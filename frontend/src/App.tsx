@@ -6,23 +6,28 @@ import { mockCronJobs } from './data/mockJobs'
 import { AuthGate } from './components/AuthGate'
 import { DashboardPage } from './pages/DashboardPage'
 import { SchedulesPage } from './pages/SchedulesPage'
+import { ScriptsProvider } from './scripts/ScriptContext'
+import { ScriptsPage } from './pages/ScriptsPage'
 
 function App() {
   return (
     <AuthGate>
-      <div className="app-shell">
-        <Sidebar />
-        <div className="app-main">
-          <TopBar />
-          <main>
-            <Routes>
-              <Route path="/" element={<DashboardPage jobs={mockCronJobs} />} />
-              <Route path="/schedules" element={<SchedulesPage jobs={mockCronJobs} />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
+      <ScriptsProvider>
+        <div className="app-shell">
+          <Sidebar />
+          <div className="app-main">
+            <TopBar />
+            <main>
+              <Routes>
+                <Route path="/" element={<DashboardPage jobs={mockCronJobs} />} />
+                <Route path="/schedules" element={<SchedulesPage jobs={mockCronJobs} />} />
+                <Route path="/scripts" element={<ScriptsPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+          </div>
         </div>
-      </div>
+      </ScriptsProvider>
     </AuthGate>
   )
 }

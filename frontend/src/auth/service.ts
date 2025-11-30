@@ -16,7 +16,8 @@ const generateId = () =>
   globalThis.crypto?.randomUUID?.() ?? `user_${Date.now()}_${Math.random().toString(16).slice(2)}`
 
 const toAuthUser = (user: StoredUser): AuthUser => {
-  const { password, ...rest } = user
+  const { password: _password, ...rest } = user
+  void _password
   return rest
 }
 

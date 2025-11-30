@@ -1,11 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { authService, type GmailProfile } from './service'
 import type { AuthUser, Credentials, RegistrationPayload } from './types'
 
@@ -24,14 +19,10 @@ type AuthContextValue = {
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const isBrowser = typeof window !== 'undefined'
+  const [user, setUser] = useState<AuthUser | null>(() => (isBrowser ? authService.getCurrentUser() : null))
   const [error, setError] = useState<string | null>(null)
-  const [isReady, setIsReady] = useState(false)
-
-  useEffect(() => {
-    setUser(authService.getCurrentUser())
-    setIsReady(true)
-  }, [])
+  const isReady = true
 
   const runAction = <Payload,>(
     action: (payload: Payload) => AuthUser,

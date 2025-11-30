@@ -70,4 +70,46 @@ test.describe('Alfred authentication and workspace', () => {
     await topbar.getByRole('button', { name: /sign out/i }).click()
     await expect(page.getByRole('heading', { name: /secure access to alfred/i })).toBeVisible()
   })
+
+  test('manages scripts in the editor workspace', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByRole('button', { name: /continue as automation ops/i }).click()
+
+    await page.getByRole('link', { name: /scripts/i }).click()
+
+    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    await expect(workspace.getByRole('heading', { name: 'Scripts' })).toBeVisible()
+
+    await workspace.getByRole('button', { name: /new script/i }).click()
+    await expect(workspace.getByText('Untitled script')).toBeVisible()
+
+    await workspace.getByLabel('Script name').fill('API sweeper')
+    await workspace.getByLabel('Script description').fill('Cleans up orphaned API resources.')
+    await workspace.getByLabel('Language').selectOption('python')
+
+    const editor = workspace.getByLabel('Script content').locator('.cm-content')
+    await editor.click()
+    const isMac = await page.evaluate(() => navigator.platform.includes('Mac'))
+    const selectAllShortcut = isMac ? 'Meta+A' : 'Control+A'
+    await page.keyboard.press(selectAllShortcut)
+    await page.keyboard.type("#!/usr/bin/env python3\nprint('api sweeper')\n", { delay: 10 })
+    await workspace.getByRole('button', { name: /save changes/i }).click()
+
+    const listItems = workspace.getByRole('list').locator('li')
+    await expect(listItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
+    await expect(listItems.filter({ hasText: 'Edge patcher' })).not.toBeAttached()
+
+    await workspace.getByRole('button', { name: /clone selected script/i }).click()
+    const copyRow = workspace.locator('button', { hasText: 'API sweeper copy' })
+    await expect(copyRow).toHaveCount(1)
+    await copyRow.first().click()
+
+    await workspace.getByRole('button', { name: /delete selected script/i }).click()
+    const confirm = workspace.getByRole('alertdialog')
+    await confirm.getByRole('button', { name: /confirm delete/i }).click()
+
+    await expect(listItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
+    await expect(copyRow).toHaveCount(0)
+  })
 })

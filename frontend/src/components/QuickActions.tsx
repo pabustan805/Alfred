@@ -7,6 +7,7 @@ const actions = [
     title: 'Schedule new cron',
     description: 'Launch the guided workflow to create a job in under a minute.',
     accent: 'primary',
+    to: '/schedules',
   },
   {
     icon: Play,
@@ -19,6 +20,7 @@ const actions = [
     title: 'Import scripts',
     description: 'Bring existing crontab entries or YAML configs into Alfred.',
     accent: 'neutral',
+    to: '/scripts',
   },
   {
     icon: Shield,
@@ -43,7 +45,7 @@ export function QuickActions() {
             key={action.title}
             type="button"
             className={`quick-action quick-action--${action.accent}`}
-            onClick={action.title === 'Schedule new cron' ? () => navigate('/schedules') : undefined}
+            onClick={action.to ? () => navigate(action.to!) : undefined}
           >
             <action.icon size={18} />
             <div>
