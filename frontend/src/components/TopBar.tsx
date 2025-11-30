@@ -14,14 +14,6 @@ export function TopBar() {
 
   return (
     <header className="topbar" aria-label="Workspace header">
-      <div className="topbar__context">
-        <span className="pill">Production workspace</span>
-        <div>
-          <h2>Morning check-in</h2>
-          <p>Chronicles of automation · 12 active cron surfaces</p>
-        </div>
-      </div>
-
       <div className="topbar__actions">
         <label className="search" aria-label="Search scripts">
           <Search size={18} />

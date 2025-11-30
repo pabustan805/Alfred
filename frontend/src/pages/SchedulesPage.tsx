@@ -13,15 +13,17 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
 
   return (
     <section className="schedules" aria-label="Schedules overview">
-      <header className="schedules__hero">
+      <header className="page-hero" aria-label="Schedules hero">
         <div>
           <p>Reliably orchestrate every automation</p>
-          <h2>Schedules</h2>
+          <h1>Schedules</h1>
           <span>Centralize cadence management, approvals, and runtime context.</span>
         </div>
-        <button type="button" className="primary" onClick={() => setWizardOpen(true)}>
-          <span>Create a cron job</span>
-        </button>
+        <div className="page-hero__actions">
+          <button type="button" className="primary" onClick={() => setWizardOpen(true)}>
+            <span>Create a cron job</span>
+          </button>
+        </div>
       </header>
 
       <JobTable jobs={jobs} />

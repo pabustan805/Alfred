@@ -3,15 +3,17 @@ import { ScriptWorkspace } from '../components/ScriptWorkspace'
 export function ScriptsPage() {
   return (
     <section className="scripts" aria-label="Scripts workspace">
-      <header className="scripts__hero">
+      <header className="page-hero" aria-label="Scripts hero">
         <div>
           <p>Advanced control center</p>
-          <h2>Scripts</h2>
+          <h1>Scripts</h1>
           <span>Author, review, and orchestrate every automation artifact in one canvas.</span>
         </div>
-        <div className="scripts__hero-meta">
-          <strong>Multi-language</strong>
-          <span>bash · python · node</span>
+        <div className="page-hero__actions">
+          <div className="page-hero__meta">
+            <strong>Multi-language</strong>
+            <span>bash · python · node</span>
+          </div>
         </div>
       </header>
 
