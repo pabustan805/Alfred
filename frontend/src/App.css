@@ -165,16 +165,10 @@ main {
 
 .topbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-}
-
-.topbar__context {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  width: 100%;
 }
 
 .pill {
@@ -198,6 +192,19 @@ main {
 }
 
 .topbar__actions {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar__search {
+  flex: 1;
+  min-width: 240px;
+}
+
+.topbar__tools {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 0.75rem;

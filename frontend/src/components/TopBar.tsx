@@ -15,37 +15,39 @@ export function TopBar() {
   return (
     <header className="topbar" aria-label="Workspace header">
       <div className="topbar__actions">
-        <label className="search" aria-label="Search scripts">
+        <label className="search topbar__search" aria-label="Search scripts">
           <Search size={18} />
           <input placeholder="Search by script, owner, or tag" />
         </label>
 
-        <button type="button" className="ghost">
-          <Sparkles size={18} />
-          <span>Copilot</span>
-        </button>
+        <div className="topbar__tools">
+          <button type="button" className="ghost">
+            <Sparkles size={18} />
+            <span>Copilot</span>
+          </button>
 
-        <button type="button" className="ghost" aria-label="Notifications">
-          <Bell size={18} />
-          <span className="badge" aria-live="polite">
-            5
-          </span>
-        </button>
+          <button type="button" className="ghost" aria-label="Notifications">
+            <Bell size={18} />
+            <span className="badge" aria-live="polite">
+              5
+            </span>
+          </button>
 
-        {user && (
-          <div className="topbar__profile">
-            <div className="avatar" aria-hidden>
-              <span>{getInitials(user.name)}</span>
+          {user && (
+            <div className="topbar__profile">
+              <div className="avatar" aria-hidden>
+                <span>{getInitials(user.name)}</span>
+              </div>
+              <div>
+                <strong>{user.name}</strong>
+                <small>{user.email}</small>
+              </div>
+              <button type="button" className="text" onClick={signOut}>
+                Sign out
+              </button>
             </div>
-            <div>
-              <strong>{user.name}</strong>
-              <small>{user.email}</small>
-            </div>
-            <button type="button" className="text" onClick={signOut}>
-              Sign out
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </header>
   )
