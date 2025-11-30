@@ -1,0 +1,69 @@
+import type { AuthUser } from './types'
+
+type StoredUser = AuthUser & {
+  password?: string
+}
+
+type Session = {
+  userId: string
+}
+
+type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
+
+const USERS_KEY = 'alfred:auth-users'
+const SESSION_KEY = 'alfred:auth-session'
+
+const memoryStorage = (() => {
+  const store = new Map<string, string>()
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value)
+    },
+    removeItem: (key: string) => {
+      store.delete(key)
+    },
+  }
+})()
+
+const getStorage = (): StorageLike => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return window.localStorage
+  }
+  return memoryStorage
+}
+
+const safeParse = <T>(value: string | null, fallback: T): T => {
+  if (!value) return fallback
+  try {
+    return JSON.parse(value) as T
+  } catch (error) {
+    console.warn('Failed to parse auth storage payload', error)
+    return fallback
+  }
+}
+
+export const authStorage = {
+  getUsers(): StoredUser[] {
+    const storage = getStorage()
+    return safeParse<StoredUser[]>(storage.getItem(USERS_KEY), [])
+  },
+  saveUsers(users: StoredUser[]) {
+    const storage = getStorage()
+    storage.setItem(USERS_KEY, JSON.stringify(users))
+  },
+  getSession(): Session | null {
+    const storage = getStorage()
+    return safeParse<Session | null>(storage.getItem(SESSION_KEY), null)
+  },
+  saveSession(userId: string) {
+    const storage = getStorage()
+    storage.setItem(SESSION_KEY, JSON.stringify({ userId }))
+  },
+  clearSession() {
+    const storage = getStorage()
+    storage.removeItem(SESSION_KEY)
+  },
+}
+
+export type { StoredUser }

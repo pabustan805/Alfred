@@ -7,6 +7,11 @@
 
 All deliverables include unit coverage (CronWizard vitest specs) and Playwright e2e coverage of the cron creation flow.
 
+## Phase 1.5: Authentication Access Layer (✅ Completed)
+- [x] Add email/password registration and sign-in with secure session persistence.
+- [x] Provide Gmail quick-login shortcuts for approved workspace accounts.
+- [x] Gate the dashboard behind authentication with new unit and e2e coverage.
+
 ## Phase 2: Script Management Core
 - Integrate the advanced script editor.
 - Add CRUD operations for scripts (create, edit, delete, clone).

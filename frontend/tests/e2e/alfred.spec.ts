@@ -2,9 +2,11 @@ import { test, expect } from '@playwright/test'
 
 const wizardRegion = 'Cron creation wizard'
 
-test.describe('Alfred UI foundation', () => {
-  test('shows dashboard content and completes the cron wizard', async ({ page }) => {
+test.describe('Alfred authentication and workspace', () => {
+  test('supports Gmail quick login before completing the cron wizard', async ({ page }) => {
     await page.goto('/')
+
+    await page.getByRole('button', { name: /continue as automation ops/i }).click()
 
     await expect(page.getByRole('heading', { name: 'Alfred' })).toBeVisible()
     await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
@@ -40,5 +42,22 @@ test.describe('Alfred UI foundation', () => {
     await wizard.getByRole('button', { name: 'Finish' }).click()
 
     await expect(wizard.getByText('Ready to schedule')).toBeVisible()
+  })
+
+  test('registers email/password users and shows profile details', async ({ page }) => {
+    await page.goto('/')
+
+    await page.getByRole('tab', { name: /register/i }).click()
+    await page.getByLabel('Full name').fill('QA Operator')
+    await page.getByLabel('Work email').fill('qa.operator@example.com')
+    await page.getByLabel('Password').fill('strongPass1')
+    await page.getByRole('button', { name: /create account/i }).click()
+
+    const topbar = page.getByRole('banner', { name: 'Workspace header' })
+    await expect(topbar.getByText('QA Operator')).toBeVisible()
+    await expect(topbar.getByText('qa.operator@example.com')).toBeVisible()
+
+    await topbar.getByRole('button', { name: /sign out/i }).click()
+    await expect(page.getByRole('heading', { name: /secure access to alfred/i })).toBeVisible()
   })
 })

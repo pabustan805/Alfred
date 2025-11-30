@@ -5,6 +5,7 @@ Alfred is a webapp that provides a clean, elegant UI for creating, editing, exec
 
 ## Features
 - Simple, elegant UI inspired by apple.com
+- Secure authentication with email/password accounts and Gmail login
 - Wizard workflow for creating cron scripts (default option)
 - Integrated script editor for manual editing
 - AI validation to ensure cron scripts are correct
@@ -13,10 +14,11 @@ Alfred is a webapp that provides a clean, elegant UI for creating, editing, exec
 
 ## Usage
 1. Launch Alfred in your browser.
-2. Use the wizard to quickly create a cron script by answering simple questions.
-3. Switch to the script editor for advanced customization.
-4. Manage scripts from the dashboard: execute immediately, reschedule, clone, or delete.
-5. Review logs to debug or audit past executions.
+2. Sign in with your email/password or a pre-approved Gmail account to access your workspace.
+3. Use the wizard to quickly create a cron script by answering simple questions.
+4. Switch to the script editor for advanced customization.
+5. Manage scripts from the dashboard: execute immediately, reschedule, clone, or delete.
+6. Review logs to debug or audit past executions.
 
 ## Getting Started
 - Installation instructions (placeholder)
