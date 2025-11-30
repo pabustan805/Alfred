@@ -2,13 +2,19 @@ import { describe, it, beforeEach, expect } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { type ReactNode } from 'react'
+import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '../auth/AuthContext'
 import { AuthGate } from '../components/AuthGate'
 import { TopBar } from '../components/TopBar'
 import { Sidebar } from '../components/Sidebar'
 import { authStorage, type StoredUser } from '../auth/storage'
 
-const renderWithProvider = (ui: ReactNode) => render(<AuthProvider>{ui}</AuthProvider>)
+const renderWithProvider = (ui: ReactNode) =>
+  render(
+    <BrowserRouter>
+      <AuthProvider>{ui}</AuthProvider>
+    </BrowserRouter>,
+  )
 
 const Protected = () => <p data-testid="protected">Alfred workspace</p>
 

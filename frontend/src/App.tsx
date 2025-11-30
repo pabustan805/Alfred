@@ -1,12 +1,11 @@
 import './App.css'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Sidebar } from './components/Sidebar'
 import { TopBar } from './components/TopBar'
-import { DashboardCards } from './components/DashboardCards'
-import { JobTable } from './components/JobTable'
-import { CronWizard } from './components/CronWizard'
-import { QuickActions } from './components/QuickActions'
 import { mockCronJobs } from './data/mockJobs'
 import { AuthGate } from './components/AuthGate'
+import { DashboardPage } from './pages/DashboardPage'
+import { SchedulesPage } from './pages/SchedulesPage'
 
 function App() {
   return (
@@ -16,10 +15,11 @@ function App() {
         <div className="app-main">
           <TopBar />
           <main>
-            <DashboardCards jobs={mockCronJobs} />
-            <QuickActions />
-            <JobTable jobs={mockCronJobs} />
-            <CronWizard />
+            <Routes>
+              <Route path="/" element={<DashboardPage jobs={mockCronJobs} />} />
+              <Route path="/schedules" element={<SchedulesPage jobs={mockCronJobs} />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </main>
         </div>
       </div>

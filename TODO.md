@@ -15,7 +15,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 ## Phase 2: Script Management Core
 - Integrate the advanced script editor.
 - Add CRUD operations for scripts (create, edit, delete, clone).
-- Implement immediate execution and scheduling features from the dashboard.
+- Build dedicated schedules workspace with modal cron creation workflow (✅ Nov 30, 2025).
 
 ## Phase 3: AI Integration
 - Add AI validation for cron scripts.

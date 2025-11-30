@@ -1,9 +1,10 @@
 import { CalendarClock, Home, ListChecks, LogOut, Settings, ShieldCheck, Zap } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
 const navItems = [
-  { icon: Home, label: 'Dashboard', active: true },
-  { icon: CalendarClock, label: 'Schedules' },
+  { icon: Home, label: 'Dashboard', to: '/' },
+  { icon: CalendarClock, label: 'Schedules', to: '/schedules' },
   { icon: ListChecks, label: 'Scripts' },
   { icon: ShieldCheck, label: 'Audit Trail' },
   { icon: Zap, label: 'Automation' },
@@ -29,10 +30,20 @@ export function Sidebar() {
         <ul>
           {navItems.map((item) => (
             <li key={item.label}>
-              <button className={`sidebar__link${item.active ? ' is-active' : ''}`} type="button">
-                <item.icon size={18} />
-                <span>{item.label}</span>
-              </button>
+              {item.to ? (
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) => `sidebar__link${isActive ? ' is-active' : ''}`}
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </NavLink>
+              ) : (
+                <button className="sidebar__link" type="button">
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </button>
+              )}
             </li>
           ))}
         </ul>

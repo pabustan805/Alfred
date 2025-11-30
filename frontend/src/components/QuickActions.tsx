@@ -1,4 +1,5 @@
 import { CalendarPlus, Play, Shield, UploadCloud } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const actions = [
   {
@@ -28,6 +29,8 @@ const actions = [
 ]
 
 export function QuickActions() {
+  const navigate = useNavigate()
+
   return (
     <section className="quick-actions" aria-label="Quick actions">
       <header>
@@ -40,6 +43,7 @@ export function QuickActions() {
             key={action.title}
             type="button"
             className={`quick-action quick-action--${action.accent}`}
+            onClick={action.title === 'Schedule new cron' ? () => navigate('/schedules') : undefined}
           >
             <action.icon size={18} />
             <div>

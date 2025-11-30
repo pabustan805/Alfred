@@ -374,6 +374,89 @@ main {
   transform: translateY(-2px);
 }
 
+.schedules {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.schedules__hero {
+  background: var(--panel-bg);
+  border-radius: 2rem;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-soft);
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.schedules__hero p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.schedules__hero h2 {
+  margin: 0.35rem 0;
+  font-size: 2rem;
+}
+
+.schedules__hero > div span {
+  color: var(--text-muted);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 13, 32, 0.65);
+  border: none;
+}
+
+.modal__content {
+  position: relative;
+  width: min(1100px, 90vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 2rem;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-strong);
+  background: #fff;
+  padding: 2rem;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal__header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.modal__header h3 {
+  margin: 0.35rem 0 0;
+}
+
 .jobs {
   background: var(--panel-bg);
   border-radius: 2rem;

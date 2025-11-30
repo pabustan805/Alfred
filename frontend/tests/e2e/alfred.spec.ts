@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 const wizardRegion = 'Cron creation wizard'
 
 test.describe('Alfred authentication and workspace', () => {
-  test('supports Gmail quick login before completing the cron wizard', async ({ page }) => {
+  test('supports Gmail quick login and schedules cron jobs from dedicated view', async ({ page }) => {
     await page.goto('/')
 
     await page.getByRole('button', { name: /continue as automation ops/i }).click()
@@ -13,9 +13,16 @@ test.describe('Alfred authentication and workspace', () => {
 
     await expect(page.getByRole('heading', { name: 'Active cron jobs' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Quick actions' })).toBeVisible()
+
+    await page.getByRole('link', { name: /schedules/i }).click()
+
+    await expect(page.getByRole('heading', { name: 'Schedules' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Scheduled automations' })).toBeVisible()
 
-    const wizard = page.getByRole('region', { name: wizardRegion })
+    await page.getByRole('button', { name: /create a cron job/i }).click()
+
+    const dialog = page.getByRole('dialog', { name: wizardRegion })
+    const wizard = dialog.getByRole('region', { name: wizardRegion })
     await expect(wizard.getByRole('heading', { name: 'Create a cron job' })).toBeVisible()
 
     await wizard.getByLabel('Name').fill('Nightly metrics rollup')
@@ -42,6 +49,9 @@ test.describe('Alfred authentication and workspace', () => {
     await wizard.getByRole('button', { name: 'Finish' }).click()
 
     await expect(wizard.getByText('Ready to schedule')).toBeVisible()
+
+    await dialog.getByRole('button', { name: /Close wizard/i }).click()
+    await expect(dialog).toBeHidden()
   })
 
   test('registers email/password users and shows profile details', async ({ page }) => {

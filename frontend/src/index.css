@@ -18,6 +18,7 @@
   --warning: #f39c12;
   --critical: #de3b40;
   --shadow-soft: 0 20px 45px rgba(15, 21, 36, 0.08);
+  --shadow-strong: 0 30px 80px rgba(7, 13, 32, 0.22);
 }
 
 * {
