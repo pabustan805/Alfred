@@ -1,4 +1,5 @@
-import { CalendarClock, Home, ListChecks, Settings, ShieldCheck, Zap } from 'lucide-react'
+import { CalendarClock, Home, ListChecks, LogOut, Settings, ShieldCheck, Zap } from 'lucide-react'
+import { useAuth } from '../auth/AuthContext'
 
 const navItems = [
   { icon: Home, label: 'Dashboard', active: true },
@@ -13,6 +14,8 @@ const preferences = [
 ]
 
 export function Sidebar() {
+  const { signOut, user } = useAuth()
+
   return (
     <aside className="sidebar" aria-label="Primary">
       <div className="sidebar__brand">
@@ -50,9 +53,22 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar__footer">
-        <p>System uptime</p>
-        <strong>99.99%</strong>
-        <span>Last incident 42 days ago</span>
+        <div>
+          <p>System uptime</p>
+          <strong>99.99%</strong>
+          <span>Last incident 42 days ago</span>
+        </div>
+        {user && (
+          <button
+            type="button"
+            className="sidebar__signout"
+            onClick={signOut}
+            aria-label="Sign out of Alfred"
+          >
+            <LogOut size={16} />
+            <span>Sign out</span>
+          </button>
+        )}
       </div>
     </aside>
   )

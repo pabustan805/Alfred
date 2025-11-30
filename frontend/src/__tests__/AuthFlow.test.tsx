@@ -5,6 +5,7 @@ import { type ReactNode } from 'react'
 import { AuthProvider } from '../auth/AuthContext'
 import { AuthGate } from '../components/AuthGate'
 import { TopBar } from '../components/TopBar'
+import { Sidebar } from '../components/Sidebar'
 import { authStorage, type StoredUser } from '../auth/storage'
 
 const renderWithProvider = (ui: ReactNode) => render(<AuthProvider>{ui}</AuthProvider>)
@@ -13,6 +14,34 @@ const Protected = () => <p data-testid="protected">Alfred workspace</p>
 
 beforeEach(() => {
   window.localStorage?.clear()
+})
+
+describe('Sidebar', () => {
+  it('shows a sign out button for authenticated users', async () => {
+    const storedUser: StoredUser = {
+      id: 'user-2',
+      email: 'dev@example.com',
+      name: 'Dev Ops',
+      provider: 'local',
+      createdAt: new Date().toISOString(),
+      password: 'anothersecret',
+    }
+
+    authStorage.saveUsers([storedUser])
+    authStorage.saveSession(storedUser.id)
+
+    const user = userEvent.setup()
+    renderWithProvider(<Sidebar />)
+
+    const signOutButton = screen.getByRole('button', { name: /sign out/i })
+    expect(signOutButton).toBeVisible()
+
+    await user.click(signOutButton)
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /sign out/i })).toBeNull()
+    })
+  })
 })
 
 describe('AuthGate', () => {

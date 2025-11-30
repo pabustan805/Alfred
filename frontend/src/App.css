@@ -123,6 +123,9 @@ main {
   border-radius: 1.25rem;
   background: rgba(255, 255, 255, 0.08);
   text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .sidebar__footer p {
@@ -140,6 +143,24 @@ main {
 .sidebar__footer span {
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.8rem;
+}
+
+.sidebar__signout {
+  border: none;
+  background: rgba(15, 23, 42, 0.15);
+  color: #fff;
+  border-radius: 0.85rem;
+  padding: 0.65rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.sidebar__signout:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .topbar {
