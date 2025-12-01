@@ -291,17 +291,35 @@ export function ScriptWorkspace() {
             />
           </div>
           <div className="scripts__toolbar-actions">
-            <button type="button" className="ghost" onClick={handleImportClick}>
-              <UploadCloud size={16} />
-              <span>Import</span>
+            <button
+              type="button"
+              className="scripts__icon-button"
+              onClick={handleImportClick}
+              aria-label="Import scripts"
+              title="Import scripts"
+            >
+              <UploadCloud size={18} />
+              <span className="sr-only">Import scripts</span>
             </button>
-            <button type="button" className="primary" onClick={handleCreate}>
-              <Plus size={16} />
-              <span>New script</span>
+            <button
+              type="button"
+              className="scripts__icon-button scripts__icon-button--primary"
+              onClick={handleCreate}
+              aria-label="New script"
+              title="New script"
+            >
+              <Plus size={18} />
+              <span className="sr-only">New script</span>
             </button>
-            <button type="button" className="ghost" onClick={() => setCreatingFolder(true)}>
-              <FolderPlus size={16} />
-              <span>New folder</span>
+            <button
+              type="button"
+              className="scripts__icon-button"
+              onClick={() => setCreatingFolder(true)}
+              aria-label="New folder"
+              title="New folder"
+            >
+              <FolderPlus size={18} />
+              <span className="sr-only">New folder</span>
             </button>
           </div>
         </div>
