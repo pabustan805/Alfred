@@ -1,4 +1,4 @@
-import { CalendarClock, Home, ListChecks, LogOut, Settings, ShieldCheck, Zap } from 'lucide-react'
+import { CalendarClock, Home, ListChecks, LogOut, Settings, ShieldCheck } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
@@ -7,7 +7,6 @@ const navItems = [
   { icon: CalendarClock, label: 'Schedules', to: '/schedules' },
   { icon: ListChecks, label: 'Scripts', to: '/scripts' },
   { icon: ShieldCheck, label: 'Audit Trail' },
-  { icon: Zap, label: 'Automation' },
 ]
 
 const preferences = [

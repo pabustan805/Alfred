@@ -15,9 +15,9 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     <section className="schedules" aria-label="Schedules overview">
       <header className="page-hero" aria-label="Schedules hero">
         <div>
-          <p>Reliably orchestrate every automation</p>
+          <p>Confidently manage every schedule</p>
           <h1>Schedules</h1>
-          <span>Centralize cadence management, approvals, and runtime context.</span>
+          <span>Keep cadence management, approvals, and runtime context in one place.</span>
         </div>
         <div className="page-hero__actions">
           <button type="button" className="primary" onClick={() => setWizardOpen(true)}>
@@ -40,7 +40,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
             <div className="modal__header">
               <div>
                 <p>Guided workflow</p>
-                <h3>New automation</h3>
+                <h3>New cron job</h3>
               </div>
               <button type="button" className="ghost" onClick={() => setWizardOpen(false)} aria-label="Close wizard">
                 <X size={16} />

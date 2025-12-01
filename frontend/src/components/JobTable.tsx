@@ -23,7 +23,7 @@ export function JobTable({ jobs }: JobTableProps) {
     <section className="jobs" aria-label="Scheduled jobs">
       <header className="jobs__header">
         <div>
-          <h3>Scheduled automations</h3>
+          <h3>Scheduled jobs</h3>
           <p>Showing {jobs.length} jobs across all clusters</p>
         </div>
         <div className="jobs__actions">
