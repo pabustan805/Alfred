@@ -588,6 +588,76 @@ main {
   padding: 0.55rem 0.8rem;
 }
 
+.scripts__folder-action {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.scripts__folder-action:hover {
+  color: var(--accent);
+}
+
+.scripts__move-form {
+  margin-top: 0.35rem;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.scripts__move-form select {
+  flex: 1;
+  border-radius: 0.6rem;
+  border: 1px solid var(--panel-border);
+  padding: 0.3rem 0.5rem;
+}
+
+.scripts__move-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.scripts__folder-confirm {
+  margin-top: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.scripts__folder-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scripts__folder-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.scripts__folder-options select {
+  border-radius: 0.6rem;
+  border: 1px solid var(--panel-border);
+  padding: 0.4rem 0.5rem;
+}
+
+.scripts__folder-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
 .scripts__search {
   display: flex;
   align-items: center;

@@ -7,8 +7,20 @@ import { python } from '@codemirror/lang-python'
 import type { Extension } from '@codemirror/state'
 import { StreamLanguage } from '@codemirror/language'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
-import { Plus, UploadCloud, Copy, Trash2, Search, RefreshCw, FolderPlus, Folder, ChevronDown, ChevronRight } from 'lucide-react'
-import type { Script, ScriptLanguage } from '../types/script'
+import {
+  Plus,
+  UploadCloud,
+  Copy,
+  Trash2,
+  Search,
+  RefreshCw,
+  FolderPlus,
+  Folder,
+  ChevronDown,
+  ChevronRight,
+  ArrowRightLeft,
+} from 'lucide-react'
+import type { Script, ScriptLanguage, ScriptFolder } from '../types/script'
 import { scriptLanguageCatalog } from '../types/script'
 import { buildFolderOptions, buildFolderTree, type FolderTreeNode, UNGROUPED_FOLDER_KEY } from '../scripts/folderUtils'
 import { useScripts } from '../scripts/ScriptContext'
@@ -35,6 +47,7 @@ export function ScriptWorkspace() {
     cloneScript,
     importScripts,
     createFolder,
+    deleteFolder,
     folders,
   } = useScripts()
   const [selectedId, setSelectedId] = useState<string | null>(scripts[0]?.id ?? null)
@@ -46,6 +59,15 @@ export function ScriptWorkspace() {
   const [creatingFolder, setCreatingFolder] = useState(false)
   const [folderNameInput, setFolderNameInput] = useState('')
   const [folderParentInput, setFolderParentInput] = useState<string>(TOP_LEVEL_FOLDER_VALUE)
+  const [folderPendingDelete, setFolderPendingDelete] = useState<{
+    folder: ScriptFolder
+    totalScripts: number
+    descendantIds: string[]
+  } | null>(null)
+  const [folderDeleteMode, setFolderDeleteMode] = useState<'move' | 'delete'>('move')
+  const [folderDeleteDestination, setFolderDeleteDestination] = useState<string | null>(null)
+  const [scriptBeingMoved, setScriptBeingMoved] = useState<string | null>(null)
+  const [scriptMoveDestination, setScriptMoveDestination] = useState<string>('')
   const [expandedFolders, setExpandedFolders] = useState<string[]>(() => [
     ...folders.map((folder) => folder.id),
     UNGROUPED_FOLDER_KEY,
@@ -75,6 +97,13 @@ export function ScriptWorkspace() {
   const folderTree = useMemo(() => buildFolderTree(folders, scripts, normalizedQuery), [folders, scripts, normalizedQuery])
   const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
   const folderSelectOptions = useMemo(() => [{ id: '', label: 'Ungrouped' }, ...folderOptions], [folderOptions])
+  const folderDeleteDestinationOptions = useMemo(() => {
+    if (!folderPendingDelete) {
+      return folderSelectOptions
+    }
+    const excluded = new Set(folderPendingDelete.descendantIds)
+    return folderSelectOptions.filter((option) => !excluded.has(option.id))
+  }, [folderPendingDelete, folderSelectOptions])
   const totalVisibleScripts = useMemo(
     () => folderTree.reduce((sum, node) => sum + node.totalScripts, 0),
     [folderTree],
@@ -179,6 +208,75 @@ export function ScriptWorkspace() {
     setPendingDeleteId(id)
   }
 
+  const collectDescendantIds = (targetId: string) => {
+    const ids: string[] = []
+    const walk = (id: string) => {
+      ids.push(id)
+      folders
+        .filter((folder) => folder.parentId === id)
+        .forEach((child) => walk(child.id))
+    }
+    walk(targetId)
+    return ids
+  }
+
+  const requestFolderDelete = (folder: ScriptFolder, totalScripts: number) => {
+    const descendantIds = collectDescendantIds(folder.id)
+    setFolderPendingDelete({ folder, totalScripts, descendantIds })
+    setFolderDeleteMode(totalScripts ? 'move' : 'delete')
+    setFolderDeleteDestination(totalScripts ? '' : null)
+  }
+
+  const cancelFolderDelete = () => {
+    setFolderPendingDelete(null)
+    setFolderDeleteDestination(null)
+  }
+
+  const handleConfirmFolderDelete = async () => {
+    if (!folderPendingDelete) {
+      return
+    }
+    const { folder, descendantIds, totalScripts } = folderPendingDelete
+    const affectedScripts = scripts.filter(
+      (script) => script.folderId && descendantIds.includes(script.folderId),
+    )
+
+    if (totalScripts && folderDeleteMode === 'move') {
+      if (folderDeleteDestination === null) {
+        return
+      }
+      const destination = folderDeleteDestination === '' ? null : folderDeleteDestination
+      await Promise.all(
+        affectedScripts.map((script) => updateScript(script.id, { folderId: destination })),
+      )
+      await deleteFolder(folder.id, { cascadeScripts: false })
+    } else {
+      await deleteFolder(folder.id, { cascadeScripts: folderDeleteMode === 'delete' })
+    }
+    setFolderPendingDelete(null)
+    setFolderDeleteDestination(null)
+  }
+
+  const startScriptMove = (id: string) => {
+    const target = scripts.find((script) => script.id === id)
+    setScriptBeingMoved(id)
+    setScriptMoveDestination(target?.folderId ?? '')
+  }
+
+  const cancelScriptMove = () => {
+    setScriptBeingMoved(null)
+    setScriptMoveDestination('')
+  }
+
+  const handleConfirmScriptMove = async () => {
+    if (!scriptBeingMoved) {
+      return
+    }
+    await updateScript(scriptBeingMoved, { folderId: scriptMoveDestination || null })
+    setScriptBeingMoved(null)
+    setScriptMoveDestination('')
+  }
+
   const hasScripts = scripts.length > 0
   const statusLabel = mutation ? `${mutation.type}…` : isDirty ? 'Unsaved changes' : 'Synced'
 
@@ -239,6 +337,16 @@ export function ScriptWorkspace() {
               <span className="scripts__folder-count">
                 {node.totalScripts} {node.totalScripts === 1 ? 'script' : 'scripts'}
               </span>
+              {node.folder && (
+                <button
+                  type="button"
+                  className="scripts__folder-action"
+                  onClick={() => requestFolderDelete(node.folder!, node.totalScripts)}
+                  aria-label={`Delete folder ${label}`}
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
             {showScripts && (
               <ul className="scripts__tree scripts__tree--scripts" role="group">
@@ -263,7 +371,32 @@ export function ScriptWorkspace() {
                       <button type="button" className="text" onClick={() => requestDelete(script.id)} aria-label={`Delete ${script.name}`}>
                         <Trash2 size={16} />
                       </button>
+                      <button type="button" className="text" onClick={() => startScriptMove(script.id)} aria-label={`Move ${script.name}`}>
+                        <ArrowRightLeft size={16} />
+                      </button>
                     </div>
+                    {scriptBeingMoved === script.id && (
+                      <div className="scripts__move-form">
+                        <select
+                          value={scriptMoveDestination}
+                          onChange={(event) => setScriptMoveDestination(event.target.value)}
+                        >
+                          {folderSelectOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="scripts__move-actions">
+                          <button type="button" className="text" onClick={cancelScriptMove}>
+                            Cancel
+                          </button>
+                          <button type="button" className="primary" onClick={handleConfirmScriptMove}>
+                            Move
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -363,6 +496,74 @@ export function ScriptWorkspace() {
         <ul className="scripts__tree" role="tree">
           {renderTree(folderTree)}
         </ul>
+        {folderPendingDelete && (
+          <div className="scripts__folder-confirm" role="dialog" aria-label={`Delete folder ${folderPendingDelete.folder.name}`}>
+            <div>
+              <strong>Delete “{folderPendingDelete.folder.name}”?</strong>
+              {folderPendingDelete.totalScripts ? (
+                <p>
+                  This folder contains {folderPendingDelete.totalScripts}{' '}
+                  {folderPendingDelete.totalScripts === 1 ? 'script' : 'scripts'}.
+                </p>
+              ) : (
+                <p>This folder is empty.</p>
+              )}
+            </div>
+            {folderPendingDelete.totalScripts > 0 && (
+              <div className="scripts__folder-options">
+                <label>
+                  <input
+                    type="radio"
+                    name="folder-delete-mode"
+                    value="move"
+                    checked={folderDeleteMode === 'move'}
+                    onChange={() => setFolderDeleteMode('move')}
+                  />
+                  <span>Move scripts to another folder</span>
+                </label>
+                {folderDeleteMode === 'move' && (
+                  <select
+                    value={folderDeleteDestination ?? ''}
+                    onChange={(event) => setFolderDeleteDestination(event.target.value)}
+                  >
+                    {folderDeleteDestinationOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <label>
+                  <input
+                    type="radio"
+                    name="folder-delete-mode"
+                    value="delete"
+                    checked={folderDeleteMode === 'delete'}
+                    onChange={() => setFolderDeleteMode('delete')}
+                  />
+                  <span>Delete scripts with the folder</span>
+                </label>
+              </div>
+            )}
+            <div className="scripts__folder-confirm-actions">
+              <button type="button" className="text" onClick={cancelFolderDelete}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger"
+                onClick={handleConfirmFolderDelete}
+                disabled={
+                  Boolean(folderPendingDelete.totalScripts) &&
+                  folderDeleteMode === 'move' &&
+                  folderDeleteDestination === null
+                }
+              >
+                Confirm delete
+              </button>
+            </div>
+          </div>
+        )}
         {!totalVisibleScripts && (
           <div className="scripts__empty">
             <p>No scripts match “{query}”.</p>

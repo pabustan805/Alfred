@@ -39,7 +39,7 @@ interface ScriptsContextValue {
   importScripts: (payloads: ScriptInput[]) => Promise<Script[]>
   createFolder: (input: ScriptFolderInput) => Promise<ScriptFolder>
   updateFolder: (id: string, update: ScriptFolderUpdate) => Promise<void>
-  deleteFolder: (id: string) => Promise<void>
+  deleteFolder: (id: string, options?: { cascadeScripts?: boolean }) => Promise<void>
 }
 
 const ScriptsContext = createContext<ScriptsContextValue | undefined>(undefined)
@@ -255,7 +255,7 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
     )
   }, [])
 
-  const deleteFolder = useCallback(async (id: string) => {
+  const deleteFolder = useCallback(async (id: string, options?: { cascadeScripts?: boolean }) => {
     setFolders((prevFolders) => {
       const idsToRemove = new Set<string>()
       const walk = (targetId: string) => {
@@ -270,13 +270,17 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
         return prevFolders
       }
 
-      setScripts((prevScripts) =>
-        prevScripts.map((script) =>
+      setScripts((prevScripts) => {
+        const timestamp = new Date().toISOString()
+        if (options?.cascadeScripts) {
+          return prevScripts.filter((script) => !script.folderId || !idsToRemove.has(script.folderId))
+        }
+        return prevScripts.map((script) =>
           script.folderId && idsToRemove.has(script.folderId)
-            ? { ...script, folderId: null, updatedAt: new Date().toISOString() }
+            ? { ...script, folderId: null, updatedAt: timestamp }
             : script,
-        ),
-      )
+        )
+      })
 
       return prevFolders.filter((folder) => !idsToRemove.has(folder.id))
     })
