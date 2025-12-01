@@ -581,11 +581,17 @@ main {
 .scripts__script-item {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
 .scripts__list-item--compact {
-  padding: 0.55rem 0.8rem;
+  padding: 0.15rem 0.3rem;
+}
+
+.scripts__script-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .scripts__folder-action {

@@ -361,7 +361,7 @@ export function ScriptWorkspace() {
                       className={`scripts__list-item scripts__list-item--compact${selectedId === script.id ? ' is-selected' : ''}`}
                     >
                       <div className="scripts__list-primary">
-                        <strong>{script.name}</strong>
+                        <span className="scripts__script-name">{script.name}</span>
                       </div>
                     </button>
                     <div className="scripts__list-actions">
