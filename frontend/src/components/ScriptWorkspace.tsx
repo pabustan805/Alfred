@@ -250,18 +250,10 @@ export function ScriptWorkspace() {
                         setSelectedId(script.id)
                         setPendingDeleteId(null)
                       }}
-                      className={`scripts__list-item${selectedId === script.id ? ' is-selected' : ''}`}
+                      className={`scripts__list-item scripts__list-item--compact${selectedId === script.id ? ' is-selected' : ''}`}
                     >
-                      <div>
+                      <div className="scripts__list-primary">
                         <strong>{script.name}</strong>
-                        <p>{script.description}</p>
-                      </div>
-                      <div className="scripts__list-meta">
-                        <span className={`scripts__pill scripts__pill--${script.language}`}>
-                          {scriptLanguageCatalog[script.language].label}
-                        </span>
-                        <span className="scripts__pill scripts__pill--muted">{script.origin}</span>
-                        <time>{formatUpdatedAt(script.updatedAt)}</time>
                       </div>
                     </button>
                     <div className="scripts__list-actions">
@@ -370,6 +362,16 @@ export function ScriptWorkspace() {
               <div>
                 <p>Editing</p>
                 <h3>{activeScript.name}</h3>
+                <div className="scripts__editor-details">
+                  <div className="scripts__editor-tags">
+                    <span className={`scripts__pill scripts__pill--${draft.language}`}>
+                      {scriptLanguageCatalog[draft.language].label}
+                    </span>
+                    <span className="scripts__pill scripts__pill--muted">{activeScript.origin}</span>
+                    <time>{formatUpdatedAt(activeScript.updatedAt)}</time>
+                  </div>
+                  <p className="scripts__editor-description">{draft.description}</p>
+                </div>
               </div>
               <div className="scripts__editor-actions">
                 <button
