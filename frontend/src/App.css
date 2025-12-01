@@ -520,6 +520,74 @@ main {
   align-items: center;
 }
 
+.scripts__tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.scripts__tree--scripts {
+  margin-left: 1.75rem;
+  gap: 0.2rem;
+}
+
+.scripts__tree-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.scripts__folder {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.85rem;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.scripts__folder strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.scripts__folder span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.scripts__folder-toggle {
+  border: none;
+  background: #fff;
+  border-radius: 0.45rem;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.scripts__folder-toggle:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.scripts__script-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scripts__list-item--compact {
+  padding: 0.55rem 0.8rem;
+}
+
 .scripts__search {
   display: flex;
   align-items: center;

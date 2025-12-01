@@ -235,10 +235,10 @@ export function ScriptWorkspace() {
                 </button>
               )}
               <Folder size={16} aria-hidden />
-              <div>
-                <strong>{label}</strong>
-                <span>{node.totalScripts} {node.totalScripts === 1 ? 'script' : 'scripts'}</span>
-              </div>
+              <strong className="scripts__folder-name">{label}</strong>
+              <span className="scripts__folder-count">
+                {node.totalScripts} {node.totalScripts === 1 ? 'script' : 'scripts'}
+              </span>
             </div>
             {showScripts && (
               <ul className="scripts__tree scripts__tree--scripts" role="group">
