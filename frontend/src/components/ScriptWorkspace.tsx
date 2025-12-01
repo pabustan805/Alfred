@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent, FormEvent, JSX } from 'react'
+import type { ChangeEvent, FormEvent, JSX, MouseEvent as ReactMouseEvent } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { javascript } from '@codemirror/lang-javascript'
@@ -68,6 +68,11 @@ export function ScriptWorkspace() {
   const [folderDeleteDestination, setFolderDeleteDestination] = useState<string | null>(null)
   const [scriptBeingMoved, setScriptBeingMoved] = useState<string | null>(null)
   const [scriptMoveDestination, setScriptMoveDestination] = useState<string>('')
+  const [leftPaneWidth, setLeftPaneWidth] = useState(360)
+  const [isResizing, setIsResizing] = useState(false)
+  const workspaceRef = useRef<HTMLDivElement | null>(null)
+  const resizeStartX = useRef(0)
+  const resizeStartWidth = useRef(leftPaneWidth)
   const [expandedFolders, setExpandedFolders] = useState<string[]>(() => [
     ...folders.map((folder) => folder.id),
     UNGROUPED_FOLDER_KEY,
@@ -277,6 +282,39 @@ export function ScriptWorkspace() {
     setScriptMoveDestination('')
   }
 
+  const handleResizeStart = (event: ReactMouseEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    resizeStartX.current = event.clientX
+    resizeStartWidth.current = leftPaneWidth
+    setIsResizing(true)
+  }
+
+  useEffect(() => {
+    if (!isResizing) {
+      return
+    }
+    const handleMove = (event: MouseEvent) => {
+      if (!workspaceRef.current) {
+        return
+      }
+      const delta = event.clientX - resizeStartX.current
+      const containerWidth = workspaceRef.current.clientWidth
+      const minWidth = 240
+      const maxWidth = Math.max(minWidth, containerWidth - 320)
+      const nextWidth = Math.min(Math.max(resizeStartWidth.current + delta, minWidth), maxWidth)
+      setLeftPaneWidth(nextWidth)
+    }
+    const handleUp = () => {
+      setIsResizing(false)
+    }
+    window.addEventListener('mousemove', handleMove)
+    window.addEventListener('mouseup', handleUp)
+    return () => {
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
+    }
+  }, [isResizing])
+
   const hasScripts = scripts.length > 0
   const statusLabel = mutation ? `${mutation.type}…` : isDirty ? 'Unsaved changes' : 'Synced'
 
@@ -415,7 +453,13 @@ export function ScriptWorkspace() {
       .filter((item): item is JSX.Element => Boolean(item))
 
   return (
-    <div className="scripts__workspace" role="region" aria-label="Scripts workspace">
+    <div
+      className="scripts__workspace"
+      role="region"
+      aria-label="Scripts workspace"
+      ref={workspaceRef}
+      style={{ gridTemplateColumns: `${Math.round(leftPaneWidth)}px 10px minmax(0, 1fr)` }}
+    >
       <div className="scripts__panel scripts__panel--list">
         <div className="scripts__toolbar">
           <div className="scripts__search">
@@ -577,6 +621,14 @@ export function ScriptWorkspace() {
         )}
       </div>
 
+      <div
+        className={`scripts__resizer${isResizing ? ' is-active' : ''}`}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize scripts panes"
+        tabIndex={0}
+        onMouseDown={handleResizeStart}
+      />
       <div className="scripts__panel scripts__panel--editor">
         {hasScripts && activeScript && draft ? (
           <form className="scripts__editor" onSubmit={(event) => event.preventDefault()}>
