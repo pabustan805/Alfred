@@ -334,8 +334,8 @@ export function ScriptWorkspace() {
               )}
               <Folder size={16} aria-hidden />
               <strong className="scripts__folder-name">{label}</strong>
-              <span className="scripts__folder-count">
-                {node.totalScripts} {node.totalScripts === 1 ? 'script' : 'scripts'}
+              <span className="scripts__folder-count" aria-label={`${node.totalScripts} scripts`}>
+                {node.totalScripts}
               </span>
               {node.folder && (
                 <button
@@ -350,8 +350,11 @@ export function ScriptWorkspace() {
             </div>
             {showScripts && (
               <ul className="scripts__tree scripts__tree--scripts" role="group">
-                {node.scripts.map((script) => (
+                {node.scripts.map((script, scriptIndex) => (
                   <li key={script.id} className="scripts__script-item">
+                    <span className="scripts__script-index" aria-hidden>
+                      {(scriptIndex + 1).toString().padStart(2, '0')}
+                    </span>
                     <button
                       type="button"
                       onClick={() => {
