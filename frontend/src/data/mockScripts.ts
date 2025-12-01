@@ -9,6 +9,7 @@ export const mockScripts: Script[] = [
     content: '#!/bin/bash\nset -euo pipefail\nacmectl fetch --env=prod\nsystemctl reload edge-proxy\n',
     updatedAt: '2025-11-25T10:20:00.000Z',
     origin: 'wizard',
+    folderId: 'folder-ops-sre',
   },
   {
     id: 'script-002',
@@ -19,6 +20,7 @@ export const mockScripts: Script[] = [
       "#!/usr/bin/env python3\nimport subprocess\nsubprocess.run(['kubectl', 'delete', 'pod', '--field-selector=status.phase==Failed'])\n",
     updatedAt: '2025-11-27T08:05:00.000Z',
     origin: 'manual',
+    folderId: 'folder-ops',
   },
   {
     id: 'script-003',
@@ -29,5 +31,6 @@ export const mockScripts: Script[] = [
       "#!/usr/bin/env node\nimport { runDriftCheck } from './salesforce/drift-checker.js'\nrunDriftCheck()\n",
     updatedAt: '2025-11-28T14:42:00.000Z',
     origin: 'import',
+    folderId: 'folder-integrations',
   },
 ]

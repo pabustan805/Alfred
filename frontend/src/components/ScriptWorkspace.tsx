@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, FormEvent, JSX } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { javascript } from '@codemirror/lang-javascript'
@@ -7,12 +7,14 @@ import { python } from '@codemirror/lang-python'
 import type { Extension } from '@codemirror/state'
 import { StreamLanguage } from '@codemirror/language'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
-import { Plus, UploadCloud, Copy, Trash2, Search, RefreshCw } from 'lucide-react'
+import { Plus, UploadCloud, Copy, Trash2, Search, RefreshCw, FolderPlus, Folder, ChevronDown, ChevronRight } from 'lucide-react'
 import type { Script, ScriptLanguage } from '../types/script'
 import { scriptLanguageCatalog } from '../types/script'
+import { buildFolderOptions, buildFolderTree, type FolderTreeNode, UNGROUPED_FOLDER_KEY } from '../scripts/folderUtils'
 import { useScripts } from '../scripts/ScriptContext'
 
 type Draft = Omit<Script, 'id' | 'updatedAt'>
+
 
 const languageExtensions: Record<ScriptLanguage, Extension> = {
   bash: StreamLanguage.define(shell),
@@ -21,15 +23,62 @@ const languageExtensions: Record<ScriptLanguage, Extension> = {
 }
 
 const languageOptions = Object.entries(scriptLanguageCatalog)
+const TOP_LEVEL_FOLDER_VALUE = '__root__'
 
 export function ScriptWorkspace() {
-  const { scripts, mutation, createScript, updateScript, deleteScript, cloneScript, importScripts } = useScripts()
+  const {
+    scripts,
+    mutation,
+    createScript,
+    updateScript,
+    deleteScript,
+    cloneScript,
+    importScripts,
+    createFolder,
+    folders,
+  } = useScripts()
   const [selectedId, setSelectedId] = useState<string | null>(scripts[0]?.id ?? null)
   const [draft, setDraft] = useState<Draft | null>(scripts[0] ? toDraft(scripts[0]) : null)
   const [query, setQuery] = useState('')
   const [importError, setImportError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [creatingFolder, setCreatingFolder] = useState(false)
+  const [folderNameInput, setFolderNameInput] = useState('')
+  const [folderParentInput, setFolderParentInput] = useState<string>(TOP_LEVEL_FOLDER_VALUE)
+  const [expandedFolders, setExpandedFolders] = useState<string[]>(() => [
+    ...folders.map((folder) => folder.id),
+    UNGROUPED_FOLDER_KEY,
+  ])
+
+  const normalizedQuery = query.trim().toLowerCase()
+
+  useEffect(() => {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev)
+      let changed = false
+      folders.forEach((folder) => {
+        if (!next.has(folder.id)) {
+          next.add(folder.id)
+          changed = true
+        }
+      })
+      if (!next.has(UNGROUPED_FOLDER_KEY)) {
+        next.add(UNGROUPED_FOLDER_KEY)
+        changed = true
+      }
+      return changed ? Array.from(next) : prev
+    })
+  }, [folders])
+
+  const expandedSet = useMemo(() => new Set(expandedFolders), [expandedFolders])
+  const folderTree = useMemo(() => buildFolderTree(folders, scripts, normalizedQuery), [folders, scripts, normalizedQuery])
+  const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
+  const folderSelectOptions = useMemo(() => [{ id: '', label: 'Ungrouped' }, ...folderOptions], [folderOptions])
+  const totalVisibleScripts = useMemo(
+    () => folderTree.reduce((sum, node) => sum + node.totalScripts, 0),
+    [folderTree],
+  )
 
   useEffect(() => {
     if (!scripts.length) {
@@ -51,20 +100,6 @@ export function ScriptWorkspace() {
   const activeScript = scripts.find((script) => script.id === selectedId) ?? null
   const pendingDeleteScript = scripts.find((script) => script.id === pendingDeleteId) ?? null
 
-  const visibleScripts = useMemo(() => {
-    const normalized = query.trim().toLowerCase()
-    let list = [...scripts].sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
-    if (normalized) {
-      list = list.filter((script) =>
-        [script.name, script.description, script.language, script.origin]
-          .join(' ')
-          .toLowerCase()
-          .includes(normalized),
-      )
-    }
-    return list
-  }, [query, scripts])
-
   const isDirty = useMemo(() => {
     if (!activeScript || !draft) {
       return false
@@ -73,12 +108,13 @@ export function ScriptWorkspace() {
       activeScript.name !== draft.name ||
       activeScript.description !== draft.description ||
       activeScript.language !== draft.language ||
-      activeScript.content !== draft.content
+      activeScript.content !== draft.content ||
+      activeScript.folderId !== draft.folderId
     )
   }, [activeScript, draft])
 
   const handleCreate = async () => {
-    const script = await createScript()
+    const script = await createScript(activeScript ? { folderId: activeScript.folderId ?? null } : undefined)
     setSelectedId(script.id)
     setPendingDeleteId(null)
   }
@@ -146,6 +182,110 @@ export function ScriptWorkspace() {
   const hasScripts = scripts.length > 0
   const statusLabel = mutation ? `${mutation.type}…` : isDirty ? 'Unsaved changes' : 'Synced'
 
+  const toggleFolder = (id: string) => {
+    setExpandedFolders((prev) =>
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
+    )
+  }
+
+  const handleFolderSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const trimmed = folderNameInput.trim()
+    if (!trimmed) {
+      return
+    }
+    const parentId = folderParentInput === TOP_LEVEL_FOLDER_VALUE ? null : folderParentInput
+    const folder = await createFolder({ name: trimmed, parentId })
+    setFolderNameInput('')
+    setFolderParentInput(TOP_LEVEL_FOLDER_VALUE)
+    setCreatingFolder(false)
+    setExpandedFolders((prev) => [...prev, folder.id])
+  }
+
+  const cancelFolderCreation = () => {
+    setCreatingFolder(false)
+    setFolderNameInput('')
+    setFolderParentInput(TOP_LEVEL_FOLDER_VALUE)
+  }
+
+  const renderTree = (nodes: FolderTreeNode[], depth = 0): JSX.Element[] =>
+    nodes
+      .map((node) => {
+        const nodeId = node.folder?.id ?? UNGROUPED_FOLDER_KEY
+        const label = node.folder?.name ?? 'Ungrouped'
+        const isExpanded = expandedSet.has(nodeId)
+        const hasChildren = node.children.length > 0
+        const showChildren = isExpanded && hasChildren
+        const showScripts = isExpanded && node.scripts.length > 0
+        const isEmpty = node.totalScripts === 0 && normalizedQuery.length > 0
+        if (node.folder && isEmpty) {
+          return null
+        }
+        return (
+          <li key={`${nodeId}-${depth}`} className="scripts__tree-item">
+            <div className="scripts__folder" style={{ paddingLeft: `${depth * 12}px` }}>
+              {(hasChildren || node.scripts.length > 0) && (
+                <button
+                  type="button"
+                  className="scripts__folder-toggle"
+                  onClick={() => toggleFolder(nodeId)}
+                  aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${label}`}
+                >
+                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </button>
+              )}
+              <Folder size={16} aria-hidden />
+              <div>
+                <strong>{label}</strong>
+                <span>{node.totalScripts} {node.totalScripts === 1 ? 'script' : 'scripts'}</span>
+              </div>
+            </div>
+            {showScripts && (
+              <ul className="scripts__tree scripts__tree--scripts" role="group">
+                {node.scripts.map((script) => (
+                  <li key={script.id} className="scripts__script-item">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedId(script.id)
+                        setPendingDeleteId(null)
+                      }}
+                      className={`scripts__list-item${selectedId === script.id ? ' is-selected' : ''}`}
+                    >
+                      <div>
+                        <strong>{script.name}</strong>
+                        <p>{script.description}</p>
+                      </div>
+                      <div className="scripts__list-meta">
+                        <span className={`scripts__pill scripts__pill--${script.language}`}>
+                          {scriptLanguageCatalog[script.language].label}
+                        </span>
+                        <span className="scripts__pill scripts__pill--muted">{script.origin}</span>
+                        <time>{formatUpdatedAt(script.updatedAt)}</time>
+                      </div>
+                    </button>
+                    <div className="scripts__list-actions">
+                      <button type="button" className="text" onClick={() => handleClone(script.id)} aria-label={`Clone ${script.name}`}>
+                        <Copy size={16} />
+                      </button>
+                      <button type="button" className="text" onClick={() => requestDelete(script.id)} aria-label={`Delete ${script.name}`}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {showChildren && (
+              <ul className="scripts__tree" role="group">
+                {renderTree(node.children, depth + 1)}
+              </ul>
+            )}
+          </li>
+        )
+      })
+      .filter((item): item is JSX.Element => Boolean(item))
+
   return (
     <div className="scripts__workspace" role="region" aria-label="Scripts workspace">
       <div className="scripts__panel scripts__panel--list">
@@ -167,6 +307,10 @@ export function ScriptWorkspace() {
               <Plus size={16} />
               <span>New script</span>
             </button>
+            <button type="button" className="ghost" onClick={() => setCreatingFolder(true)}>
+              <FolderPlus size={16} />
+              <span>New folder</span>
+            </button>
           </div>
         </div>
 
@@ -176,41 +320,40 @@ export function ScriptWorkspace() {
           </p>
         )}
 
-        <ul className="scripts__list" role="list">
-          {visibleScripts.map((script) => (
-            <li key={script.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedId(script.id)
-                  setPendingDeleteId(null)
-                }}
-                className={`scripts__list-item${selectedId === script.id ? ' is-selected' : ''}`}
-              >
-                <div>
-                  <strong>{script.name}</strong>
-                  <p>{script.description}</p>
-                </div>
-                <div className="scripts__list-meta">
-                  <span className={`scripts__pill scripts__pill--${script.language}`}>
-                    {scriptLanguageCatalog[script.language].label}
-                  </span>
-                  <span className="scripts__pill scripts__pill--muted">{script.origin}</span>
-                  <time>{formatUpdatedAt(script.updatedAt)}</time>
-                </div>
+        {creatingFolder && (
+          <form className="scripts__folder-form" onSubmit={handleFolderSubmit}>
+            <label>
+              Folder name
+              <input value={folderNameInput} onChange={(event) => setFolderNameInput(event.target.value)} />
+            </label>
+            {folderOptions.length > 0 && (
+              <label>
+                Parent folder
+                <select value={folderParentInput} onChange={(event) => setFolderParentInput(event.target.value)}>
+                  <option value={TOP_LEVEL_FOLDER_VALUE}>Top level</option>
+                  {folderOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <div className="scripts__folder-form-actions">
+              <button type="button" className="text" onClick={cancelFolderCreation}>
+                Cancel
               </button>
-              <div className="scripts__list-actions">
-                <button type="button" className="text" onClick={() => handleClone(script.id)} aria-label={`Clone ${script.name}`}>
-                  <Copy size={16} />
-                </button>
-                <button type="button" className="text" onClick={() => requestDelete(script.id)} aria-label={`Delete ${script.name}`}>
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </li>
-          ))}
+              <button type="submit" className="primary" disabled={!folderNameInput.trim()}>
+                Create folder
+              </button>
+            </div>
+          </form>
+        )}
+
+        <ul className="scripts__tree" role="tree">
+          {renderTree(folderTree)}
         </ul>
-        {!visibleScripts.length && (
+        {!totalVisibleScripts && (
           <div className="scripts__empty">
             <p>No scripts match “{query}”.</p>
             <button type="button" className="text" onClick={() => setQuery('')}>
@@ -283,6 +426,26 @@ export function ScriptWorkspace() {
                   {languageOptions.map(([value, meta]) => (
                     <option key={value} value={value}>
                       {meta.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Folder
+                <select
+                  value={draft.folderId ?? ''}
+                  onChange={(event) =>
+                    setDraft((prev) =>
+                      prev && {
+                        ...prev,
+                        folderId: event.target.value ? event.target.value : null,
+                      },
+                    )
+                  }
+                >
+                  {folderSelectOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
@@ -365,6 +528,7 @@ const toDraft = (script: Script): Draft => ({
   language: script.language,
   content: script.content,
   origin: script.origin,
+  folderId: script.folderId,
 })
 
 const formatUpdatedAt = (iso: string) => {

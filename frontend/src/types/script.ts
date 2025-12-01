@@ -10,6 +10,7 @@ export interface Script {
   content: string
   updatedAt: string
   origin: ScriptOrigin
+  folderId: string | null
 }
 
 export interface ScriptInput {
@@ -18,9 +19,24 @@ export interface ScriptInput {
   language: ScriptLanguage
   content: string
   origin?: ScriptOrigin
+  folderId?: string | null
 }
 
 export type ScriptUpdate = Partial<Omit<Script, 'id'>>
+
+export interface ScriptFolder {
+  id: string
+  name: string
+  parentId: string | null
+  updatedAt: string
+}
+
+export interface ScriptFolderInput {
+  name: string
+  parentId: string | null
+}
+
+export type ScriptFolderUpdate = Partial<Omit<ScriptFolder, 'id'>>
 
 export const scriptLanguageCatalog: Record<ScriptLanguage, { label: string; defaultSnippet: string }> = {
   bash: {
