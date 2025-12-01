@@ -1,4 +1,4 @@
-export type AuthProviderType = 'local' | 'gmail'
+export type AuthProviderType = 'local'
 
 export interface AuthUser {
   id: string

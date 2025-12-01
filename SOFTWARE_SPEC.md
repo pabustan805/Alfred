@@ -5,7 +5,7 @@ Alfred simplifies cron management through a modern web interface with AI validat
 
 ## Functional Requirements
 - UI inspired by apple.com with emphasis on clean, elegant design.
-- Authentication supporting email/password accounts plus one-click Gmail login.
+- Authentication supporting email/password accounts.
 - Wizard workflow for guided cron creation.
 - Integrated script editor for manual editing and advanced customization.
 - AI validation of cron scripts to prevent syntax errors and suggest corrections.
@@ -24,7 +24,7 @@ Alfred simplifies cron management through a modern web interface with AI validat
 - **Database**: PostgreSQL storing scripts, schedules, execution metadata, and audit logs.
 - **AI Module**: Python microservice or external API providing cron validation and suggestions.
 - **Scheduler**: Cron-like service running on the backend, integrated with a job queue for reliable execution.
-- **Identity provider**: Integrates with Google OAuth for Gmail-based sign-in alongside first-party credential storage.
+- **Identity provider**: First-party credential storage using secure email/password authentication.
 
 ### Diagram Description
 ```
@@ -36,7 +36,7 @@ Alfred simplifies cron management through a modern web interface with AI validat
 ```
 
 ## User Workflows
-0. **Signing in**: User enters email/password or selects an approved Gmail identity. Successful authentication unlocks the dashboard, while failures return inline error feedback.
+0. **Signing in**: User enters email/password. Successful authentication unlocks the dashboard, while failures return inline error feedback.
 1. **Creating a script via wizard**: User answers guided questions, selects frequency, commands, and scheduling options. Wizard generates a cron expression and script metadata, sends to backend for storage and validation.
 2. **Editing a script via editor**: From script list, user opens editor for direct modifications. Edits trigger AI validation before saving changes.
 3. **Executing a script immediately**: User triggers manual execution from dashboard; backend queues job, runs script, and records logs.

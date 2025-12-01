@@ -9,7 +9,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 
 ## Phase 1.5: Authentication Access Layer (✅ Completed)
 - [x] Add email/password registration and sign-in with secure session persistence.
-- [x] Provide Gmail quick-login shortcuts for approved workspace accounts.
+- [x] Simplify access to email/password only (removed Gmail quick-login shortcuts on Dec 1, 2025).
 - [x] Gate the dashboard behind authentication with new unit and e2e coverage.
 
 ## Phase 2: Script Management Core (✅ Updated Dec 1, 2025)

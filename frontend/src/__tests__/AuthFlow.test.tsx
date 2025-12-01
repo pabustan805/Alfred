@@ -86,17 +86,14 @@ describe('AuthGate', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
-  it('allows Gmail quick login with one tap', async () => {
-    const user = userEvent.setup()
+  it('does not render Gmail quick login shortcuts', () => {
     renderWithProvider(
       <AuthGate>
         <Protected />
       </AuthGate>,
     )
 
-    await user.click(screen.getByRole('button', { name: /continue as automation ops/i }))
-
-    expect(await screen.findByTestId('protected')).toBeVisible()
+    expect(screen.queryByRole('button', { name: /continue as/i })).toBeNull()
   })
 })
 

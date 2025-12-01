@@ -1139,41 +1139,6 @@ select:focus {
   font-weight: 600;
 }
 
-.auth-divider {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--panel-border);
-}
-
-.auth-gmail {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.auth-gmail__button {
-  justify-content: space-between;
-  width: 100%;
-}
-
-.auth-gmail__button strong {
-  display: block;
-}
-
-.auth-gmail__button span {
-  color: var(--text-muted);
-  font-weight: 400;
-}
 
 .auth-loading {
   margin: 0;

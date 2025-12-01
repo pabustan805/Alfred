@@ -1,12 +1,22 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 const wizardRegion = 'Cron creation wizard'
 
 test.describe('Alfred authentication and workspace', () => {
-  test('supports Gmail quick login and schedules cron jobs from dedicated view', async ({ page }) => {
+  const registerAndEnterWorkspace = async (page: Page, profile: { name: string; email: string }) => {
     await page.goto('/')
+    await page.getByRole('tab', { name: /register/i }).click()
+    await page.getByLabel('Full name').fill(profile.name)
+    await page.getByLabel('Work email').fill(profile.email)
+    await page.getByLabel('Password').fill('StrongPass1!')
+    await page.getByRole('button', { name: /create account/i }).click()
+  }
 
-    await page.getByRole('button', { name: /continue as automation ops/i }).click()
+  test('registers and schedules cron jobs from dedicated view', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
 
     await expect(page.getByRole('heading', { name: 'Alfred' })).toBeVisible()
     await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
@@ -55,13 +65,10 @@ test.describe('Alfred authentication and workspace', () => {
   })
 
   test('registers email/password users and shows profile details', async ({ page }) => {
-    await page.goto('/')
-
-    await page.getByRole('tab', { name: /register/i }).click()
-    await page.getByLabel('Full name').fill('QA Operator')
-    await page.getByLabel('Work email').fill('qa.operator@example.com')
-    await page.getByLabel('Password').fill('strongPass1')
-    await page.getByRole('button', { name: /create account/i }).click()
+    await registerAndEnterWorkspace(page, {
+      name: 'QA Operator',
+      email: 'qa.operator@example.com',
+    })
 
     const topbar = page.getByRole('banner', { name: 'Workspace header' })
     await expect(topbar.getByText('QA Operator')).toBeVisible()
@@ -72,9 +79,10 @@ test.describe('Alfred authentication and workspace', () => {
   })
 
   test('manages scripts in the editor workspace', async ({ page }) => {
-    await page.goto('/')
-
-    await page.getByRole('button', { name: /continue as automation ops/i }).click()
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
 
     await page.getByRole('link', { name: /scripts/i }).click()
 

@@ -1,17 +1,15 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
-import { authService, type GmailProfile } from './service'
+import { authService } from './service'
 import type { AuthUser, Credentials, RegistrationPayload } from './types'
 
 type AuthContextValue = {
   user: AuthUser | null
   isReady: boolean
   error: string | null
-  gmailAccounts: GmailProfile[]
   signUp: (payload: RegistrationPayload) => AuthUser
   signIn: (payload: Credentials) => AuthUser
-  loginWithGmail: (profile: GmailProfile) => AuthUser
   signOut: () => void
   clearError: () => void
 }
@@ -43,7 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = runAction(authService.register)
   const signIn = runAction(authService.signIn)
-  const loginWithGmail = runAction(authService.loginWithGmail)
 
   const signOut = () => {
     authService.signOut()
@@ -53,16 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = () => setError(null)
 
-  const gmailAccounts = useMemo(() => authService.getAvailableGmailAccounts(), [])
-
   const value: AuthContextValue = {
     user,
     isReady,
     error,
-    gmailAccounts,
     signUp,
     signIn,
-    loginWithGmail,
     signOut,
     clearError,
   }

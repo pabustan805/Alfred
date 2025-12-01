@@ -1,6 +1,5 @@
 import { type ChangeEvent, type FormEvent, type ReactNode, useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import type { GmailProfile } from '../auth/service'
 
 type AuthMode = 'signin' | 'register'
 
@@ -37,16 +36,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
 }
 
 function AuthPanel() {
-  const { signIn, signUp, loginWithGmail, gmailAccounts, error, clearError } = useAuth()
+  const { signIn, signUp, error, clearError } = useAuth()
   const [mode, setMode] = useState<AuthMode>('signin')
   const [form, setForm] = useState<FormState>(initialState)
   const [busy, setBusy] = useState(false)
 
   const benefits = useMemo(
     () => [
-      'Single sign-on ready with Gmail',
       'Granular access controls and audits',
       'End-to-end encryption for secrets',
+      'Workspace-scoped email access policies',
     ],
     [],
   )
@@ -79,17 +78,6 @@ function AuthPanel() {
     }
   }
 
-  const handleGmail = async (profile: GmailProfile) => {
-    setBusy(true)
-    try {
-      await Promise.resolve(loginWithGmail(profile))
-    } catch (err) {
-      console.warn('Gmail login failed', err)
-    } finally {
-      setBusy(false)
-    }
-  }
-
   const isRegister = mode === 'register'
 
   return (
@@ -98,8 +86,7 @@ function AuthPanel() {
         <p className="pill">New · Secure workspaces</p>
         <h1>Secure access to Alfred</h1>
         <p>
-          Authenticate with your company email or trusted Gmail account to orchestrate cron
-          automations with confidence.
+          Authenticate with your company email to orchestrate cron automations with confidence.
         </p>
         <ul className="auth-benefits">
           {benefits.map((benefit) => (
@@ -183,26 +170,6 @@ function AuthPanel() {
           </button>
         </form>
 
-        <div className="auth-divider" role="presentation">
-          <span>or</span>
-        </div>
-
-        <div className="auth-gmail" role="group" aria-label="Gmail login options">
-          {gmailAccounts.map((account) => (
-            <button
-              key={account.email}
-              type="button"
-              className="ghost auth-gmail__button"
-              onClick={() => handleGmail(account)}
-              disabled={busy}
-            >
-              <div>
-                <strong>Continue as {account.name}</strong>
-                <span>{account.email}</span>
-              </div>
-            </button>
-          ))}
-        </div>
       </div>
     </section>
   )
