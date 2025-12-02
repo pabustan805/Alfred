@@ -1,9 +1,36 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { ScriptsProvider } from '../scripts/ScriptContext'
 import { ScriptWorkspace } from '../components/ScriptWorkspace'
 import type { Script, ScriptFolder } from '../types/script'
+
+vi.mock('../ai/reviewer', () => ({
+  runAiReview: vi.fn(),
+}))
+
+import type { AIReviewResult } from '../ai/reviewer'
+import { runAiReview } from '../ai/reviewer'
+
+const mockAiResult: AIReviewResult = {
+  scriptName: 'Edge patcher',
+  language: 'bash',
+  summary: 'AI review: Edge patcher looks solid (78% confidence).',
+  score: 0.78,
+  metrics: {
+    maintainability: 0.8,
+    efficiency: 0.75,
+    safety: 0.65,
+    lengthScore: 0.7,
+    commentDensity: 0.4,
+    dangerousCommandRatio: 0.1,
+  },
+  warnings: ['No critical risks detected. Keep following best practices.'],
+  suggestions: ['Add inline comments to explain complex steps or parameter choices.'],
+  timestamp: '2025-12-02T00:00:00.000Z',
+}
+
+const mockedRunAiReview = vi.mocked(runAiReview)
 
 const fixture: Script = {
   id: 'script-fixture',
@@ -44,8 +71,18 @@ const createDataTransfer = () => {
   } satisfies DataTransfer
 }
 
+beforeEach(() => {
+  mockedRunAiReview.mockImplementation(
+    () =>
+      new Promise<AIReviewResult>((resolve) => {
+        setTimeout(() => resolve(mockAiResult), 0)
+      }),
+  )
+})
+
 afterEach(() => {
   window.localStorage.clear()
+  mockedRunAiReview.mockClear()
 })
 
 describe('ScriptWorkspace', () => {
@@ -85,6 +122,22 @@ describe('ScriptWorkspace', () => {
     await user.click(screen.getByRole('button', { name: /confirm delete/i }))
 
     await waitFor(() => expect(screen.getByText(/No scripts yet/i)).toBeVisible())
+  })
+
+  it('runs AI review and renders insights panel', async () => {
+    const user = userEvent.setup()
+    renderWorkspace()
+
+    const button = await screen.findByRole('button', { name: /ai review/i })
+    await user.click(button)
+
+    await waitFor(() => expect(screen.getByTestId('ai-review-score')).toHaveTextContent('78'))
+    expect(screen.getByText(/AI review: Edge patcher looks solid/)).toBeVisible()
+    expect(screen.getByText(/No critical risks detected/)).toBeVisible()
+    expect(screen.getByText(/Add inline comments/)).toBeVisible()
+    expect(mockedRunAiReview).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Edge patcher', language: 'bash' }),
+    )
   })
 
   it('moves scripts between folders via drag and drop', async () => {

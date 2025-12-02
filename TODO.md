@@ -21,9 +21,9 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Introduce sortable folder pane (title/created date/tag) with toolbar toggle (✅ Dec 2, 2025).
 - [x] Expand script workspace language support to Ruby, Perl, and Groovy with editor + test coverage (✅ Dec 2, 2025).
 
-## Phase 3: AI Integration
-- Add AI validation for cron scripts.
-- Provide error handling and actionable suggestions for invalid scripts.
+## Phase 3: AI Integration (✅ Dec 2, 2025)
+- [x] Add AI validation for cron scripts, including a scripts-page AI Review button powered by the in-app reviewer service with logging.
+- [x] Provide error handling, actionable suggestions, and insights modal + e2e/unit coverage for the AI review results.
 
 ## Phase 4: Logging & Audit Trail
 - Implement logging for every script execution.

@@ -137,6 +137,14 @@ test.describe('Alfred authentication and workspace', () => {
     await expect(scriptItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
     await expect(copyRow).toHaveCount(0)
 
+    const aiReviewButton = workspace.getByRole('button', { name: /ai review/i })
+    await aiReviewButton.click()
+    const aiPanel = workspace.getByTestId('ai-review-panel')
+    await expect(aiPanel).toBeVisible()
+    const score = aiPanel.getByTestId('ai-review-score')
+    await expect(score).toBeVisible()
+    await expect(aiPanel).toContainText(/AI review/i)
+
     const folderFullscreen = workspace.getByRole('button', { name: /enter folder pane fullscreen/i })
     await folderFullscreen.click()
     await expect(workspace).toHaveClass(/is-folder-fullscreen/)

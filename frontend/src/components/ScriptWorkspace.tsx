@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   ChangeEvent,
   DragEvent as ReactDragEvent,
@@ -31,6 +31,10 @@ import {
   Maximize2,
   Minimize2,
   ArrowUpDown,
+  Sparkles,
+  AlertTriangle,
+  Info,
+  X,
 } from 'lucide-react'
 import type { Script, ScriptLanguage, ScriptFolder } from '../types/script'
 import { scriptLanguageCatalog } from '../types/script'
@@ -43,9 +47,16 @@ import {
   type ScriptSortField,
 } from '../scripts/folderUtils'
 import { useScripts } from '../scripts/ScriptContext'
+import { runAiReview } from '../ai/reviewer'
+import type { AIReviewResult } from '../ai/reviewer'
 
 type Draft = Omit<Script, 'id' | 'updatedAt' | 'createdAt' | 'tags'>
 
+type AiReviewState =
+  | { status: 'idle'; result: null; error: null }
+  | { status: 'loading'; result: null; error: null }
+  | { status: 'success'; result: AIReviewResult; error: null }
+  | { status: 'error'; result: null; error: string }
 
 const languageExtensions: Record<ScriptLanguage, Extension> = {
   bash: StreamLanguage.define(shell),
@@ -108,6 +119,9 @@ export function ScriptWorkspace() {
   const [creatingFolder, setCreatingFolder] = useState(false)
   const [folderNameInput, setFolderNameInput] = useState('')
   const [folderParentInput, setFolderParentInput] = useState<string>(TOP_LEVEL_FOLDER_VALUE)
+  const [aiReviewState, setAiReviewState] = useState<AiReviewState>({ status: 'idle', result: null, error: null })
+  const [isAiPanelVisible, setIsAiPanelVisible] = useState(false)
+  const activeScriptIdRef = useRef<string | null>(selectedId)
   const [folderPendingDelete, setFolderPendingDelete] = useState<{
     folder: ScriptFolder
     totalScripts: number
@@ -136,6 +150,12 @@ export function ScriptWorkspace() {
   const sortMenuRef = useRef<HTMLDivElement | null>(null)
 
   const normalizedQuery = query.trim().toLowerCase()
+
+  useEffect(() => {
+    activeScriptIdRef.current = selectedId
+    setAiReviewState({ status: 'idle', result: null, error: null })
+    setIsAiPanelVisible(false)
+  }, [selectedId])
 
   useEffect(() => {
     setExpandedFolders((prev) => {
@@ -213,13 +233,13 @@ export function ScriptWorkspace() {
   }, [fullscreenTarget])
 
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+    function handleKeydown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setFullscreenTarget(null)
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeydown)
+    return () => window.removeEventListener('keydown', handleKeydown)
   }, [])
 
   const workspaceClasses = ['scripts__workspace']
@@ -324,6 +344,39 @@ export function ScriptWorkspace() {
     await updateScript(activeScript.id, draft)
     setPendingDeleteId(null)
   }
+
+  const handleAiReview = useCallback(async () => {
+    if (!activeScript || !draft) {
+      return
+    }
+    const currentScriptId = activeScript.id
+    setIsAiPanelVisible(true)
+    setAiReviewState({ status: 'loading', result: null, error: null })
+    try {
+      const result = await runAiReview({
+        name: draft.name,
+        description: draft.description,
+        content: draft.content,
+        language: draft.language,
+      })
+      if (activeScriptIdRef.current !== currentScriptId) {
+        return
+      }
+      setAiReviewState({ status: 'success', result, error: null })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to complete AI review.'
+      if (activeScriptIdRef.current !== currentScriptId) {
+        return
+      }
+      setAiReviewState({ status: 'error', result: null, error: message })
+    }
+  }, [activeScript, draft])
+
+  const closeAiPanel = useCallback(() => {
+    setIsAiPanelVisible(false)
+  }, [])
+
+  const aiPanelId = 'ai-review-panel-title'
 
   const handleClone = async (targetId: string) => {
     const clone = await cloneScript(targetId)
@@ -997,6 +1050,16 @@ export function ScriptWorkspace() {
                 <button
                   type="button"
                   className="ghost"
+                  onClick={handleAiReview}
+                  disabled={Boolean(mutation) || !activeScript || aiReviewState.status === 'loading'}
+                  aria-label="Run AI review"
+                >
+                  <Sparkles size={16} />
+                  <span>AI Review</span>
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
                   onClick={() => activeScript && handleClone(activeScript.id)}
                   disabled={Boolean(mutation) || !activeScript}
                   aria-label="Clone selected script"
@@ -1114,6 +1177,86 @@ export function ScriptWorkspace() {
                 Save changes
               </button>
             </div>
+
+            {isAiPanelVisible && (
+              <section
+                className="scripts__ai-panel"
+                role="region"
+                aria-labelledby={aiPanelId}
+                data-testid="ai-review-panel"
+              >
+                <header className="scripts__ai-panel__header">
+                  <div>
+                    <p>AI insights</p>
+                    <strong id={aiPanelId}>{draft.name || 'Current script'}</strong>
+                  </div>
+                  <button type="button" className="scripts__ai-panel__close" onClick={closeAiPanel} aria-label="Dismiss AI review">
+                    <X size={16} />
+                  </button>
+                </header>
+                <div className="scripts__ai-panel__body" aria-live="polite">
+                  {aiReviewState.status === 'idle' && <p className="scripts__ai-panel__muted">Trigger AI review to analyze this script.</p>}
+                  {aiReviewState.status === 'loading' && (
+                    <div className="scripts__ai-panel__status" data-testid="ai-review-loading">
+                      <Sparkles size={16} />
+                      <span>Analyzing script for safety, efficiency, and maintainability…</span>
+                    </div>
+                  )}
+                  {aiReviewState.status === 'error' && (
+                    <div className="scripts__ai-panel__status scripts__ai-panel__status--error" role="alert">
+                      <AlertTriangle size={16} />
+                      <div>
+                        <strong>AI review failed</strong>
+                        <p>{aiReviewState.error}</p>
+                      </div>
+                    </div>
+                  )}
+                  {aiReviewState.status === 'success' && aiReviewState.result && (
+                    <div className="scripts__ai-panel__content">
+                      <div className="scripts__ai-panel__summary">
+                        <p>{aiReviewState.result.summary}</p>
+                        <span className="scripts__ai-panel__score" data-testid="ai-review-score">
+                          {(aiReviewState.result.score * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="scripts__ai-panel__metrics">
+                        {Object.entries(aiReviewState.result.metrics).map(([label, value]) => (
+                          <div key={label} className="scripts__ai-panel__metric">
+                            <span>{label.replace(/([A-Z])/g, ' $1')}</span>
+                            <strong>{(value * 100).toFixed(0)}%</strong>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="scripts__ai-panel__lists">
+                        <section>
+                          <div className="scripts__ai-panel__list-heading">
+                            <AlertTriangle size={16} />
+                            <span>Warnings</span>
+                          </div>
+                          <ul>
+                            {aiReviewState.result.warnings.map((warning, index) => (
+                              <li key={`warning-${index}`}>{warning}</li>
+                            ))}
+                          </ul>
+                        </section>
+                        <section>
+                          <div className="scripts__ai-panel__list-heading">
+                            <Info size={16} />
+                            <span>Suggestions</span>
+                          </div>
+                          <ul>
+                            {aiReviewState.result.suggestions.map((suggestion, index) => (
+                              <li key={`suggestion-${index}`}>{suggestion}</li>
+                            ))}
+                          </ul>
+                        </section>
+                      </div>
+                      <small className="scripts__ai-panel__timestamp">Reviewed {formatUpdatedAt(aiReviewState.result.timestamp)}</small>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
 
             {pendingDeleteScript && (
               <div className="scripts__confirm" role="alertdialog" aria-labelledby="delete-title">
