@@ -25,7 +25,7 @@ describe('SchedulesPage', () => {
     render(<SchedulesPage jobs={sampleJobs} />)
 
     expect(screen.getByRole('heading', { name: 'Schedules' })).toBeVisible()
-    expect(screen.getByRole('heading', { name: 'Scheduled automations' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Scheduled jobs' })).toBeVisible()
   })
 
   it('opens and closes the cron creation wizard modal', async () => {

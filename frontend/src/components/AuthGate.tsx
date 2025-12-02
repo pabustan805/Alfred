@@ -85,9 +85,7 @@ function AuthPanel() {
       <div className="auth-hero">
         <p className="pill">New · Secure workspaces</p>
         <h1>Secure access to Alfred</h1>
-        <p>
-          Authenticate with your company email to orchestrate cron automations with confidence.
-        </p>
+        <p>Authenticate with your company email to manage cron jobs with confidence.</p>
         <ul className="auth-benefits">
           {benefits.map((benefit) => (
             <li key={benefit}>{benefit}</li>

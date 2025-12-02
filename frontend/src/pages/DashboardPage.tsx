@@ -20,7 +20,7 @@ export function DashboardPage({ jobs }: DashboardPageProps) {
             Export snapshot
           </button>
           <button type="button" className="primary">
-            Launch automation
+            Launch workflow
           </button>
         </div>
       </header>

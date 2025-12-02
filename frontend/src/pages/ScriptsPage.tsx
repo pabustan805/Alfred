@@ -7,7 +7,7 @@ export function ScriptsPage() {
         <div>
           <p>Advanced control center</p>
           <h1>Scripts</h1>
-          <span>Author, review, and orchestrate every automation artifact in one canvas.</span>
+          <span>Author, review, and orchestrate every script artifact in one canvas.</span>
         </div>
         <div className="page-hero__actions">
           <div className="page-hero__meta">

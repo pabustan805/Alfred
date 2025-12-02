@@ -145,7 +145,7 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
         const newScript: Script = {
           id: nanoid(),
           name: input?.name ?? 'Untitled script',
-          description: input?.description ?? 'Describe what this automation accomplishes.',
+          description: input?.description ?? 'Describe what this script accomplishes.',
           language,
           content,
           origin,

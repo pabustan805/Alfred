@@ -45,7 +45,7 @@ export const scriptLanguageCatalog: Record<ScriptLanguage, { label: string; defa
   },
   python: {
     label: 'Python',
-    defaultSnippet: "#!/usr/bin/env python3\nif __name__ == '__main__':\n    print('Ready to automate')\n",
+    defaultSnippet: "#!/usr/bin/env python3\nif __name__ == '__main__':\n    print('Ready to run')\n",
   },
   node: {
     label: 'Node.js',
