@@ -11,7 +11,7 @@ export function ScriptsPage() {
         </div>
         <div className="page-hero__actions">
           <div className="page-hero__meta">
-            <strong>Multi-language</strong>
+            <strong>Multi-language&nbsp;</strong>
             <span>bash · python · node</span>
           </div>
         </div>
