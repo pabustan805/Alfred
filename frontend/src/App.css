@@ -1016,6 +1016,13 @@ body.scripts-fullscreen-active {
   align-items: center;
 }
 
+.scripts__editor-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
 .scripts__status {
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
