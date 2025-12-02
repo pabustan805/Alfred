@@ -10,7 +10,7 @@ const getInitials = (name: string) =>
     .join('') || 'AL'
 
 export function TopBar() {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
 
   return (
     <header className="topbar" aria-label="Workspace header">
@@ -37,9 +37,6 @@ export function TopBar() {
                 <strong>{user.name}</strong>
                 <small>{user.email}</small>
               </div>
-              <button type="button" className="text" onClick={signOut}>
-                Sign out
-              </button>
             </div>
           )}
         </div>

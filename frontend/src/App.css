@@ -145,7 +145,7 @@ main {
 
 .sidebar {
   width: 280px;
-  background: #0f172a;
+  background: #000;
   color: #edf1ff;
   padding: 2.5rem 2rem;
   display: flex;
