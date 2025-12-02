@@ -112,7 +112,7 @@ export function JobTable({
               <td>
                 <span className={`status-pill status-pill--${job.status}`}>{job.status}</span>
               </td>
-              <td>
+              <td className="jobs__priority-cell">
                 <span className={`jobs__priority-chip jobs__priority-chip--${job.priority}`}>
                   <span className="sr-only">{priorityToLabel[job.priority]}</span>
                 </span>
