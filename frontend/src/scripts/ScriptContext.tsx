@@ -141,6 +141,8 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
       const language = input?.language ?? 'bash'
       const content = input?.content ?? scriptLanguageCatalog[language].defaultSnippet
       const origin = input?.origin ?? 'manual'
+      const timestamp = input?.createdAt ?? new Date().toISOString()
+      const tags = Array.isArray(input?.tags) ? input?.tags ?? [] : []
       const result = await runMutation<Script>({ type: 'create' }, (prev) => {
         const newScript: Script = {
           id: nanoid(),
@@ -150,7 +152,9 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
           content,
           origin,
           folderId: input?.folderId ?? null,
-          updatedAt: new Date().toISOString(),
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          tags,
         }
         return { next: [newScript, ...prev], result: newScript }
       })
@@ -189,13 +193,16 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
         if (!original) {
           return { next: prev, result: null }
         }
+        const timestamp = new Date().toISOString()
         const clone: Script = {
           ...original,
           id: nanoid(),
           name: `${original.name} copy`,
           description: original.description,
-          updatedAt: new Date().toISOString(),
+          createdAt: timestamp,
+          updatedAt: timestamp,
           origin: 'clone',
+          tags: [...(original.tags ?? [])],
         }
         return { next: [clone, ...prev], result: clone }
       })
@@ -210,16 +217,21 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
         return []
       }
       const result = await runMutation<Script[]>({ type: 'import' }, (prev) => {
-        const imported = payloads.map((item) => ({
-          id: nanoid(),
-          name: item.name,
-          description: item.description,
-          language: item.language,
-          content: item.content,
-          updatedAt: new Date().toISOString(),
-          origin: item.origin ?? 'import',
-          folderId: item.folderId ?? null,
-        }))
+        const imported = payloads.map((item) => {
+          const timestamp = item.createdAt ?? new Date().toISOString()
+          return {
+            id: nanoid(),
+            name: item.name,
+            description: item.description,
+            language: item.language,
+            content: item.content,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            origin: item.origin ?? 'import',
+            folderId: item.folderId ?? null,
+            tags: item.tags ?? [],
+          }
+        })
         return { next: [...imported, ...prev], result: imported }
       })
       return result ?? []

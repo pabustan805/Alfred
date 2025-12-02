@@ -8,9 +8,11 @@ export interface Script {
   description: string
   language: ScriptLanguage
   content: string
+  createdAt: string
   updatedAt: string
   origin: ScriptOrigin
   folderId: string | null
+  tags: string[]
 }
 
 export interface ScriptInput {
@@ -20,6 +22,8 @@ export interface ScriptInput {
   content: string
   origin?: ScriptOrigin
   folderId?: string | null
+  createdAt?: string
+  tags?: string[]
 }
 
 export type ScriptUpdate = Partial<Omit<Script, 'id'>>

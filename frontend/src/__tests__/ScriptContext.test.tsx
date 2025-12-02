@@ -11,7 +11,10 @@ const baseScript: Script = {
   language: 'bash',
   content: 'echo fixture',
   origin: 'manual',
+  createdAt: '2025-11-20T00:00:00.000Z',
   updatedAt: '2025-11-25T00:00:00.000Z',
+  folderId: null,
+  tags: ['fixture'],
 }
 
 function ScriptsHarness({ initialScripts = [] }: { initialScripts?: Script[] }) {

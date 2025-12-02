@@ -27,13 +27,21 @@ import {
   ArrowRightLeft,
   Maximize2,
   Minimize2,
+  ArrowUpDown,
 } from 'lucide-react'
 import type { Script, ScriptLanguage, ScriptFolder } from '../types/script'
 import { scriptLanguageCatalog } from '../types/script'
-import { buildFolderOptions, buildFolderTree, type FolderTreeNode, UNGROUPED_FOLDER_KEY } from '../scripts/folderUtils'
+import {
+  buildFolderOptions,
+  buildFolderTree,
+  type FolderTreeNode,
+  UNGROUPED_FOLDER_KEY,
+  type ScriptSortConfig,
+  type ScriptSortField,
+} from '../scripts/folderUtils'
 import { useScripts } from '../scripts/ScriptContext'
 
-type Draft = Omit<Script, 'id' | 'updatedAt'>
+type Draft = Omit<Script, 'id' | 'updatedAt' | 'createdAt' | 'tags'>
 
 
 const languageExtensions: Record<ScriptLanguage, Extension> = {
@@ -44,6 +52,11 @@ const languageExtensions: Record<ScriptLanguage, Extension> = {
 
 const languageOptions = Object.entries(scriptLanguageCatalog)
 const TOP_LEVEL_FOLDER_VALUE = '__root__'
+const sortFieldOptions: { value: ScriptSortField; label: string }[] = [
+  { value: 'title', label: 'Title' },
+  { value: 'createdAt', label: 'Created date' },
+  { value: 'tag', label: 'Tag' },
+]
 
 export function ScriptWorkspace() {
   const {
@@ -90,6 +103,9 @@ export function ScriptWorkspace() {
   const [draggingScriptId, setDraggingScriptId] = useState<string | null>(null)
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
   const [fullscreenTarget, setFullscreenTarget] = useState<'folders' | 'editor' | null>(null)
+  const [sortConfig, setSortConfig] = useState<ScriptSortConfig>({ field: 'title', direction: 'asc' })
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false)
+  const sortMenuRef = useRef<HTMLDivElement | null>(null)
 
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -119,7 +135,10 @@ export function ScriptWorkspace() {
   const isEditorFullscreen = fullscreenTarget === 'editor'
 
   const expandedSet = useMemo(() => new Set(expandedFolders), [expandedFolders])
-  const folderTree = useMemo(() => buildFolderTree(folders, scripts, normalizedQuery), [folders, scripts, normalizedQuery])
+  const folderTree = useMemo(
+    () => buildFolderTree(folders, scripts, normalizedQuery, sortConfig),
+    [folders, scripts, normalizedQuery, sortConfig],
+  )
   const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
   const folderSelectOptions = useMemo(() => [{ id: '', label: 'Ungrouped' }, ...folderOptions], [folderOptions])
   const folderDeleteDestinationOptions = useMemo(() => {
@@ -481,6 +500,40 @@ export function ScriptWorkspace() {
     )
   }
 
+  const toggleSortMenu = () => {
+    setIsSortMenuOpen((prev) => !prev)
+  }
+
+  const handleSortFieldChange = (field: ScriptSortField) => {
+    setSortConfig((prev) => ({ ...prev, field }))
+  }
+
+  const handleSortDirectionToggle = () => {
+    setSortConfig((prev) => ({ ...prev, direction: prev.direction === 'asc' ? 'desc' : 'asc' }))
+  }
+
+  useEffect(() => {
+    if (!isSortMenuOpen) {
+      return
+    }
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(event.target as Node)) {
+        setIsSortMenuOpen(false)
+      }
+    }
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSortMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isSortMenuOpen])
+
   const handleFolderSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const trimmed = folderNameInput.trim()
@@ -691,6 +744,55 @@ export function ScriptWorkspace() {
               <FolderPlus size={18} />
               <span className="sr-only">New folder</span>
             </button>
+            <div className="scripts__sort-control" ref={sortMenuRef}>
+              <button
+                type="button"
+                className={`scripts__icon-button${isSortMenuOpen ? ' is-active' : ''}`}
+                onClick={toggleSortMenu}
+                aria-haspopup="true"
+                aria-expanded={isSortMenuOpen}
+                aria-label="Sort scripts"
+                title="Sort scripts"
+                data-testid="scripts-sort-button"
+              >
+                <ArrowUpDown size={18} />
+                <span className="sr-only">Sort scripts</span>
+              </button>
+              {isSortMenuOpen && (
+                <div className="scripts__sort-menu" role="menu" aria-label="Sort scripts">
+                  <p className="scripts__sort-heading">Sort by</p>
+                  <div className="scripts__sort-fields">
+                    {sortFieldOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className={`scripts__sort-option${sortConfig.field === option.value ? ' is-selected' : ''}`}
+                        data-testid={`sort-field-${option.value}`}
+                      >
+                        <input
+                          type="radio"
+                          name="scripts-sort-field"
+                          value={option.value}
+                          checked={sortConfig.field === option.value}
+                          onChange={() => handleSortFieldChange(option.value)}
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="scripts__sort-direction">
+                    <span>Direction</span>
+                    <button
+                      type="button"
+                      onClick={handleSortDirectionToggle}
+                      className="scripts__sort-direction-button"
+                      data-testid="sort-direction-button"
+                    >
+                      {sortConfig.direction === 'asc' ? 'Ascending (A → Z)' : 'Descending (Z → A)'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               className={`scripts__icon-button scripts__fullscreen-button${isFolderFullscreen ? ' is-active' : ''}`}

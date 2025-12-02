@@ -26,7 +26,10 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
         </div>
       </header>
 
-      <JobTable jobs={jobs} />
+      <section aria-label="Scheduled automations">
+        <h2>Scheduled automations</h2>
+        <JobTable jobs={jobs} />
+      </section>
 
       {wizardOpen && (
         <div className="modal" role="dialog" aria-modal="true" aria-label="Cron creation wizard">

@@ -159,4 +159,46 @@ test.describe('Alfred authentication and workspace', () => {
     await expect(operationsCount).toHaveText('3')
     await expect(integrationsCount).toHaveText('0')
   })
+
+  test('sorts scripts in the folders pane', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
+
+    await page.getByRole('link', { name: /scripts/i }).click()
+
+    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    const newScriptButton = workspace.getByRole('button', { name: /new script/i })
+    const saveButton = workspace.getByRole('button', { name: /save changes/i })
+    const nameInput = workspace.getByLabel('Script name')
+    const searchInput = workspace.getByPlaceholder('Search scripts').first()
+
+    await newScriptButton.click()
+    await workspace.getByRole('button', { name: /^Untitled script$/i }).first().click()
+    await nameInput.fill('Alpha script')
+    await expect(saveButton).toBeEnabled()
+    await saveButton.click()
+
+    await newScriptButton.click()
+    await workspace.getByRole('button', { name: /^Untitled script$/i }).first().click()
+    await nameInput.fill('Zulu script')
+    await expect(saveButton).toBeEnabled()
+    await saveButton.click()
+
+    await searchInput.fill('script')
+
+    const scriptList = workspace.locator('[data-testid^="script-"] .scripts__script-name')
+    const scriptNames = async () => (await scriptList.allTextContents()).map((text) => text.trim())
+
+    await expect(scriptList).toHaveCount(2)
+    await expect.poll(scriptNames).toEqual(['Alpha script', 'Zulu script'])
+
+    await workspace.getByTestId('scripts-sort-button').click()
+    await workspace.getByTestId('sort-field-createdAt').click()
+    await expect.poll(scriptNames).toEqual(['Alpha script', 'Zulu script'])
+
+    await workspace.getByTestId('sort-direction-button').click()
+    await expect.poll(scriptNames).toEqual(['Zulu script', 'Alpha script'])
+  })
 })

@@ -12,13 +12,15 @@ const fixture: Script = {
   language: 'bash',
   content: '#!/bin/bash\necho "hello"\n',
   origin: 'manual',
+  createdAt: '2025-11-20T00:00:00.000Z',
   updatedAt: '2025-11-25T00:00:00.000Z',
   folderId: null,
+  tags: ['edge'],
 }
 
-const renderWorkspace = (scripts: Script[] = [fixture]) =>
+const renderWorkspace = (scripts: Script[] = [fixture], folders?: ScriptFolder[]) =>
   render(
-    <ScriptsProvider initialScripts={scripts}>
+    <ScriptsProvider initialScripts={scripts} initialFolders={folders}>
       <ScriptWorkspace />
     </ScriptsProvider>,
   )
@@ -142,5 +144,67 @@ describe('ScriptWorkspace', () => {
     expect(editorPane).not.toHaveClass('is-fullscreen')
     expect(workspace).not.toHaveClass('is-editor-fullscreen')
     expect(document.body).not.toHaveClass('scripts-fullscreen-active')
+  })
+
+  it('sorts scripts via the toolbar menu', async () => {
+    const user = userEvent.setup()
+    const scripts: Script[] = [
+      {
+        id: 'script-alpha',
+        name: 'Alpha job',
+        description: 'Alpha description',
+        language: 'bash',
+        content: 'echo alpha',
+        origin: 'manual',
+        folderId: null,
+        createdAt: '2025-11-10T00:00:00.000Z',
+        updatedAt: '2025-11-10T00:00:00.000Z',
+        tags: ['a-tag'],
+      },
+      {
+        id: 'script-zulu',
+        name: 'Zulu job',
+        description: 'Zulu description',
+        language: 'python',
+        content: 'print("zulu")',
+        origin: 'manual',
+        folderId: null,
+        createdAt: '2025-11-05T00:00:00.000Z',
+        updatedAt: '2025-11-05T00:00:00.000Z',
+        tags: ['z-tag'],
+      },
+      {
+        id: 'script-bravo',
+        name: 'Bravo job',
+        description: 'Bravo description',
+        language: 'node',
+        content: "console.log('bravo')",
+        origin: 'manual',
+        folderId: null,
+        createdAt: '2025-11-20T00:00:00.000Z',
+        updatedAt: '2025-11-20T00:00:00.000Z',
+        tags: ['b-tag'],
+      },
+    ]
+
+    renderWorkspace(scripts, [])
+
+    const scriptOrder = () =>
+      screen
+        .getAllByTestId(/script-/i)
+        .map((button) => within(button).getByText(/job/).textContent?.trim())
+
+    await screen.findByTestId('script-script-alpha')
+
+    expect(scriptOrder()).toEqual(['Alpha job', 'Bravo job', 'Zulu job'])
+
+    await user.click(screen.getByTestId('scripts-sort-button'))
+    await user.click(screen.getByTestId('sort-field-createdAt'))
+
+    expect(scriptOrder()).toEqual(['Zulu job', 'Alpha job', 'Bravo job'])
+
+    await user.click(screen.getByTestId('sort-direction-button'))
+
+    expect(scriptOrder()).toEqual(['Bravo job', 'Alpha job', 'Zulu job'])
   })
 })
