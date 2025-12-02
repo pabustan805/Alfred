@@ -20,8 +20,13 @@ export function Sidebar() {
     <aside className="sidebar" aria-label="Primary">
       <div className="sidebar__brand">
         <div className="sidebar__glow" aria-hidden />
-        <h1>Alfred</h1>
-        <p>Intelligent cron orchestration</p>
+        <img
+          className="sidebar__logo"
+          src="/AlfredLogoBlack.jpg"
+          alt="Alfred – Script & Schedule Simplified"
+          width={180}
+          height={180}
+        />
       </div>
 
       <nav className="sidebar__nav" aria-label="Main navigation">
