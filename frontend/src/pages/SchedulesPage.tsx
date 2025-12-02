@@ -14,6 +14,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
   const [editingJob, setEditingJob] = useState<CronJob | null>(null)
   const [editDraft, setEditDraft] = useState<CronJob | null>(null)
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set())
+  const allJobsSelected = jobItems.length > 0 && jobItems.every((job) => selectedJobIds.has(job.id))
 
   useEffect(() => {
     setJobItems(jobs)
@@ -64,6 +65,14 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     })
   }
 
+  const handleToggleSelectAll = () => {
+    if (allJobsSelected) {
+      setSelectedJobIds(new Set())
+      return
+    }
+    setSelectedJobIds(new Set(jobItems.map((job) => job.id)))
+  }
+
   return (
     <section className="schedules" aria-label="Schedules overview">
       <header className="page-hero" aria-label="Schedules hero">
@@ -86,6 +95,8 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
           onEdit={handleEditRequest}
           selectedJobIds={selectedJobIds}
           onToggleSelect={handleToggleSelect}
+          allJobsSelected={allJobsSelected}
+          onToggleSelectAll={handleToggleSelectAll}
         />
       </section>
 

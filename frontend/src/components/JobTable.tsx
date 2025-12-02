@@ -1,10 +1,12 @@
 import type { CronJob } from '../types/cron'
-import { Play, Pause, MoreHorizontal, PencilLine } from 'lucide-react'
+import { Play, Pause, MoreHorizontal, PencilLine, CheckSquare } from 'lucide-react'
 
 interface JobTableProps {
   jobs: CronJob[]
   selectedJobIds: Set<string>
   onToggleSelect: (jobId: string) => void
+  allJobsSelected: boolean
+  onToggleSelectAll: () => void
   onEdit: (job: CronJob) => void
 }
 
@@ -14,7 +16,7 @@ const priorityToLabel: Record<CronJob['priority'], string> = {
   maintenance: 'Maintenance',
 }
 
-export function JobTable({ jobs, selectedJobIds, onToggleSelect, onEdit }: JobTableProps) {
+export function JobTable({ jobs, selectedJobIds, onToggleSelect, allJobsSelected, onToggleSelectAll, onEdit }: JobTableProps) {
   return (
     <section className="jobs" aria-label="Scheduled jobs">
       <header className="jobs__header">
@@ -23,6 +25,10 @@ export function JobTable({ jobs, selectedJobIds, onToggleSelect, onEdit }: JobTa
           <p>Showing {jobs.length} jobs across all clusters</p>
         </div>
         <div className="jobs__actions">
+          <button type="button" className="ghost" onClick={onToggleSelectAll} data-testid="jobs-select-toggle">
+            <CheckSquare size={16} />
+            <span>{allJobsSelected ? 'Deselect all' : 'Select all'}</span>
+          </button>
           <button type="button" className="ghost">
             <Play size={16} />
             <span>Run now</span>
