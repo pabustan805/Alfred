@@ -204,15 +204,15 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
               }}
             >
               <div className="field-grid">
-                <label>
-                  Job name
+                <label className="jobs__field">
+                  <span>Job name</span>
                   <input
                     value={editDraft.name}
                     onChange={(event) => handleEditFieldChange('name', event.target.value)}
                   />
                 </label>
-                <label>
-                  Cluster target
+                <label className="jobs__field">
+                  <span>Cluster target</span>
                   <input
                     value={editDraft.target}
                     onChange={(event) => handleEditFieldChange('target', event.target.value)}
@@ -220,8 +220,8 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
                 </label>
               </div>
 
-              <label className="field">
-                Description
+              <label className="jobs__field jobs__field--stacked">
+                <span>Description</span>
                 <textarea
                   rows={3}
                   value={editDraft.description}
@@ -230,15 +230,15 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
               </label>
 
               <div className="field-grid">
-                <label>
-                  Cron expression
+                <label className="jobs__field">
+                  <span>Cron expression</span>
                   <input
                     value={editDraft.schedule}
                     onChange={(event) => handleEditFieldChange('schedule', event.target.value)}
                   />
                 </label>
-                <label>
-                  Readable cadence
+                <label className="jobs__field">
+                  <span>Readable cadence</span>
                   <input
                     value={editDraft.readableSchedule}
                     onChange={(event) => handleEditFieldChange('readableSchedule', event.target.value)}
@@ -247,15 +247,15 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
               </div>
 
               <div className="field-grid">
-                <label>
-                  Next run window
+                <label className="jobs__field">
+                  <span>Next run window</span>
                   <input
                     value={editDraft.nextRun}
                     onChange={(event) => handleEditFieldChange('nextRun', event.target.value)}
                   />
                 </label>
-                <label>
-                  Command
+                <label className="jobs__field">
+                  <span>Command</span>
                   <input
                     value={editDraft.command}
                     onChange={(event) => handleEditFieldChange('command', event.target.value)}
@@ -264,8 +264,8 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
               </div>
 
               <div className="field-grid">
-                <label>
-                  Status
+                <label className="jobs__field">
+                  <span>Status</span>
                   <select
                     value={editDraft.status}
                     onChange={(event) => handleEditFieldChange('status', event.target.value as CronJob['status'])}
@@ -275,8 +275,8 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
                     <option value="paused">Paused</option>
                   </select>
                 </label>
-                <label>
-                  Priority
+                <label className="jobs__field">
+                  <span>Priority</span>
                   <select
                     value={editDraft.priority}
                     onChange={(event) => handleEditFieldChange('priority', event.target.value as CronJob['priority'])}

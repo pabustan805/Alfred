@@ -1299,6 +1299,39 @@ body.scripts-fullscreen-active {
   padding: 2rem;
 }
 
+.jobs__edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.jobs__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.jobs__field span {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.jobs__field input,
+.jobs__field textarea,
+.jobs__field select {
+  border-radius: 0.65rem;
+  border: 1px solid var(--panel-border);
+  padding: 0.65rem 0.85rem;
+}
+
+.jobs__field--stacked textarea {
+  resize: vertical;
+}
+
 .modal__header {
   display: flex;
   align-items: center;
