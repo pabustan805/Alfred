@@ -23,6 +23,7 @@ import {
   Trash2,
   Search,
   RefreshCw,
+  Play,
   FolderPlus,
   Folder,
   ChevronDown,
@@ -148,6 +149,8 @@ export function ScriptWorkspace() {
   const [sortConfig, setSortConfig] = useState<ScriptSortConfig>(() => loadStoredSortConfig())
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false)
   const sortMenuRef = useRef<HTMLDivElement | null>(null)
+  const [bulkSelection, setBulkSelection] = useState<string[]>([])
+  const [bulkActionFeedback, setBulkActionFeedback] = useState<string | null>(null)
 
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -187,6 +190,23 @@ export function ScriptWorkspace() {
     () => buildFolderTree(folders, scripts, normalizedQuery, sortConfig),
     [folders, scripts, normalizedQuery, sortConfig],
   )
+  const visibleScriptIds = useMemo(() => {
+    const ids: string[] = []
+    const walk = (nodes: FolderTreeNode[]) => {
+      nodes.forEach((node) => {
+        node.scripts.forEach((script) => ids.push(script.id))
+        if (node.children.length) {
+          walk(node.children)
+        }
+      })
+    }
+    walk(folderTree)
+    return ids
+  }, [folderTree])
+  const visibleScriptIdSet = useMemo(() => new Set(visibleScriptIds), [visibleScriptIds])
+  const bulkSelectionSet = useMemo(() => new Set(bulkSelection), [bulkSelection])
+  const bulkSelectionCount = bulkSelection.length
+  const allVisibleSelected = visibleScriptIds.length > 0 && visibleScriptIds.every((id) => bulkSelectionSet.has(id))
   const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
   const folderSelectOptions = useMemo(() => [{ id: '', label: 'Ungrouped' }, ...folderOptions], [folderOptions])
   const folderDeleteDestinationOptions = useMemo(() => {
@@ -241,6 +261,30 @@ export function ScriptWorkspace() {
     window.addEventListener('keydown', handleKeydown)
     return () => window.removeEventListener('keydown', handleKeydown)
   }, [])
+
+  useEffect(() => {
+    setBulkSelection((prev) => prev.filter((id) => scripts.some((script) => script.id === id)))
+  }, [scripts])
+
+  useEffect(() => {
+    if (!bulkActionFeedback) {
+      return
+    }
+    const timeout = window.setTimeout(() => setBulkActionFeedback(null), 3500)
+    return () => window.clearTimeout(timeout)
+  }, [bulkActionFeedback])
+
+  useEffect(() => {
+    setBulkSelection((prev) => prev.filter((id) => scripts.some((script) => script.id === id)))
+  }, [scripts])
+
+  useEffect(() => {
+    if (!bulkActionFeedback) {
+      return
+    }
+    const timeout = window.setTimeout(() => setBulkActionFeedback(null), 3500)
+    return () => window.clearTimeout(timeout)
+  }, [bulkActionFeedback])
 
   const workspaceClasses = ['scripts__workspace']
   if (isFolderFullscreen) {
@@ -396,6 +440,36 @@ export function ScriptWorkspace() {
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id)
+  }
+
+  const toggleScriptSelection = (scriptId: string) => {
+    setBulkSelection((prev) => (prev.includes(scriptId) ? prev.filter((id) => id !== scriptId) : [...prev, scriptId]))
+  }
+
+  const handleToggleSelectVisible = () => {
+    if (!visibleScriptIds.length) {
+      return
+    }
+    if (allVisibleSelected) {
+      setBulkSelection((prev) => prev.filter((id) => !visibleScriptIdSet.has(id)))
+      return
+    }
+    setBulkSelection((prev) => {
+      const next = new Set(prev)
+      visibleScriptIds.forEach((id) => next.add(id))
+      return Array.from(next)
+    })
+  }
+
+  const handleClearBulkSelection = () => {
+    setBulkSelection([])
+  }
+
+  const handleBulkRun = () => {
+    if (bulkSelectionCount < 2) {
+      return
+    }
+    setBulkActionFeedback(`Queued ${bulkSelectionCount} scripts for immediate execution.`)
   }
 
   const collectDescendantIds = (targetId: string) => {
@@ -714,26 +788,37 @@ export function ScriptWorkspace() {
                     className={`scripts__script-item${draggingScriptId === script.id ? ' is-dragging' : ''}`}
                     data-script-id={script.id}
                   >
-                    <span className="scripts__script-index" aria-hidden>
-                      {(scriptIndex + 1).toString().padStart(2, '0')}
-                    </span>
-                    <button
-                      type="button"
-                      draggable
-                      data-script-name={script.name}
-                      data-testid={`script-${script.id}`}
-                      onDragStart={(event) => handleScriptDragStart(event, script.id)}
-                      onDragEnd={handleScriptDragEnd}
-                      onClick={() => {
-                        setSelectedId(script.id)
-                        setPendingDeleteId(null)
-                      }}
-                      className={`scripts__list-item scripts__list-item--compact${selectedId === script.id ? ' is-selected' : ''}`}
-                    >
-                      <div className="scripts__list-primary">
-                        <span className="scripts__script-name">{script.name}</span>
+                    <div className="scripts__script-main">
+                      <span className="scripts__script-index" aria-hidden>
+                        {(scriptIndex + 1).toString().padStart(2, '0')}
+                      </span>
+                      <div className="scripts__script-select">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${script.name}`}
+                          checked={bulkSelectionSet.has(script.id)}
+                          onChange={() => toggleScriptSelection(script.id)}
+                          data-testid={`script-select-${script.id}`}
+                        />
                       </div>
-                    </button>
+                      <button
+                        type="button"
+                        draggable
+                        data-script-name={script.name}
+                        data-testid={`script-${script.id}`}
+                        onDragStart={(event) => handleScriptDragStart(event, script.id)}
+                        onDragEnd={handleScriptDragEnd}
+                        onClick={() => {
+                          setSelectedId(script.id)
+                          setPendingDeleteId(null)
+                        }}
+                        className={`scripts__list-item scripts__list-item--compact${selectedId === script.id ? ' is-selected' : ''}`}
+                      >
+                        <div className="scripts__list-primary">
+                          <span className="scripts__script-name">{script.name}</span>
+                        </div>
+                      </button>
+                    </div>
                     <div className="scripts__list-actions">
                       <button type="button" className="text" onClick={() => handleClone(script.id)} aria-label={`Clone ${script.name}`}>
                         <Copy size={16} />
@@ -897,6 +982,50 @@ export function ScriptWorkspace() {
             </button>
           </div>
         </div>
+
+        {totalVisibleScripts > 0 && (
+          <div className="scripts__bulk-bar" role="region" aria-label="Bulk script actions">
+            <div className="scripts__bulk-count" aria-live="polite">
+              <strong data-testid="scripts-bulk-count">{bulkSelectionCount}</strong>
+              <span> selected</span>
+              {bulkActionFeedback && (
+                <span className="scripts__bulk-feedback" role="status">
+                  {bulkActionFeedback}
+                </span>
+              )}
+            </div>
+            <div className="scripts__bulk-actions">
+              <button
+                type="button"
+                className="text"
+                onClick={handleToggleSelectVisible}
+                disabled={!visibleScriptIds.length}
+                data-testid="scripts-select-visible"
+              >
+                {allVisibleSelected ? 'Deselect visible' : 'Select visible'}
+              </button>
+              <button
+                type="button"
+                className="text"
+                onClick={handleClearBulkSelection}
+                disabled={!bulkSelectionCount}
+                data-testid="scripts-clear-selection"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className="ghost scripts__bulk-run"
+                onClick={handleBulkRun}
+                disabled={bulkSelectionCount < 2}
+                data-testid="scripts-bulk-run"
+              >
+                <Play size={16} />
+                <span>Run now</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {importError && (
           <p className="scripts__error" role="alert">

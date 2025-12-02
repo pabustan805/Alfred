@@ -1387,42 +1387,71 @@ body.scripts-fullscreen-active {
   text-transform: capitalize;
 }
 
-.status {
+.status-pill--scheduled {
+  background: rgba(37, 99, 235, 0.16);
+  color: #1d4ed8;
+}
+
+.status-pill--running {
+  background: rgba(16, 185, 129, 0.18);
+  color: #047857;
+}
+
+.status-pill--paused {
+  background: rgba(248, 113, 113, 0.2);
+  color: #b91c1c;
+}
+
+
+.jobs__status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+
+.jobs__status-dot svg {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.jobs__status-label {
+  display: inline;
   color: var(--text-muted);
 }
 
-.status--running {
-  color: var(--accent);
+.jobs__status-dot--running {
+  color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.12);
 }
 
-.status--scheduled {
-  color: var(--success);
+.jobs__status-dot--paused {
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.15);
 }
 
-.status--paused {
-  color: var(--warning);
-}
-
-.priority {
-  padding: 0.25rem 0.75rem;
+.jobs__priority-chip {
+  display: inline-flex;
+  width: 0.85rem;
+  height: 0.85rem;
   border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.85rem;
+  background: rgba(15, 23, 42, 0.15);
 }
 
-.priority--critical {
-  background: rgba(222, 59, 64, 0.12);
-  color: var(--critical);
+.jobs__priority-chip--critical {
+  background: var(--critical);
 }
 
-.priority--routine {
-  background: rgba(0, 113, 227, 0.12);
-  color: var(--accent);
+.jobs__priority-chip--routine {
+  background: #0ea5e9;
 }
 
-.priority--maintenance {
-  background: rgba(17, 163, 143, 0.18);
-  color: #11806a;
+.jobs__priority-chip--maintenance {
+  background: #14b8a6;
 }
 
 .wizard {

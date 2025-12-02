@@ -1,15 +1,11 @@
-import type { ReactNode } from 'react'
 import type { CronJob } from '../types/cron'
-import { Circle, CircleCheck, CircleDashed, Play, Pause, MoreHorizontal } from 'lucide-react'
+import { Play, Pause, MoreHorizontal, PencilLine } from 'lucide-react'
 
 interface JobTableProps {
   jobs: CronJob[]
-}
-
-const statusToIcon: Record<CronJob['status'], ReactNode> = {
-  scheduled: <Circle className="status status--scheduled" size={14} aria-label="Scheduled" />,
-  running: <CircleDashed className="status status--running" size={14} aria-label="Running" />,
-  paused: <CircleCheck className="status status--paused" size={14} aria-label="Paused" />,
+  selectedJobIds: Set<string>
+  onToggleSelect: (jobId: string) => void
+  onEdit: (job: CronJob) => void
 }
 
 const priorityToLabel: Record<CronJob['priority'], string> = {
@@ -18,7 +14,7 @@ const priorityToLabel: Record<CronJob['priority'], string> = {
   maintenance: 'Maintenance',
 }
 
-export function JobTable({ jobs }: JobTableProps) {
+export function JobTable({ jobs, selectedJobIds, onToggleSelect, onEdit }: JobTableProps) {
   return (
     <section className="jobs" aria-label="Scheduled jobs">
       <header className="jobs__header">
@@ -44,41 +40,58 @@ export function JobTable({ jobs }: JobTableProps) {
       <table>
         <thead>
           <tr>
+            <th>
+              <span className="sr-only">Select job</span>
+            </th>
             <th>Job</th>
             <th>Schedule</th>
             <th>Next run</th>
             <th>Status</th>
             <th>Priority</th>
             <th>Cluster</th>
-            <th>Command</th>
+            <th>
+              <span className="sr-only">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           {jobs.map((job) => (
             <tr key={job.id}>
               <td>
+                <input
+                  type="checkbox"
+                  aria-label={`Select ${job.name}`}
+                  checked={selectedJobIds.has(job.id)}
+                  onChange={() => onToggleSelect(job.id)}
+                />
+              </td>
+              <td>
                 <strong>{job.name}</strong>
                 <span>{job.description}</span>
               </td>
               <td>
                 <strong>{job.readableSchedule}</strong>
-                <span>{job.schedule}</span>
               </td>
               <td>{job.nextRun}</td>
               <td>
-                <div className="status-pill">
-                  {statusToIcon[job.status]}
-                  <span>{job.status}</span>
-                </div>
+                <span className={`status-pill status-pill--${job.status}`}>{job.status}</span>
               </td>
               <td>
-                <span className={`priority priority--${job.priority}`}>
-                  {priorityToLabel[job.priority]}
+                <span className={`jobs__priority-chip jobs__priority-chip--${job.priority}`}>
+                  <span className="sr-only">{priorityToLabel[job.priority]}</span>
                 </span>
               </td>
               <td>{job.target}</td>
               <td>
-                <code>{job.command}</code>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => onEdit(job)}
+                  aria-label={`Edit ${job.name}`}
+                >
+                  <PencilLine size={16} />
+                  <span>Edit</span>
+                </button>
               </td>
             </tr>
           ))}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { CronWizard } from '../components/CronWizard'
 import { JobTable } from '../components/JobTable'
@@ -10,6 +10,59 @@ interface SchedulesPageProps {
 
 export function SchedulesPage({ jobs }: SchedulesPageProps) {
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [jobItems, setJobItems] = useState<CronJob[]>(jobs)
+  const [editingJob, setEditingJob] = useState<CronJob | null>(null)
+  const [editDraft, setEditDraft] = useState<CronJob | null>(null)
+  const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    setJobItems(jobs)
+    setSelectedJobIds((prev) => {
+      const next = new Set<string>()
+      jobs.forEach((job) => {
+        if (prev.has(job.id)) {
+          next.add(job.id)
+        }
+      })
+      return next
+    })
+  }, [jobs])
+
+  const closeWizard = () => setWizardOpen(false)
+
+  const handleEditRequest = (job: CronJob) => {
+    setEditingJob(job)
+    setEditDraft({ ...job })
+  }
+
+  const closeEditModal = () => {
+    setEditingJob(null)
+    setEditDraft(null)
+  }
+
+  const handleEditFieldChange = <K extends keyof CronJob>(field: K, value: CronJob[K]) => {
+    setEditDraft((prev) => (prev ? { ...prev, [field]: value } : prev))
+  }
+
+  const handleEditSubmit = () => {
+    if (!editDraft) {
+      return
+    }
+    setJobItems((prev) => prev.map((job) => (job.id === editDraft.id ? editDraft : job)))
+    closeEditModal()
+  }
+
+  const handleToggleSelect = (jobId: string) => {
+    setSelectedJobIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(jobId)) {
+        next.delete(jobId)
+      } else {
+        next.add(jobId)
+      }
+      return next
+    })
+  }
 
   return (
     <section className="schedules" aria-label="Schedules overview">
@@ -28,7 +81,12 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
 
       <section aria-label="Scheduled automations">
         <h2>Scheduled automations</h2>
-        <JobTable jobs={jobs} />
+        <JobTable
+          jobs={jobItems}
+          onEdit={handleEditRequest}
+          selectedJobIds={selectedJobIds}
+          onToggleSelect={handleToggleSelect}
+        />
       </section>
 
       {wizardOpen && (
@@ -37,7 +95,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
             type="button"
             className="modal__backdrop"
             aria-label="Dismiss wizard backdrop"
-            onClick={() => setWizardOpen(false)}
+            onClick={closeWizard}
           />
           <div className="modal__content">
             <div className="modal__header">
@@ -45,12 +103,137 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
                 <p>Guided workflow</p>
                 <h3>New cron job</h3>
               </div>
-              <button type="button" className="ghost" onClick={() => setWizardOpen(false)} aria-label="Close wizard">
+              <button type="button" className="ghost" onClick={closeWizard} aria-label="Close wizard">
                 <X size={16} />
                 <span>Close</span>
               </button>
             </div>
             <CronWizard />
+          </div>
+        </div>
+      )}
+
+      {editingJob && editDraft && (
+        <div className="modal" role="dialog" aria-modal="true" aria-label={`Edit ${editingJob.name} schedule`}>
+          <button
+            type="button"
+            className="modal__backdrop"
+            aria-label="Dismiss edit dialog backdrop"
+            onClick={closeEditModal}
+          />
+          <div className="modal__content">
+            <div className="modal__header">
+              <div>
+                <p>Schedule details</p>
+                <h3>Edit {editingJob.name}</h3>
+              </div>
+              <button type="button" className="ghost" onClick={closeEditModal} aria-label="Close edit dialog">
+                <X size={16} />
+                <span>Close</span>
+              </button>
+            </div>
+
+            <form
+              className="jobs__edit-form"
+              onSubmit={(event) => {
+                event.preventDefault()
+                handleEditSubmit()
+              }}
+            >
+              <div className="field-grid">
+                <label>
+                  Job name
+                  <input
+                    value={editDraft.name}
+                    onChange={(event) => handleEditFieldChange('name', event.target.value)}
+                  />
+                </label>
+                <label>
+                  Cluster target
+                  <input
+                    value={editDraft.target}
+                    onChange={(event) => handleEditFieldChange('target', event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <label className="field">
+                Description
+                <textarea
+                  rows={3}
+                  value={editDraft.description}
+                  onChange={(event) => handleEditFieldChange('description', event.target.value)}
+                />
+              </label>
+
+              <div className="field-grid">
+                <label>
+                  Cron expression
+                  <input
+                    value={editDraft.schedule}
+                    onChange={(event) => handleEditFieldChange('schedule', event.target.value)}
+                  />
+                </label>
+                <label>
+                  Readable cadence
+                  <input
+                    value={editDraft.readableSchedule}
+                    onChange={(event) => handleEditFieldChange('readableSchedule', event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className="field-grid">
+                <label>
+                  Next run window
+                  <input
+                    value={editDraft.nextRun}
+                    onChange={(event) => handleEditFieldChange('nextRun', event.target.value)}
+                  />
+                </label>
+                <label>
+                  Command
+                  <input
+                    value={editDraft.command}
+                    onChange={(event) => handleEditFieldChange('command', event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className="field-grid">
+                <label>
+                  Status
+                  <select
+                    value={editDraft.status}
+                    onChange={(event) => handleEditFieldChange('status', event.target.value as CronJob['status'])}
+                  >
+                    <option value="scheduled">Scheduled</option>
+                    <option value="running">Running</option>
+                    <option value="paused">Paused</option>
+                  </select>
+                </label>
+                <label>
+                  Priority
+                  <select
+                    value={editDraft.priority}
+                    onChange={(event) => handleEditFieldChange('priority', event.target.value as CronJob['priority'])}
+                  >
+                    <option value="critical">Critical</option>
+                    <option value="routine">Routine</option>
+                    <option value="maintenance">Maintenance</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="modal__footer">
+                <button type="button" className="ghost" onClick={closeEditModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary">
+                  Save changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
