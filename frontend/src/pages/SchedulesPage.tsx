@@ -17,6 +17,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
   const allJobsSelected = jobItems.length > 0 && jobItems.every((job) => selectedJobIds.has(job.id))
   const [sortField, setSortField] = useState<JobSortField>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [runFeedback, setRunFeedback] = useState<string | null>(null)
 
   const sortedJobs = useMemo(() => {
     const comparer = (a: CronJob, b: CronJob) => {
@@ -122,6 +123,15 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     setSelectedJobIds(new Set(jobItems.map((job) => job.id)))
   }
 
+  const handleRunSelected = () => {
+    if (selectedJobIds.size === 0) {
+      return
+    }
+    const jobNames = jobItems.filter((job) => selectedJobIds.has(job.id)).map((job) => job.name)
+    setRunFeedback(`Queued ${jobNames.length} schedules: ${jobNames.join(', ')}`)
+    window.setTimeout(() => setRunFeedback(null), 4000)
+  }
+
   return (
     <section className="schedules" aria-label="Schedules overview">
       <header className="page-hero" aria-label="Schedules hero">
@@ -149,7 +159,14 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
           sortField={sortField}
           sortDirection={sortDirection}
           onRequestSort={handleRequestSort}
+          onRunSelected={handleRunSelected}
+          canRunSelected={selectedJobIds.size > 0}
         />
+        {runFeedback && (
+          <p className="jobs__run-feedback" role="status">
+            {runFeedback}
+          </p>
+        )}
       </section>
 
       {wizardOpen && (

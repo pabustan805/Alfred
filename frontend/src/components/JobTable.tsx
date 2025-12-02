@@ -10,6 +10,8 @@ interface JobTableProps {
   sortField: JobSortField
   sortDirection: 'asc' | 'desc'
   onRequestSort: (field: JobSortField) => void
+  onRunSelected: () => void
+  canRunSelected: boolean
   onEdit: (job: CronJob) => void
 }
 
@@ -30,6 +32,8 @@ export function JobTable({
   sortField,
   sortDirection,
   onRequestSort,
+  onRunSelected,
+  canRunSelected,
   onEdit,
 }: JobTableProps) {
   const renderSortableHeader = (label: string, field: JobSortField) => {
@@ -59,7 +63,7 @@ export function JobTable({
             <CheckSquare size={16} />
             <span>{allJobsSelected ? 'Deselect all' : 'Select all'}</span>
           </button>
-          <button type="button" className="ghost">
+          <button type="button" className="ghost" onClick={onRunSelected} disabled={!canRunSelected}>
             <Play size={16} />
             <span>Run now</span>
           </button>
