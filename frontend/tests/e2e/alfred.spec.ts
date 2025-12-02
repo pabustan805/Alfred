@@ -64,6 +64,23 @@ test.describe('Alfred authentication and workspace', () => {
     await expect(dialog).toBeHidden()
   })
 
+  test('surfaces Ruby, Perl, and Groovy options in the script editor', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
+
+    await page.getByRole('link', { name: /scripts/i }).click()
+
+    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    await workspace.getByRole('button', { name: /new script/i }).click()
+
+    const languageSelect = workspace.getByLabel('Language')
+    const optionTexts = await languageSelect.locator('option').allTextContents()
+
+    expect(optionTexts.map((text) => text.trim())).toEqual(['Bash', 'Python', 'Node.js', 'Ruby', 'Perl', 'Groovy'])
+  })
+
   test('registers email/password users and shows profile details', async ({ page }) => {
     await registerAndEnterWorkspace(page, {
       name: 'QA Operator',

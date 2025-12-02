@@ -19,6 +19,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Enable drag-and-drop script movement between folders for faster organization (✅ Dec 1, 2025).
 - [x] Add fullscreen controls for both script folders and editor panes to improve focus (✅ Dec 1, 2025).
 - [x] Introduce sortable folder pane (title/created date/tag) with toolbar toggle (✅ Dec 2, 2025).
+- [x] Expand script workspace language support to Ruby, Perl, and Groovy with editor + test coverage (✅ Dec 2, 2025).
 
 ## Phase 3: AI Integration
 - Add AI validation for cron scripts.

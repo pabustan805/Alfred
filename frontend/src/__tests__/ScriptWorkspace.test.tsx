@@ -65,6 +65,15 @@ describe('ScriptWorkspace', () => {
     expect(screen.getByText(/synced/i)).toBeVisible()
   })
 
+  it('lists all supported languages in the editor select', async () => {
+    renderWorkspace()
+
+    const select = await screen.findByLabelText(/language/i)
+    const optionLabels = within(select).getAllByRole('option').map((option) => option.textContent?.trim())
+
+    expect(optionLabels).toEqual(['Bash', 'Python', 'Node.js', 'Ruby', 'Perl', 'Groovy'])
+  })
+
   it('confirms deletion before removing a script', async () => {
     const user = userEvent.setup()
     renderWorkspace()

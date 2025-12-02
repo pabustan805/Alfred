@@ -13,6 +13,9 @@ import { python } from '@codemirror/lang-python'
 import type { Extension } from '@codemirror/state'
 import { StreamLanguage } from '@codemirror/language'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
+import { ruby as rubyMode } from '@codemirror/legacy-modes/mode/ruby'
+import { perl as perlMode } from '@codemirror/legacy-modes/mode/perl'
+import { groovy as groovyMode } from '@codemirror/legacy-modes/mode/groovy'
 import {
   Plus,
   UploadCloud,
@@ -48,6 +51,9 @@ const languageExtensions: Record<ScriptLanguage, Extension> = {
   bash: StreamLanguage.define(shell),
   node: javascript({ jsx: false, typescript: false }),
   python: python(),
+  ruby: StreamLanguage.define(rubyMode),
+  perl: StreamLanguage.define(perlMode),
+  groovy: StreamLanguage.define(groovyMode),
 }
 
 const languageOptions = Object.entries(scriptLanguageCatalog)
@@ -1167,6 +1173,15 @@ const formatUpdatedAt = (iso: string) => {
 }
 
 const inferLanguageFromFilename = (filename: string): ScriptLanguage => {
+  if (filename.endsWith('.rb')) {
+    return 'ruby'
+  }
+  if (filename.endsWith('.pl') || filename.endsWith('.pm')) {
+    return 'perl'
+  }
+  if (filename.endsWith('.groovy') || filename.endsWith('.gvy')) {
+    return 'groovy'
+  }
   if (filename.endsWith('.py')) {
     return 'python'
   }

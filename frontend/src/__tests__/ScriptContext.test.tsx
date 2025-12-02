@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
 import { ScriptsProvider, useScripts } from '../scripts/ScriptContext'
 import type { Script } from '../types/script'
+import { scriptLanguageCatalog } from '../types/script'
 
 const baseScript: Script = {
   id: 'script-fixture-1',
@@ -89,5 +90,29 @@ describe('ScriptsProvider', () => {
 
     await user.click(screen.getByRole('button', { name: /delete first/i }))
     await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(1))
+  })
+
+})
+
+describe('scriptLanguageCatalog', () => {
+  it('defines default snippets for Ruby, Perl, and Groovy', () => {
+    expect(scriptLanguageCatalog.ruby).toEqual(
+      expect.objectContaining({
+        label: 'Ruby',
+        defaultSnippet: "#!/usr/bin/env ruby\nputs 'Ready to run'\n",
+      }),
+    )
+    expect(scriptLanguageCatalog.perl).toEqual(
+      expect.objectContaining({
+        label: 'Perl',
+        defaultSnippet: "#!/usr/bin/env perl\nuse strict;\nuse warnings;\nprint \"Ready to run\\n\";\n",
+      }),
+    )
+    expect(scriptLanguageCatalog.groovy).toEqual(
+      expect.objectContaining({
+        label: 'Groovy',
+        defaultSnippet: "#!/usr/bin/env groovy\nprintln 'Ready to run'\n",
+      }),
+    )
   })
 })

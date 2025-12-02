@@ -1,4 +1,4 @@
-export type ScriptLanguage = 'bash' | 'python' | 'node'
+export type ScriptLanguage = 'bash' | 'python' | 'node' | 'ruby' | 'perl' | 'groovy'
 
 export type ScriptOrigin = 'manual' | 'import' | 'wizard' | 'clone'
 
@@ -54,5 +54,17 @@ export const scriptLanguageCatalog: Record<ScriptLanguage, { label: string; defa
   node: {
     label: 'Node.js',
     defaultSnippet: "#!/usr/bin/env node\nconsole.log('Hello from Alfred');\n",
+  },
+  ruby: {
+    label: 'Ruby',
+    defaultSnippet: "#!/usr/bin/env ruby\nputs 'Ready to run'\n",
+  },
+  perl: {
+    label: 'Perl',
+    defaultSnippet: "#!/usr/bin/env perl\nuse strict;\nuse warnings;\nprint \"Ready to run\\n\";\n",
+  },
+  groovy: {
+    label: 'Groovy',
+    defaultSnippet: "#!/usr/bin/env groovy\nprintln 'Ready to run'\n",
   },
 }

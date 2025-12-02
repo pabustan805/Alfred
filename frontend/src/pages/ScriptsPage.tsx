@@ -12,7 +12,7 @@ export function ScriptsPage() {
         <div className="page-hero__actions">
           <div className="page-hero__meta">
             <strong>Multi-language&nbsp;</strong>
-            <span>bash · python · node</span>
+            <span>bash · python · node · ruby · perl · groovy</span>
           </div>
         </div>
       </header>

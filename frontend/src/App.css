@@ -975,6 +975,21 @@ body.scripts-fullscreen-active {
   color: #0c7a67;
 }
 
+.scripts__pill--ruby {
+  background: rgba(239, 68, 68, 0.18);
+  color: #b91c1c;
+}
+
+.scripts__pill--perl {
+  background: rgba(99, 102, 241, 0.18);
+  color: #4338ca;
+}
+
+.scripts__pill--groovy {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+
 .scripts__pill--muted {
   background: rgba(15, 23, 42, 0.08);
   color: var(--text-muted);
