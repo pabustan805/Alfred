@@ -454,6 +454,9 @@ export function ScriptWorkspace() {
   const hasScripts = scripts.length > 0
   const statusLabel = mutation ? `${mutation.type}…` : isDirty ? 'Unsaved changes' : 'Synced'
 
+  const isFolderPaneHidden = isEditorFullscreen
+  const isEditorPaneHidden = isFolderFullscreen
+
   const folderPaneClasses = ['scripts__panel', 'scripts__panel--list']
   const editorPaneClasses = ['scripts__panel', 'scripts__panel--editor']
   if (isFolderFullscreen) {
@@ -461,6 +464,12 @@ export function ScriptWorkspace() {
   }
   if (isEditorFullscreen) {
     editorPaneClasses.push('is-fullscreen')
+  }
+  if (isFolderPaneHidden) {
+    folderPaneClasses.push('is-hidden')
+  }
+  if (isEditorPaneHidden) {
+    editorPaneClasses.push('is-hidden')
   }
 
   const folderFullscreenLabel = isFolderFullscreen ? 'Exit folder pane fullscreen' : 'Enter folder pane fullscreen'
@@ -636,7 +645,12 @@ export function ScriptWorkspace() {
       ref={workspaceRef}
       style={workspaceStyle}
     >
-      <div className={folderPaneClasses.join(' ')} ref={folderPaneRef}>
+      <div
+        className={folderPaneClasses.join(' ')}
+        ref={folderPaneRef}
+        hidden={isFolderPaneHidden}
+        aria-hidden={isFolderPaneHidden || undefined}
+      >
         <div className="scripts__toolbar">
           <div className="scripts__search">
             <Search size={16} aria-hidden />
@@ -816,7 +830,12 @@ export function ScriptWorkspace() {
         tabIndex={0}
         onMouseDown={handleResizeStart}
       />
-      <div className={editorPaneClasses.join(' ')} ref={editorPaneRef}>
+      <div
+        className={editorPaneClasses.join(' ')}
+        ref={editorPaneRef}
+        hidden={isEditorPaneHidden}
+        aria-hidden={isEditorPaneHidden || undefined}
+      >
         {hasScripts && activeScript && draft ? (
           <form className="scripts__editor" onSubmit={(event) => event.preventDefault()}>
             <header>
