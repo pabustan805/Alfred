@@ -509,6 +509,9 @@ main {
   gap: 0;
   align-items: stretch;
   min-height: 620px;
+  width: calc(100% + 2rem);
+  margin-left: -1rem;
+  margin-right: -1rem;
 }
 
 .scripts__panel {
@@ -527,10 +530,12 @@ main {
 .scripts__panel--list {
   max-height: 720px;
   overflow: hidden;
+  padding-left: 1.1rem;
 }
 
 .scripts__panel--editor {
   position: relative;
+  padding-right: 1rem;
 }
 
 .scripts__toolbar {
