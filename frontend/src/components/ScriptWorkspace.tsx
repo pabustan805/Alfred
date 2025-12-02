@@ -52,11 +52,33 @@ const languageExtensions: Record<ScriptLanguage, Extension> = {
 
 const languageOptions = Object.entries(scriptLanguageCatalog)
 const TOP_LEVEL_FOLDER_VALUE = '__root__'
+const SORT_STORAGE_KEY = 'alfred:scripts-sort-preference'
 const sortFieldOptions: { value: ScriptSortField; label: string }[] = [
   { value: 'title', label: 'Title' },
   { value: 'createdAt', label: 'Created date' },
   { value: 'tag', label: 'Tag' },
 ]
+
+const defaultSortConfig: ScriptSortConfig = { field: 'title', direction: 'asc' }
+
+const loadStoredSortConfig = (): ScriptSortConfig => {
+  if (typeof window === 'undefined') {
+    return defaultSortConfig
+  }
+  try {
+    const raw = window.localStorage.getItem(SORT_STORAGE_KEY)
+    if (!raw) {
+      return defaultSortConfig
+    }
+    const parsed = JSON.parse(raw) as Partial<ScriptSortConfig>
+    if (parsed && parsed.field && parsed.direction) {
+      return parsed as ScriptSortConfig
+    }
+  } catch (error) {
+    console.warn('Failed to load sort preference', error)
+  }
+  return defaultSortConfig
+}
 
 export function ScriptWorkspace() {
   const {
@@ -103,7 +125,7 @@ export function ScriptWorkspace() {
   const [draggingScriptId, setDraggingScriptId] = useState<string | null>(null)
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
   const [fullscreenTarget, setFullscreenTarget] = useState<'folders' | 'editor' | null>(null)
-  const [sortConfig, setSortConfig] = useState<ScriptSortConfig>({ field: 'title', direction: 'asc' })
+  const [sortConfig, setSortConfig] = useState<ScriptSortConfig>(() => loadStoredSortConfig())
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false)
   const sortMenuRef = useRef<HTMLDivElement | null>(null)
 
@@ -511,6 +533,16 @@ export function ScriptWorkspace() {
   const handleSortDirectionToggle = () => {
     setSortConfig((prev) => ({ ...prev, direction: prev.direction === 'asc' ? 'desc' : 'asc' }))
   }
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(sortConfig))
+      }
+    } catch (error) {
+      console.warn('Failed to save sort preference', error)
+    }
+  }, [sortConfig])
 
   useEffect(() => {
     if (!isSortMenuOpen) {

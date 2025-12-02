@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { ScriptsProvider } from '../scripts/ScriptContext'
 import { ScriptWorkspace } from '../components/ScriptWorkspace'
 import type { Script, ScriptFolder } from '../types/script'
@@ -43,6 +43,10 @@ const createDataTransfer = () => {
     setDragImage: () => {},
   } satisfies DataTransfer
 }
+
+afterEach(() => {
+  window.localStorage.clear()
+})
 
 describe('ScriptWorkspace', () => {
   it('edits metadata and saves changes', async () => {
@@ -206,5 +210,36 @@ describe('ScriptWorkspace', () => {
     await user.click(screen.getByTestId('sort-direction-button'))
 
     expect(scriptOrder()).toEqual(['Bravo job', 'Alpha job', 'Zulu job'])
+  })
+
+  it('remembers stored sort preference between sessions', async () => {
+    window.localStorage.setItem(
+      'alfred:scripts-sort-preference',
+      JSON.stringify({ field: 'tag', direction: 'desc' }),
+    )
+    const scripts: Script[] = [
+      {
+        ...fixture,
+        id: 'script-alpha',
+        name: 'Alpha runner',
+        tags: ['alpha'],
+        createdAt: '2025-11-01T00:00:00.000Z',
+      },
+      {
+        ...fixture,
+        id: 'script-beta',
+        name: 'Zulu watcher',
+        tags: ['zulu'],
+        createdAt: '2025-11-02T00:00:00.000Z',
+      },
+    ]
+
+    renderWorkspace(scripts)
+
+    const scriptButtons = await screen.findAllByTestId(/script-/)
+    const names = scriptButtons.map((button) => within(button).getByText(/runner|watcher/i).textContent?.trim())
+
+    expect(names[0]).toBe('Zulu watcher')
+    expect(names[1]).toBe('Alpha runner')
   })
 })
