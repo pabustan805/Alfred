@@ -1,4 +1,4 @@
-import { Bell, Search, Sparkles } from 'lucide-react'
+import { Bell, Search } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 
 const getInitials = (name: string) =>
@@ -21,11 +21,6 @@ export function TopBar() {
         </label>
 
         <div className="topbar__tools">
-          <button type="button" className="ghost">
-            <Sparkles size={18} />
-            <span>Copilot</span>
-          </button>
-
           <button type="button" className="ghost" aria-label="Notifications">
             <Bell size={18} />
             <span className="badge" aria-live="polite">
