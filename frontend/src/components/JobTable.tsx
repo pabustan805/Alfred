@@ -1,5 +1,5 @@
 import type { CronJob } from '../types/cron'
-import { Play, Pause, MoreHorizontal, PencilLine, CheckSquare } from 'lucide-react'
+import { Play, Pause, MoreHorizontal, PencilLine, CheckSquare, ArrowUpDown } from 'lucide-react'
 
 interface JobTableProps {
   jobs: CronJob[]
@@ -7,8 +7,13 @@ interface JobTableProps {
   onToggleSelect: (jobId: string) => void
   allJobsSelected: boolean
   onToggleSelectAll: () => void
+  sortField: JobSortField
+  sortDirection: 'asc' | 'desc'
+  onRequestSort: (field: JobSortField) => void
   onEdit: (job: CronJob) => void
 }
+
+export type JobSortField = 'name' | 'schedule' | 'nextRun' | 'status' | 'priority' | 'target'
 
 const priorityToLabel: Record<CronJob['priority'], string> = {
   critical: 'Critical',
@@ -16,7 +21,32 @@ const priorityToLabel: Record<CronJob['priority'], string> = {
   maintenance: 'Maintenance',
 }
 
-export function JobTable({ jobs, selectedJobIds, onToggleSelect, allJobsSelected, onToggleSelectAll, onEdit }: JobTableProps) {
+export function JobTable({
+  jobs,
+  selectedJobIds,
+  onToggleSelect,
+  allJobsSelected,
+  onToggleSelectAll,
+  sortField,
+  sortDirection,
+  onRequestSort,
+  onEdit,
+}: JobTableProps) {
+  const renderSortableHeader = (label: string, field: JobSortField) => {
+    const isActive = sortField === field
+    return (
+      <button
+        type="button"
+        className={`jobs__sort-btn${isActive ? ` is-active is-${sortDirection}` : ''}`}
+        onClick={() => onRequestSort(field)}
+      >
+        <span>{label}</span>
+        <ArrowUpDown size={14} aria-hidden />
+        {isActive && <span className="sr-only">Sorted {sortDirection === 'asc' ? 'ascending' : 'descending'}</span>}
+      </button>
+    )
+  }
+
   return (
     <section className="jobs" aria-label="Scheduled jobs">
       <header className="jobs__header">
@@ -49,12 +79,12 @@ export function JobTable({ jobs, selectedJobIds, onToggleSelect, allJobsSelected
             <th>
               <span className="sr-only">Select job</span>
             </th>
-            <th>Job</th>
-            <th>Schedule</th>
-            <th>Next run</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Cluster</th>
+            <th>{renderSortableHeader('Job', 'name')}</th>
+            <th>{renderSortableHeader('Schedule', 'schedule')}</th>
+            <th>{renderSortableHeader('Next run', 'nextRun')}</th>
+            <th>{renderSortableHeader('Status', 'status')}</th>
+            <th>{renderSortableHeader('Priority', 'priority')}</th>
+            <th>{renderSortableHeader('Cluster', 'target')}</th>
             <th>
               <span className="sr-only">Actions</span>
             </th>

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { CronWizard } from '../components/CronWizard'
-import { JobTable } from '../components/JobTable'
+import { JobTable, type JobSortField } from '../components/JobTable'
 import type { CronJob } from '../types/cron'
 
 interface SchedulesPageProps {
@@ -15,6 +15,46 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
   const [editDraft, setEditDraft] = useState<CronJob | null>(null)
   const [selectedJobIds, setSelectedJobIds] = useState<Set<string>>(new Set())
   const allJobsSelected = jobItems.length > 0 && jobItems.every((job) => selectedJobIds.has(job.id))
+  const [sortField, setSortField] = useState<JobSortField>('name')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+
+  const sortedJobs = useMemo(() => {
+    const comparer = (a: CronJob, b: CronJob) => {
+      const direction = sortDirection === 'asc' ? 1 : -1
+      let left: string = ''
+      let right: string = ''
+      switch (sortField) {
+        case 'name':
+          left = a.name.toLowerCase()
+          right = b.name.toLowerCase()
+          break
+        case 'schedule':
+          left = a.readableSchedule.toLowerCase()
+          right = b.readableSchedule.toLowerCase()
+          break
+        case 'nextRun':
+          left = a.nextRun.toLowerCase()
+          right = b.nextRun.toLowerCase()
+          break
+        case 'status':
+          left = a.status
+          right = b.status
+          break
+        case 'priority':
+          left = a.priority
+          right = b.priority
+          break
+        case 'target':
+          left = a.target.toLowerCase()
+          right = b.target.toLowerCase()
+          break
+        default:
+          break
+      }
+      return left.localeCompare(right) * direction
+    }
+    return [...jobItems].sort(comparer)
+  }, [jobItems, sortField, sortDirection])
 
   useEffect(() => {
     setJobItems(jobs)
@@ -51,6 +91,15 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     }
     setJobItems((prev) => prev.map((job) => (job.id === editDraft.id ? editDraft : job)))
     closeEditModal()
+  }
+
+  const handleRequestSort = (field: JobSortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+      return
+    }
+    setSortField(field)
+    setSortDirection('asc')
   }
 
   const handleToggleSelect = (jobId: string) => {
@@ -91,12 +140,15 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
       <section aria-label="Scheduled automations">
         <h2>Scheduled automations</h2>
         <JobTable
-          jobs={jobItems}
+          jobs={sortedJobs}
           onEdit={handleEditRequest}
           selectedJobIds={selectedJobIds}
           onToggleSelect={handleToggleSelect}
           allJobsSelected={allJobsSelected}
           onToggleSelectAll={handleToggleSelectAll}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onRequestSort={handleRequestSort}
         />
       </section>
 

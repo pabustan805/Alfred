@@ -1366,6 +1366,36 @@ body.scripts-fullscreen-active {
   color: var(--text-muted);
 }
 
+.jobs__sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.jobs__sort-btn svg {
+  opacity: 0.6;
+}
+
+.jobs__sort-btn.is-active {
+  color: var(--text-primary);
+}
+
+.jobs__sort-btn.is-active svg {
+  opacity: 1;
+}
+
+.jobs__sort-btn.is-desc svg {
+  transform: rotate(180deg);
+}
+
 .jobs td strong {
   display: block;
   font-weight: 600;
