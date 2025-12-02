@@ -16,6 +16,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Integrate the advanced script editor with multi-language syntax highlighting + Monaco-powered UX.
 - [x] Add CRUD operations for scripts (create, edit, delete, clone) with import/clone flows and optimistic UI state.
 - [x] Build dedicated schedules workspace with modal cron creation workflow (✅ Nov 30, 2025).
+- [x] Enable drag-and-drop script movement between folders for faster organization (✅ Dec 1, 2025).
 
 ## Phase 3: AI Integration
 - Add AI validation for cron scripts.

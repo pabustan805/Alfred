@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent, FormEvent, JSX, MouseEvent as ReactMouseEvent } from 'react'
+import type {
+  ChangeEvent,
+  DragEvent as ReactDragEvent,
+  FormEvent,
+  JSX,
+  MouseEvent as ReactMouseEvent,
+} from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { javascript } from '@codemirror/lang-javascript'
@@ -77,6 +83,8 @@ export function ScriptWorkspace() {
     ...folders.map((folder) => folder.id),
     UNGROUPED_FOLDER_KEY,
   ])
+  const [draggingScriptId, setDraggingScriptId] = useState<string | null>(null)
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
 
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -282,6 +290,57 @@ export function ScriptWorkspace() {
     setScriptMoveDestination('')
   }
 
+  const handleScriptDragStart = (event: ReactDragEvent<HTMLButtonElement>, scriptId: string) => {
+    event.dataTransfer.setData('text/plain', scriptId)
+    event.dataTransfer.effectAllowed = 'move'
+    setDraggingScriptId(scriptId)
+  }
+
+  const handleScriptDragEnd = () => {
+    setDraggingScriptId(null)
+    setDragOverFolderId(null)
+  }
+
+  const handleFolderDragOver = (event: ReactDragEvent<HTMLDivElement>, folderKey: string) => {
+    if (!draggingScriptId) {
+      return
+    }
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    if (dragOverFolderId !== folderKey) {
+      setDragOverFolderId(folderKey)
+    }
+  }
+
+  const handleFolderDragLeave = (event: ReactDragEvent<HTMLDivElement>, folderKey: string) => {
+    if (!draggingScriptId) {
+      return
+    }
+    const nextTarget = event.relatedTarget as Node | null
+    if (nextTarget && event.currentTarget.contains(nextTarget)) {
+      return
+    }
+    if (dragOverFolderId === folderKey) {
+      setDragOverFolderId(null)
+    }
+  }
+
+  const handleFolderDrop = async (event: ReactDragEvent<HTMLDivElement>, folderKey: string) => {
+    if (!draggingScriptId) {
+      return
+    }
+    event.preventDefault()
+    const scriptId = draggingScriptId
+    const destination = folderKey === UNGROUPED_FOLDER_KEY ? null : folderKey
+    setDraggingScriptId(null)
+    setDragOverFolderId(null)
+    const targetScript = scripts.find((item) => item.id === scriptId)
+    if (!targetScript || targetScript.folderId === destination) {
+      return
+    }
+    await updateScript(scriptId, { folderId: destination })
+  }
+
   const handleResizeStart = (event: ReactMouseEvent<HTMLDivElement>) => {
     event.preventDefault()
     resizeStartX.current = event.clientX
@@ -349,6 +408,10 @@ export function ScriptWorkspace() {
       .map((node) => {
         const nodeId = node.folder?.id ?? UNGROUPED_FOLDER_KEY
         const label = node.folder?.name ?? 'Ungrouped'
+        const folderClasses = ['scripts__folder']
+        if (dragOverFolderId === nodeId) {
+          folderClasses.push('is-drop-target')
+        }
         const isExpanded = expandedSet.has(nodeId)
         const hasChildren = node.children.length > 0
         const showChildren = isExpanded && hasChildren
@@ -358,8 +421,23 @@ export function ScriptWorkspace() {
           return null
         }
         return (
-          <li key={`${nodeId}-${depth}`} className="scripts__tree-item">
-            <div className="scripts__folder" style={{ paddingLeft: `${depth * 12}px` }}>
+          <li
+            key={`${nodeId}-${depth}`}
+            className="scripts__tree-item"
+            data-folder-node-id={nodeId}
+          >
+            <div
+              className={folderClasses.join(' ')}
+              style={{ paddingLeft: `${depth * 12}px` }}
+              data-folder-id={nodeId}
+              data-folder-label={label}
+              data-testid={`folder-${nodeId}`}
+              onDragOver={(event) => handleFolderDragOver(event, nodeId)}
+              onDragEnter={(event) => handleFolderDragOver(event, nodeId)}
+              onDrop={(event) => handleFolderDrop(event, nodeId)}
+              onDragLeave={(event) => handleFolderDragLeave(event, nodeId)}
+              aria-dropeffect={draggingScriptId ? 'move' : undefined}
+            >
               {(hasChildren || node.scripts.length > 0) && (
                 <button
                   type="button"
@@ -389,12 +467,21 @@ export function ScriptWorkspace() {
             {showScripts && (
               <ul className="scripts__tree scripts__tree--scripts" role="group">
                 {node.scripts.map((script, scriptIndex) => (
-                  <li key={script.id} className="scripts__script-item">
+                  <li
+                    key={script.id}
+                    className={`scripts__script-item${draggingScriptId === script.id ? ' is-dragging' : ''}`}
+                    data-script-id={script.id}
+                  >
                     <span className="scripts__script-index" aria-hidden>
                       {(scriptIndex + 1).toString().padStart(2, '0')}
                     </span>
                     <button
                       type="button"
+                      draggable
+                      data-script-name={script.name}
+                      data-testid={`script-${script.id}`}
+                      onDragStart={(event) => handleScriptDragStart(event, script.id)}
+                      onDragEnd={handleScriptDragEnd}
                       onClick={() => {
                         setSelectedId(script.id)
                         setPendingDeleteId(null)

@@ -120,4 +120,29 @@ test.describe('Alfred authentication and workspace', () => {
     await expect(listItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
     await expect(copyRow).toHaveCount(0)
   })
+
+  test('moves scripts between folders via drag-and-drop', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
+
+    await page.getByRole('link', { name: /scripts/i }).click()
+
+    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    const integrationsFolder = workspace.locator('[data-folder-label="Integrations"]')
+    const operationsFolder = workspace.locator('[data-folder-label="Operations"]')
+    const integrationsCount = integrationsFolder.locator('.scripts__folder-count')
+    const operationsCount = operationsFolder.locator('.scripts__folder-count')
+
+    await expect(integrationsCount).toHaveText('1')
+    await expect(operationsCount).toHaveText('2')
+
+    const scriptRow = workspace.locator('[data-testid="script-script-003"]')
+    await scriptRow.scrollIntoViewIfNeeded()
+    await scriptRow.dragTo(operationsFolder)
+
+    await expect(operationsCount).toHaveText('3')
+    await expect(integrationsCount).toHaveText('0')
+  })
 })
