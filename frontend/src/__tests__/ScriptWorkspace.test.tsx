@@ -100,4 +100,47 @@ describe('ScriptWorkspace', () => {
 
     await waitFor(() => expect(folderCount).toHaveTextContent('1'))
   })
+
+  it('toggles folder pane fullscreen state', async () => {
+    const user = userEvent.setup()
+    renderWorkspace()
+
+    const workspace = await screen.findByRole('region', { name: /scripts workspace/i })
+    const resizer = screen.getByRole('separator', { name: /resize scripts panes/i })
+    const enterButton = screen.getByRole('button', { name: /enter folder pane fullscreen/i })
+
+    await user.click(enterButton)
+
+    expect(workspace).toHaveClass('is-folder-fullscreen')
+    expect(resizer).toHaveClass('is-hidden')
+    expect(document.body).toHaveClass('scripts-fullscreen-active')
+
+    const exitButton = screen.getByRole('button', { name: /exit folder pane fullscreen/i })
+    await user.click(exitButton)
+
+    expect(workspace).not.toHaveClass('is-folder-fullscreen')
+    expect(resizer).not.toHaveClass('is-hidden')
+    expect(document.body).not.toHaveClass('scripts-fullscreen-active')
+  })
+
+  it('enters editor fullscreen and exits via Escape', async () => {
+    const user = userEvent.setup()
+    renderWorkspace()
+
+    const workspace = await screen.findByRole('region', { name: /scripts workspace/i })
+    const editorPane = workspace.querySelector('.scripts__panel--editor') as HTMLElement
+    expect(editorPane).toBeTruthy()
+
+    const editorButton = screen.getByRole('button', { name: /enter editor pane fullscreen/i })
+    await user.click(editorButton)
+
+    expect(editorPane).toHaveClass('is-fullscreen')
+    expect(workspace).toHaveClass('is-editor-fullscreen')
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    expect(editorPane).not.toHaveClass('is-fullscreen')
+    expect(workspace).not.toHaveClass('is-editor-fullscreen')
+    expect(document.body).not.toHaveClass('scripts-fullscreen-active')
+  })
 })

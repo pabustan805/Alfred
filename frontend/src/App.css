@@ -11,8 +11,8 @@
   content: '';
   width: 2px;
   height: 60%;
-  border-radius: 2px;
-  background: rgba(15, 23, 42, 0.15);
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 999px;
   transition: background 120ms ease;
 }
 
@@ -20,11 +20,17 @@
 .scripts__resizer:hover::before {
   background: rgba(15, 23, 42, 0.35);
 }
+
+.scripts__resizer.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .scripts__icon-button {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  border: 1px solid var(--panel-border);
+  border: 1px solid rgba(15, 23, 42, 0.12);
   background: #fff;
   display: inline-flex;
   align-items: center;
@@ -41,6 +47,47 @@
 
 .scripts__icon-button svg {
   pointer-events: none;
+}
+
+.scripts__fullscreen-button {
+  position: relative;
+  overflow: visible;
+}
+
+.scripts__fullscreen-button--inline {
+  width: 38px;
+  height: 38px;
+}
+
+.scripts__fullscreen-button.is-active {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(15, 23, 42, 0.85);
+  color: #fff;
+}
+
+.scripts__icon-button-label {
+  position: absolute;
+  bottom: -1.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.5rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(15, 23, 42, 0.85);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.scripts__fullscreen-button:hover .scripts__icon-button-label,
+.scripts__fullscreen-button:focus-visible .scripts__icon-button-label,
+.scripts__fullscreen-button.is-active .scripts__icon-button-label {
+  opacity: 1;
+  transform: translate(-50%, -4px);
 }
 
 .scripts__icon-button--primary {
@@ -514,6 +561,17 @@ main {
   margin-right: -1rem;
 }
 
+body.scripts-fullscreen-active {
+  overflow: hidden;
+}
+
+.scripts__workspace.is-folder-fullscreen,
+.scripts__workspace.is-editor-fullscreen {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .scripts__panel {
   background: var(--panel-bg);
   border-radius: 1.75rem;
@@ -536,6 +594,24 @@ main {
 .scripts__panel--editor {
   position: relative;
   padding-right: 1rem;
+}
+
+.scripts__panel.is-fullscreen {
+  max-height: none;
+  min-height: calc(100vh - 4rem);
+  box-shadow: var(--shadow-strong);
+}
+
+.scripts__panel--list.is-fullscreen {
+  overflow: auto;
+}
+
+.scripts__panel--editor.is-fullscreen {
+  padding-right: 1.75rem;
+}
+
+.scripts__panel--editor.is-fullscreen .scripts__editor {
+  min-height: calc(100vh - 6rem);
 }
 
 .scripts__toolbar {

@@ -86,8 +86,8 @@ test.describe('Alfred authentication and workspace', () => {
 
     await page.getByRole('link', { name: /scripts/i }).click()
 
-    const workspace = page.getByRole('region', { name: /scripts workspace/i })
-    await expect(workspace.getByRole('heading', { name: 'Scripts' })).toBeVisible()
+    const workspace = page.locator('.scripts__workspace[role="region"][aria-label="Scripts workspace"]')
+    await expect(page.getByRole('heading', { name: 'Scripts' })).toBeVisible()
 
     await workspace.getByRole('button', { name: /new script/i }).click()
     await expect(workspace.getByText('Untitled script')).toBeVisible()
@@ -104,12 +104,12 @@ test.describe('Alfred authentication and workspace', () => {
     await page.keyboard.type("#!/usr/bin/env python3\nprint('api sweeper')\n", { delay: 10 })
     await workspace.getByRole('button', { name: /save changes/i }).click()
 
-    const listItems = workspace.getByRole('list').locator('li')
-    await expect(listItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
-    await expect(listItems.filter({ hasText: 'Edge patcher' })).not.toBeAttached()
+    const scriptItems = workspace.locator('[data-testid^="script-"]')
+    await expect(scriptItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
+    await expect(scriptItems.filter({ hasText: 'Edge patcher' })).toHaveCount(0)
 
     await workspace.getByRole('button', { name: /clone selected script/i }).click()
-    const copyRow = workspace.locator('button', { hasText: 'API sweeper copy' })
+    const copyRow = scriptItems.filter({ hasText: 'API sweeper copy' })
     await expect(copyRow).toHaveCount(1)
     await copyRow.first().click()
 
@@ -117,8 +117,22 @@ test.describe('Alfred authentication and workspace', () => {
     const confirm = workspace.getByRole('alertdialog')
     await confirm.getByRole('button', { name: /confirm delete/i }).click()
 
-    await expect(listItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
+    await expect(scriptItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
     await expect(copyRow).toHaveCount(0)
+
+    const folderFullscreen = workspace.getByRole('button', { name: /enter folder pane fullscreen/i })
+    await folderFullscreen.click()
+    await expect(workspace).toHaveClass(/is-folder-fullscreen/)
+
+    await workspace.getByRole('button', { name: /exit folder pane fullscreen/i }).click()
+    await expect(workspace).not.toHaveClass(/is-folder-fullscreen/)
+
+    const editorFullscreen = workspace.getByRole('button', { name: /enter editor pane fullscreen/i })
+    await editorFullscreen.click()
+    await expect(workspace).toHaveClass(/is-editor-fullscreen/)
+
+    await page.keyboard.press('Escape')
+    await expect(workspace).not.toHaveClass(/is-editor-fullscreen/)
   })
 
   test('moves scripts between folders via drag-and-drop', async ({ page }) => {

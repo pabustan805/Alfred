@@ -25,6 +25,8 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowRightLeft,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import type { Script, ScriptLanguage, ScriptFolder } from '../types/script'
 import { scriptLanguageCatalog } from '../types/script'
@@ -77,6 +79,8 @@ export function ScriptWorkspace() {
   const [leftPaneWidth, setLeftPaneWidth] = useState(360)
   const [isResizing, setIsResizing] = useState(false)
   const workspaceRef = useRef<HTMLDivElement | null>(null)
+  const folderPaneRef = useRef<HTMLDivElement | null>(null)
+  const editorPaneRef = useRef<HTMLDivElement | null>(null)
   const resizeStartX = useRef(0)
   const resizeStartWidth = useRef(leftPaneWidth)
   const [expandedFolders, setExpandedFolders] = useState<string[]>(() => [
@@ -85,6 +89,7 @@ export function ScriptWorkspace() {
   ])
   const [draggingScriptId, setDraggingScriptId] = useState<string | null>(null)
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
+  const [fullscreenTarget, setFullscreenTarget] = useState<'folders' | 'editor' | null>(null)
 
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -106,6 +111,13 @@ export function ScriptWorkspace() {
     })
   }, [folders])
 
+  const handleFullscreenToggle = (target: 'folders' | 'editor') => {
+    setFullscreenTarget((prev) => (prev === target ? null : target))
+  }
+
+  const isFolderFullscreen = fullscreenTarget === 'folders'
+  const isEditorFullscreen = fullscreenTarget === 'editor'
+
   const expandedSet = useMemo(() => new Set(expandedFolders), [expandedFolders])
   const folderTree = useMemo(() => buildFolderTree(folders, scripts, normalizedQuery), [folders, scripts, normalizedQuery])
   const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
@@ -121,6 +133,71 @@ export function ScriptWorkspace() {
     () => folderTree.reduce((sum, node) => sum + node.totalScripts, 0),
     [folderTree],
   )
+
+  useEffect(() => {
+    const smoothScrollIntoView = (element: HTMLElement | null) => {
+      if (!element) {
+        return
+      }
+      if (typeof element.scrollIntoView === 'function') {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+    if (fullscreenTarget === 'folders') {
+      smoothScrollIntoView(folderPaneRef.current)
+    }
+    if (fullscreenTarget === 'editor') {
+      smoothScrollIntoView(editorPaneRef.current)
+    }
+  }, [fullscreenTarget])
+
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('scripts-fullscreen-active')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (fullscreenTarget) {
+      document.body.classList.add('scripts-fullscreen-active')
+    } else {
+      document.body.classList.remove('scripts-fullscreen-active')
+    }
+  }, [fullscreenTarget])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setFullscreenTarget(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const workspaceClasses = ['scripts__workspace']
+  if (isFolderFullscreen) {
+    workspaceClasses.push('is-folder-fullscreen')
+  }
+  if (isEditorFullscreen) {
+    workspaceClasses.push('is-editor-fullscreen')
+  }
+
+  const workspaceStyle = isFolderFullscreen
+    ? { gridTemplateColumns: 'minmax(0, 1fr) 0 0' }
+    : isEditorFullscreen
+      ? { gridTemplateColumns: '0 0 minmax(0, 1fr)' }
+      : { gridTemplateColumns: `${Math.round(leftPaneWidth)}px 10px minmax(0, 1fr)` }
+
+  const resizerClasses = ['scripts__resizer']
+  if (isResizing) {
+    resizerClasses.push('is-active')
+  }
+  if (fullscreenTarget) {
+    resizerClasses.push('is-hidden')
+  }
+
+  const editorContentHeight = isEditorFullscreen ? '70vh' : '360px'
 
   useEffect(() => {
     if (!scripts.length) {
@@ -377,6 +454,18 @@ export function ScriptWorkspace() {
   const hasScripts = scripts.length > 0
   const statusLabel = mutation ? `${mutation.type}…` : isDirty ? 'Unsaved changes' : 'Synced'
 
+  const folderPaneClasses = ['scripts__panel', 'scripts__panel--list']
+  const editorPaneClasses = ['scripts__panel', 'scripts__panel--editor']
+  if (isFolderFullscreen) {
+    folderPaneClasses.push('is-fullscreen')
+  }
+  if (isEditorFullscreen) {
+    editorPaneClasses.push('is-fullscreen')
+  }
+
+  const folderFullscreenLabel = isFolderFullscreen ? 'Exit folder pane fullscreen' : 'Enter folder pane fullscreen'
+  const editorFullscreenLabel = isEditorFullscreen ? 'Exit editor pane fullscreen' : 'Enter editor pane fullscreen'
+
   const toggleFolder = (id: string) => {
     setExpandedFolders((prev) =>
       prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
@@ -541,13 +630,13 @@ export function ScriptWorkspace() {
 
   return (
     <div
-      className="scripts__workspace"
+      className={workspaceClasses.join(' ')}
       role="region"
       aria-label="Scripts workspace"
       ref={workspaceRef}
-      style={{ gridTemplateColumns: `${Math.round(leftPaneWidth)}px 10px minmax(0, 1fr)` }}
+      style={workspaceStyle}
     >
-      <div className="scripts__panel scripts__panel--list">
+      <div className={folderPaneClasses.join(' ')} ref={folderPaneRef}>
         <div className="scripts__toolbar">
           <div className="scripts__search">
             <Search size={16} aria-hidden />
@@ -587,6 +676,17 @@ export function ScriptWorkspace() {
             >
               <FolderPlus size={18} />
               <span className="sr-only">New folder</span>
+            </button>
+            <button
+              type="button"
+              className={`scripts__icon-button scripts__fullscreen-button${isFolderFullscreen ? ' is-active' : ''}`}
+              onClick={() => handleFullscreenToggle('folders')}
+              aria-label={folderFullscreenLabel}
+              aria-pressed={isFolderFullscreen}
+              title={isFolderFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+            >
+              {isFolderFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              <span className="scripts__icon-button-label">fullscreen</span>
             </button>
           </div>
         </div>
@@ -709,14 +809,14 @@ export function ScriptWorkspace() {
       </div>
 
       <div
-        className={`scripts__resizer${isResizing ? ' is-active' : ''}`}
+        className={resizerClasses.join(' ')}
         role="separator"
         aria-orientation="vertical"
         aria-label="Resize scripts panes"
         tabIndex={0}
         onMouseDown={handleResizeStart}
       />
-      <div className="scripts__panel scripts__panel--editor">
+      <div className={editorPaneClasses.join(' ')} ref={editorPaneRef}>
         {hasScripts && activeScript && draft ? (
           <form className="scripts__editor" onSubmit={(event) => event.preventDefault()}>
             <header>
@@ -754,6 +854,17 @@ export function ScriptWorkspace() {
                 >
                   <Trash2 size={16} />
                   <span>Delete</span>
+                </button>
+                <button
+                  type="button"
+                  className={`scripts__icon-button scripts__fullscreen-button scripts__fullscreen-button--inline${isEditorFullscreen ? ' is-active' : ''}`}
+                  onClick={() => handleFullscreenToggle('editor')}
+                  aria-label={editorFullscreenLabel}
+                  aria-pressed={isEditorFullscreen}
+                  title={isEditorFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                >
+                  {isEditorFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                  <span className="scripts__icon-button-label">fullscreen</span>
                 </button>
               </div>
             </header>
@@ -822,7 +933,7 @@ export function ScriptWorkspace() {
               Script content
               <CodeMirror
                 value={draft.content}
-                height="360px"
+                height={editorContentHeight}
                 theme={oneDark}
                 extensions={[languageExtensions[draft.language]]}
                 aria-label="Script content"
