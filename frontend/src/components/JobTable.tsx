@@ -121,7 +121,7 @@ export function JobTable({
               <td>
                 <button
                   type="button"
-                  className="ghost"
+                  className="ghost jobs__edit-btn"
                   onClick={() => onEdit(job)}
                   aria-label={`Edit ${job.name}`}
                   title={`Edit ${job.name}`}
