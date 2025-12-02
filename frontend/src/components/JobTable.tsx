@@ -1,5 +1,5 @@
 import type { CronJob } from '../types/cron'
-import { Play, Pause, MoreHorizontal, PencilLine, CheckSquare, ArrowUpDown } from 'lucide-react'
+import { Play, Pause, MoreHorizontal, PencilLine, CheckSquare, ArrowUpDown, Loader2 } from 'lucide-react'
 
 interface JobTableProps {
   jobs: CronJob[]
@@ -12,6 +12,7 @@ interface JobTableProps {
   onRequestSort: (field: JobSortField) => void
   onRunSelected: () => void
   canRunSelected: boolean
+  runningJobIds: Set<string>
   onEdit: (job: CronJob) => void
 }
 
@@ -34,6 +35,7 @@ export function JobTable({
   onRequestSort,
   onRunSelected,
   canRunSelected,
+  runningJobIds,
   onEdit,
 }: JobTableProps) {
   const renderSortableHeader = (label: string, field: JobSortField) => {
@@ -104,6 +106,9 @@ export function JobTable({
                   checked={selectedJobIds.has(job.id)}
                   onChange={() => onToggleSelect(job.id)}
                 />
+                {runningJobIds.has(job.id) && (
+                  <Loader2 className="jobs__spinner" size={16} aria-label={`${job.name} running`} />
+                )}
               </td>
               <td>
                 <strong>{job.name}</strong>

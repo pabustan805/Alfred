@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { CronWizard } from '../components/CronWizard'
 import { JobTable, type JobSortField } from '../components/JobTable'
@@ -18,6 +18,15 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
   const [sortField, setSortField] = useState<JobSortField>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [runFeedback, setRunFeedback] = useState<string | null>(null)
+  const [runningJobIds, setRunningJobIds] = useState<Set<string>>(new Set())
+  const runningTimeoutsRef = useRef<number[]>([])
+  const runningOriginalStatusesRef = useRef<Map<string, CronJob['status']>>(new Map())
+
+  useEffect(() => {
+    return () => {
+      runningTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId))
+    }
+  }, [])
 
   const sortedJobs = useMemo(() => {
     const comparer = (a: CronJob, b: CronJob) => {
@@ -127,8 +136,40 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     if (selectedJobIds.size === 0) {
       return
     }
-    const jobNames = jobItems.filter((job) => selectedJobIds.has(job.id)).map((job) => job.name)
-    setRunFeedback(`Queued ${jobNames.length} schedules: ${jobNames.join(', ')}`)
+    const jobsToRun = jobItems.filter((job) => selectedJobIds.has(job.id) && !runningJobIds.has(job.id))
+    if (jobsToRun.length === 0) {
+      return
+    }
+    const originalStatusMap = runningOriginalStatusesRef.current
+    jobsToRun.forEach((job) => {
+      if (!originalStatusMap.has(job.id)) {
+        originalStatusMap.set(job.id, job.status)
+      }
+    })
+    setRunningJobIds((prev) => {
+      const next = new Set(prev)
+      jobsToRun.forEach((job) => next.add(job.id))
+      return next
+    })
+    setJobItems((prev) =>
+      prev.map((job) => (selectedJobIds.has(job.id) ? { ...job, status: 'running' } : job)),
+    )
+    jobsToRun.forEach((job) => {
+      const timeoutId = window.setTimeout(() => {
+        setRunningJobIds((prev) => {
+          const next = new Set(prev)
+          next.delete(job.id)
+          return next
+        })
+        const originalStatus = runningOriginalStatusesRef.current.get(job.id) ?? 'scheduled'
+        setJobItems((prev) => prev.map((item) => (item.id === job.id ? { ...item, status: originalStatus } : item)))
+        runningOriginalStatusesRef.current.delete(job.id)
+        runningTimeoutsRef.current = runningTimeoutsRef.current.filter((id) => id !== timeoutId)
+      }, 2500)
+      runningTimeoutsRef.current.push(timeoutId)
+    })
+    const jobNames = jobsToRun.map((job) => job.name)
+    setRunFeedback(`Running ${jobNames.length} schedules: ${jobNames.join(', ')}`)
     window.setTimeout(() => setRunFeedback(null), 4000)
   }
 
@@ -161,6 +202,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
           onRequestSort={handleRequestSort}
           onRunSelected={handleRunSelected}
           canRunSelected={selectedJobIds.size > 0}
+          runningJobIds={runningJobIds}
         />
         {runFeedback && (
           <p className="jobs__run-feedback" role="status">

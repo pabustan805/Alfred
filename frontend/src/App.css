@@ -1457,6 +1457,21 @@ body.scripts-fullscreen-active {
   color: rgba(15, 23, 42, 0.8);
 }
 
+.jobs__spinner {
+  margin-left: 0.35rem;
+  color: #0ea5e9;
+  animation: jobs-spin 1s linear infinite;
+}
+
+@keyframes jobs-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .jobs__run-feedback {
   margin-top: 0.75rem;
   padding: 0.75rem 1rem;
