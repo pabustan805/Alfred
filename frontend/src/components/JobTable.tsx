@@ -124,9 +124,9 @@ export function JobTable({
                   className="ghost"
                   onClick={() => onEdit(job)}
                   aria-label={`Edit ${job.name}`}
+                  title={`Edit ${job.name}`}
                 >
                   <PencilLine size={16} />
-                  <span>Edit</span>
                 </button>
               </td>
             </tr>
