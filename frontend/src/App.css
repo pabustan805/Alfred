@@ -582,11 +582,12 @@ body.scripts-fullscreen-active {
   flex-direction: column;
   gap: 1rem;
   min-height: 620px;
+  height: 100%;
   min-width: 0;
 }
 
 .scripts__panel--list {
-  max-height: 720px;
+  height: 100%;
   overflow: hidden;
   padding-left: 1.1rem;
 }
