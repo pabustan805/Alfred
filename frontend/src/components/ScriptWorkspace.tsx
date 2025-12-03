@@ -36,8 +36,13 @@ import {
   AlertTriangle,
   Info,
   X,
+  Pause,
+  PlayCircle,
+  StopCircle,
+  Save,
+  Loader2,
 } from 'lucide-react'
-import type { Script, ScriptLanguage, ScriptFolder } from '../types/script'
+import type { Script, ScriptExecution, ScriptLanguage, ScriptFolder } from '../types/script'
 import { scriptLanguageCatalog } from '../types/script'
 import {
   buildFolderOptions,
@@ -101,6 +106,7 @@ const loadStoredSortConfig = (): ScriptSortConfig => {
 export function ScriptWorkspace() {
   const {
     scripts,
+    executions,
     mutation,
     createScript,
     updateScript,
@@ -110,6 +116,11 @@ export function ScriptWorkspace() {
     createFolder,
     deleteFolder,
     folders,
+    startExecutions,
+    pauseExecution,
+    resumeExecution,
+    stopExecution,
+    storeExecutionLog,
   } = useScripts()
   const [selectedId, setSelectedId] = useState<string | null>(scripts[0]?.id ?? null)
   const [draft, setDraft] = useState<Draft | null>(scripts[0] ? toDraft(scripts[0]) : null)
@@ -151,6 +162,7 @@ export function ScriptWorkspace() {
   const sortMenuRef = useRef<HTMLDivElement | null>(null)
   const [bulkSelection, setBulkSelection] = useState<string[]>([])
   const [bulkActionFeedback, setBulkActionFeedback] = useState<string | null>(null)
+  const [executionFeedback, setExecutionFeedback] = useState<string | null>(null)
   const pendingSelectionRef = useRef<string | null>(null)
   const lastSyncedScriptIdRef = useRef<string | null>(scripts[0]?.id ?? null)
 
@@ -194,6 +206,33 @@ export function ScriptWorkspace() {
   )
   const bulkSelectionSet = useMemo(() => new Set(bulkSelection), [bulkSelection])
   const bulkSelectionCount = bulkSelection.length
+  const scriptLookup = useMemo(() => new Map(scripts.map((script) => [script.id, script])), [scripts])
+  const liveExecutions = useMemo(
+    () => executions.filter((execution) => execution.status === 'running' || execution.status === 'paused'),
+    [executions],
+  )
+  const activeScriptExecutions = useMemo(() => {
+    if (!selectedId) {
+      return []
+    }
+    return executions.filter((execution) => execution.scriptId === selectedId)
+  }, [executions, selectedId])
+  const sortedActiveExecutions = useMemo(
+    () =>
+      [...activeScriptExecutions].sort(
+        (left, right) => new Date(right.startedAt).getTime() - new Date(left.startedAt).getTime(),
+      ),
+    [activeScriptExecutions],
+  )
+  const primaryExecution = useMemo(() => {
+    return sortedActiveExecutions.find((execution) => execution.status === 'running' || execution.status === 'paused') ?? null
+  }, [sortedActiveExecutions])
+  const secondaryExecutions = useMemo(() => {
+    if (!primaryExecution) {
+      return sortedActiveExecutions
+    }
+    return sortedActiveExecutions.filter((execution) => execution.id !== primaryExecution.id)
+  }, [primaryExecution, sortedActiveExecutions])
   const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
   const folderSelectOptions = useMemo(() => [{ id: '', label: 'Ungrouped' }, ...folderOptions], [folderOptions])
   const folderDeleteDestinationOptions = useMemo(() => {
@@ -260,6 +299,14 @@ export function ScriptWorkspace() {
     const timeout = window.setTimeout(() => setBulkActionFeedback(null), 3500)
     return () => window.clearTimeout(timeout)
   }, [bulkActionFeedback])
+
+  useEffect(() => {
+    if (!executionFeedback) {
+      return
+    }
+    const timeout = window.setTimeout(() => setExecutionFeedback(null), 3500)
+    return () => window.clearTimeout(timeout)
+  }, [executionFeedback])
 
   useEffect(() => {
     setBulkSelection((prev) => prev.filter((id) => scripts.some((script) => script.id === id)))
@@ -369,15 +416,19 @@ export function ScriptWorkspace() {
     )
   }, [activeScript, draft])
 
+  const handleScriptSelection = useCallback((scriptId: string) => {
+    setSelectedId(scriptId)
+    setPendingDeleteId(null)
+    setBulkSelection([scriptId])
+  }, [])
+
   const handleCreate = async () => {
     const script = await createScript(activeScript ? { folderId: activeScript.folderId ?? null } : undefined)
     pendingSelectionRef.current = script.id
-    setSelectedId(script.id)
-    setPendingDeleteId(null)
+    handleScriptSelection(script.id)
     const blankDraft = toBlankDraft(script.language, script.folderId)
     setDraft(blankDraft)
     lastSyncedScriptIdRef.current = script.id
-    setBulkSelection([script.id])
     setQuery('')
     const targetFolderId = script.folderId ?? UNGROUPED_FOLDER_KEY
     setExpandedFolders((prev) => (prev.includes(targetFolderId) ? prev : [...prev, targetFolderId]))
@@ -459,8 +510,7 @@ export function ScriptWorkspace() {
   const handleClone = async (targetId: string) => {
     const clone = await cloneScript(targetId)
     if (clone) {
-      setSelectedId(clone.id)
-      setPendingDeleteId(null)
+      handleScriptSelection(clone.id)
     }
   }
 
@@ -480,11 +530,41 @@ export function ScriptWorkspace() {
     setBulkSelection((prev) => (prev.includes(scriptId) ? prev.filter((id) => id !== scriptId) : [...prev, scriptId]))
   }
 
-  const handleBulkRun = () => {
+  const handleBulkRun = useCallback(async () => {
     if (bulkSelectionCount === 0) {
       return
     }
-    setBulkActionFeedback(`Queued ${bulkSelectionCount} scripts for immediate execution.`)
+    const started = await startExecutions(bulkSelection)
+    if (!started.length) {
+      setBulkActionFeedback('No scripts ready to execute.')
+      return
+    }
+    const names = started
+      .map((execution) => scriptLookup.get(execution.scriptId)?.name)
+      .filter(Boolean)
+      .join(', ')
+    setBulkActionFeedback(`Queued ${started.length} scripts: ${names}`)
+    setExecutionFeedback('Executions started. Monitor progress on the right panel.')
+  }, [bulkSelection, bulkSelectionCount, scriptLookup, startExecutions])
+
+  const handlePauseResume = (execution: ScriptExecution) => {
+    if (execution.status === 'running') {
+      pauseExecution(execution.id)
+      setExecutionFeedback('Execution paused.')
+    } else if (execution.status === 'paused') {
+      resumeExecution(execution.id)
+      setExecutionFeedback('Execution resumed.')
+    }
+  }
+
+  const handleStopExecution = (executionId: string) => {
+    stopExecution(executionId)
+    setExecutionFeedback('Execution stopped.')
+  }
+
+  const handleStoreExecutionLog = (executionId: string) => {
+    storeExecutionLog(executionId)
+    setExecutionFeedback('Execution log stored for debugging.')
   }
 
   const collectDescendantIds = (targetId: string) => {
@@ -822,11 +902,7 @@ export function ScriptWorkspace() {
                         data-testid={`script-${script.id}`}
                         onDragStart={(event) => handleScriptDragStart(event, script.id)}
                         onDragEnd={handleScriptDragEnd}
-                        onClick={() => {
-                          setSelectedId(script.id)
-                          setPendingDeleteId(null)
-                          setBulkSelection([script.id])
-                        }}
+                        onClick={() => handleScriptSelection(script.id)}
                         className={`scripts__list-item scripts__list-item--compact${selectedId === script.id ? ' is-selected' : ''}`}
                       >
                         <div className="scripts__list-primary">
@@ -1008,8 +1084,56 @@ export function ScriptWorkspace() {
                   {bulkActionFeedback}
                 </span>
               )}
+              {executionFeedback && (
+                <span className="scripts__bulk-feedback" role="status">
+                  {executionFeedback}
+                </span>
+              )}
             </div>
           </div>
+        )}
+
+        {liveExecutions.length > 0 && (
+          <section className="scripts__running" aria-label="Live script executions">
+            <header>
+              <div>
+                <p>Live executions</p>
+                <strong>{liveExecutions.length}</strong>
+              </div>
+              <span>Tap a script to inspect its run</span>
+            </header>
+            <ul>
+              {liveExecutions.slice(0, 4).map((execution) => {
+                const script = scriptLookup.get(execution.scriptId)
+                if (!script) {
+                  return null
+                }
+                const isSelected = selectedId === script.id
+                return (
+                  <li key={execution.id}>
+                    <button
+                      type="button"
+                      className={`scripts__running-item${isSelected ? ' is-selected' : ''}`}
+                      onClick={() => handleScriptSelection(script.id)}
+                      data-testid={`live-execution-${execution.id}`}
+                    >
+                      <div>
+                        <strong>{script.name}</strong>
+                        <span>{formatUpdatedAt(execution.startedAt)}</span>
+                      </div>
+                      <span className={`scripts__execution-status scripts__execution-status--${execution.status}`}>
+                        {execution.status}
+                        {execution.status === 'running' && <Loader2 size={14} />}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+            {liveExecutions.length > 4 && (
+              <p className="scripts__running-more">+ {liveExecutions.length - 4} more active in the queue</p>
+            )}
+          </section>
         )}
 
         {importError && (
@@ -1214,6 +1338,145 @@ export function ScriptWorkspace() {
                 </button>
               </div>
             </header>
+
+            {primaryExecution && (
+              <section
+                className="scripts__execution-panel"
+                aria-label="Current execution"
+                data-testid="scripts-execution-panel"
+              >
+                <header>
+                  <div>
+                    <p>Current execution</p>
+                    <strong>{formatDuration(primaryExecution)}</strong>
+                  </div>
+                  <div className="scripts__execution-actions">
+                    {(primaryExecution.status === 'running' || primaryExecution.status === 'paused') && (
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => handlePauseResume(primaryExecution)}
+                        aria-label={primaryExecution.status === 'running' ? 'Pause execution' : 'Resume execution'}
+                      >
+                        {primaryExecution.status === 'running' ? <Pause size={16} /> : <PlayCircle size={16} />}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => handleStopExecution(primaryExecution.id)}
+                      aria-label="Stop execution"
+                    >
+                      <StopCircle size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => handleStoreExecutionLog(primaryExecution.id)}
+                      aria-label="Save execution log"
+                    >
+                      <Save size={16} />
+                    </button>
+                  </div>
+                </header>
+                <div className="scripts__execution-meta">
+                  <span className={`scripts__execution-status scripts__execution-status--${primaryExecution.status}`}>
+                    {primaryExecution.status}
+                  </span>
+                  <span>
+                    Started {formatUpdatedAt(primaryExecution.startedAt)}
+                  </span>
+                  {primaryExecution.savedAt && <span>Log saved {formatUpdatedAt(primaryExecution.savedAt)}</span>}
+                </div>
+                <div className="scripts__execution-logs" role="log">
+                  {primaryExecution.logs.map((entry) => (
+                    <article
+                      key={entry.id}
+                      className={`scripts__execution-log scripts__execution-log--${entry.level}`}
+                    >
+                      <div>
+                        <span>{entry.level}</span>
+                        <time>{formatTimeLabel(entry.timestamp)}</time>
+                      </div>
+                      <p>{entry.message}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+            {!primaryExecution && sortedActiveExecutions.length > 0 && (
+              <section className="scripts__execution-panel" aria-label="Recent executions" data-testid="scripts-execution-panel">
+                <header>
+                  <div>
+                    <p>Recent execution</p>
+                    <strong>{formatDuration(sortedActiveExecutions[0])}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => handleStoreExecutionLog(sortedActiveExecutions[0].id)}
+                    aria-label="Save execution log"
+                  >
+                    <Save size={16} />
+                  </button>
+                </header>
+                <div className="scripts__execution-meta">
+                  <span className={`scripts__execution-status scripts__execution-status--${sortedActiveExecutions[0].status}`}>
+                    {sortedActiveExecutions[0].status}
+                  </span>
+                  <span>Started {formatUpdatedAt(sortedActiveExecutions[0].startedAt)}</span>
+                  {sortedActiveExecutions[0].savedAt && (
+                    <span>Log saved {formatUpdatedAt(sortedActiveExecutions[0].savedAt)}</span>
+                  )}
+                </div>
+                <div className="scripts__execution-logs" role="log">
+                  {sortedActiveExecutions[0].logs.map((entry) => (
+                    <article
+                      key={entry.id}
+                      className={`scripts__execution-log scripts__execution-log--${entry.level}`}
+                    >
+                      <div>
+                        <span>{entry.level}</span>
+                        <time>{formatTimeLabel(entry.timestamp)}</time>
+                      </div>
+                      <p>{entry.message}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {secondaryExecutions.length > 0 && (
+              <section className="scripts__execution-history" aria-label="Execution history">
+                <header>
+                  <p>Execution history</p>
+                  <span>{secondaryExecutions.length} prior {secondaryExecutions.length === 1 ? 'run' : 'runs'}</span>
+                </header>
+                <ul>
+                  {secondaryExecutions.map((execution) => (
+                    <li key={execution.id}>
+                      <div>
+                        <strong>{formatDuration(execution)}</strong>
+                        <span>{formatUpdatedAt(execution.startedAt)}</span>
+                      </div>
+                      <div className="scripts__execution-history-actions">
+                        <span className={`scripts__execution-status scripts__execution-status--${execution.status}`}>
+                          {execution.status}
+                        </span>
+                        <button
+                          type="button"
+                          className="ghost"
+                          onClick={() => handleStoreExecutionLog(execution.id)}
+                          aria-label="Store execution log"
+                        >
+                          <Save size={14} />
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <label className="field">
               Script name
@@ -1441,6 +1704,27 @@ const formatUpdatedAt = (iso: string) => {
   const formatter = new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
+  })
+  return formatter.format(new Date(iso))
+}
+
+const formatDuration = (execution: ScriptExecution) => {
+  const end = execution.endedAt ?? new Date().toISOString()
+  const durationMs = Math.max(new Date(end).getTime() - new Date(execution.startedAt).getTime(), 0)
+  const seconds = Math.floor(durationMs / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  if (minutes === 0) {
+    return `${remainingSeconds}s`
+  }
+  return `${minutes}m ${remainingSeconds.toString().padStart(2, '0')}s`
+}
+
+const formatTimeLabel = (iso: string) => {
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
   })
   return formatter.format(new Date(iso))
 }

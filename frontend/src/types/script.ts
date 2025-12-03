@@ -68,3 +68,24 @@ export const scriptLanguageCatalog: Record<ScriptLanguage, { label: string; defa
     defaultSnippet: "#!/usr/bin/env groovy\nprintln 'Ready to run'\n",
   },
 }
+
+export type ScriptExecutionStatus = 'running' | 'paused' | 'stopped' | 'completed'
+
+export interface ScriptExecutionLogEntry {
+  id: string
+  message: string
+  timestamp: string
+  level: 'info' | 'warning' | 'error'
+}
+
+export interface ScriptExecution {
+  id: string
+  scriptId: string
+  status: ScriptExecutionStatus
+  startedAt: string
+  updatedAt: string
+  endedAt?: string
+  durationMs: number
+  logs: ScriptExecutionLogEntry[]
+  savedAt?: string
+}

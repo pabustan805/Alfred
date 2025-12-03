@@ -226,4 +226,47 @@ test.describe('Alfred authentication and workspace', () => {
     await workspace.getByTestId('sort-direction-button').click()
     await expect.poll(scriptNames).toEqual(['Zulu script', 'Alpha script'])
   })
+
+  test('monitors running scripts with pause, resume, stop, and log controls', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
+
+    await page.getByRole('link', { name: /scripts/i }).click()
+
+    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    await workspace.getByText('Edge patcher').waitFor()
+
+    const firstScriptCheckbox = workspace.getByLabel('Select Edge patcher')
+    await firstScriptCheckbox.click()
+
+    const runButton = workspace.getByTestId('scripts-bulk-run')
+    await runButton.click()
+
+    const liveExecution = workspace.getByTestId(/live-execution-/).first()
+    await expect(liveExecution).toBeVisible()
+
+    const executionPanel = workspace.getByTestId('scripts-execution-panel')
+    await expect(executionPanel.getByText(/Current execution/i)).toBeVisible()
+
+    const pauseButton = executionPanel.getByRole('button', { name: /pause execution/i })
+    await pauseButton.click()
+    await expect(executionPanel.getByText(/paused/i)).toBeVisible()
+
+    const resumeButton = executionPanel.getByRole('button', { name: /resume execution/i })
+    await resumeButton.click()
+    await expect(executionPanel.getByText(/running/i)).toBeVisible()
+
+    const stopButton = executionPanel.getByRole('button', { name: /stop execution/i })
+    await stopButton.click()
+
+    await expect(workspace.getByText(/Recent execution/i)).toBeVisible()
+
+    const saveLogButton = workspace.getByRole('button', { name: /save execution log/i })
+    await saveLogButton.click()
+    await expect(workspace.getByText(/Log saved/i)).toBeVisible()
+
+    await expect(workspace.getByText(/Execution history/i)).toBeVisible()
+  })
 })

@@ -304,4 +304,42 @@ describe('ScriptWorkspace', () => {
     expect(names[0]).toBe('Zulu watcher')
     expect(names[1]).toBe('Alpha runner')
   })
+
+  it('monitors live executions with pause, resume, stop, and log controls', async () => {
+    const user = userEvent.setup()
+    renderWorkspace()
+
+    await screen.findByText('Edge patcher')
+    const checkbox = screen.getByLabelText('Select Edge patcher')
+    await user.click(checkbox)
+
+    const runButton = screen.getByTestId('scripts-bulk-run')
+    await user.click(runButton)
+
+    const liveItem = await screen.findByTestId(/live-execution-/i)
+    expect(liveItem).toBeVisible()
+
+    const executionPanel = await screen.findByTestId('scripts-execution-panel')
+    expect(within(executionPanel).getByText(/Current execution/i)).toBeVisible()
+
+    const pauseButton = within(executionPanel).getByRole('button', { name: /pause execution/i })
+    await user.click(pauseButton)
+    await within(executionPanel).findByText(/paused/i)
+
+    const resumeButton = within(executionPanel).getByRole('button', { name: /resume execution/i })
+    await user.click(resumeButton)
+    await within(executionPanel).findByText(/running/i)
+
+    const stopButton = within(executionPanel).getByRole('button', { name: /stop execution/i })
+    await user.click(stopButton)
+
+    const recentPanel = await screen.findByTestId('scripts-execution-panel')
+    await within(recentPanel).findByText(/Recent execution/i)
+
+    const saveLogButton = within(recentPanel).getByRole('button', { name: /save execution log/i })
+    await user.click(saveLogButton)
+    await within(recentPanel).findByText(/Log saved/i)
+
+    expect(screen.getByText(/Execution history/i)).toBeVisible()
+  })
 })

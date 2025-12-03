@@ -6,6 +6,9 @@ import { mockScripts } from '../data/mockScripts'
 import { mockFolders } from '../data/mockFolders'
 import type {
   Script,
+  ScriptExecution,
+  ScriptExecutionLogEntry,
+  ScriptExecutionStatus,
   ScriptFolder,
   ScriptFolderInput,
   ScriptFolderUpdate,
@@ -20,6 +23,7 @@ const isTestEnv =
   typeof import.meta !== 'undefined' &&
   (import.meta.env?.MODE === 'test' || Boolean(importMetaWithVitest?.vitest))
 const LATENCY_MS = isTestEnv ? 0 : 150
+const EXECUTION_AUTO_COMPLETE_MS = isTestEnv ? null : 6000
 
 type ScriptMutationType = 'create' | 'update' | 'delete' | 'clone' | 'import'
 
@@ -31,6 +35,7 @@ interface ScriptMutation {
 interface ScriptsContextValue {
   scripts: Script[]
   folders: ScriptFolder[]
+  executions: ScriptExecution[]
   mutation: ScriptMutation | null
   createScript: (input?: Partial<ScriptInput>) => Promise<Script>
   updateScript: (id: string, update: ScriptUpdate) => Promise<void>
@@ -40,6 +45,11 @@ interface ScriptsContextValue {
   createFolder: (input: ScriptFolderInput) => Promise<ScriptFolder>
   updateFolder: (id: string, update: ScriptFolderUpdate) => Promise<void>
   deleteFolder: (id: string, options?: { cascadeScripts?: boolean }) => Promise<void>
+  startExecutions: (scriptIds: string[]) => Promise<ScriptExecution[]>
+  pauseExecution: (executionId: string) => void
+  resumeExecution: (executionId: string) => void
+  stopExecution: (executionId: string) => void
+  storeExecutionLog: (executionId: string) => void
 }
 
 const ScriptsContext = createContext<ScriptsContextValue | undefined>(undefined)
@@ -48,35 +58,38 @@ interface ScriptsProviderProps {
   children: ReactNode
   initialScripts?: Script[]
   initialFolders?: ScriptFolder[]
+  initialExecutions?: ScriptExecution[]
 }
 
 interface PersistedScriptsState {
   scripts: Script[]
   folders: ScriptFolder[]
+  executions: ScriptExecution[]
 }
 
 const loadState = (): PersistedScriptsState => {
   try {
     if (typeof window === 'undefined') {
-      return { scripts: mockScripts, folders: mockFolders }
+      return { scripts: mockScripts, folders: mockFolders, executions: [] }
     }
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as PersistedScriptsState | Script[]
       if (Array.isArray(parsed)) {
-        return { scripts: parsed, folders: mockFolders }
+        return { scripts: parsed, folders: mockFolders, executions: [] }
       }
       if (parsed && Array.isArray(parsed.scripts)) {
         return {
           scripts: parsed.scripts,
           folders: Array.isArray(parsed.folders) && parsed.folders.length ? parsed.folders : mockFolders,
+          executions: Array.isArray(parsed.executions) ? parsed.executions : [],
         }
       }
     }
   } catch (error) {
     console.warn('Failed to read persisted scripts', error)
   }
-  return { scripts: mockScripts, folders: mockFolders }
+  return { scripts: mockScripts, folders: mockFolders, executions: [] }
 }
 
 const persistState = (state: PersistedScriptsState) => {
@@ -92,7 +105,7 @@ const persistState = (state: PersistedScriptsState) => {
 
 const simulateLatency = () => new Promise((resolve) => setTimeout(resolve, LATENCY_MS))
 
-export function ScriptsProvider({ children, initialScripts, initialFolders }: ScriptsProviderProps) {
+export function ScriptsProvider({ children, initialScripts, initialFolders, initialExecutions }: ScriptsProviderProps) {
   const fallbackStateRef = useRef<PersistedScriptsState | null>(null)
   if (!fallbackStateRef.current) {
     fallbackStateRef.current = loadState()
@@ -111,14 +124,264 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
     }
     return fallbackState.folders
   })
+  const [executions, setExecutions] = useState<ScriptExecution[]>(() => {
+    if (initialExecutions !== undefined) {
+      return initialExecutions
+    }
+    return fallbackState.executions
+  })
   const [mutation, setMutation] = useState<ScriptMutation | null>(null)
+  const scriptsRef = useRef<Script[]>(scripts)
+  const executionTimersRef = useRef<Map<string, number>>(new Map())
 
   useEffect(() => {
-    if (initialScripts !== undefined || initialFolders !== undefined) {
+    scriptsRef.current = scripts
+  }, [scripts])
+
+  useEffect(() => {
+    if (initialScripts !== undefined || initialFolders !== undefined || initialExecutions !== undefined) {
       return
     }
-    persistState({ scripts, folders })
-  }, [folders, initialFolders, initialScripts, scripts])
+    persistState({ scripts, folders, executions })
+  }, [executions, folders, initialExecutions, initialFolders, initialScripts, scripts])
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === 'undefined') {
+        return
+      }
+      executionTimersRef.current.forEach((timerId) => window.clearTimeout(timerId))
+      executionTimersRef.current.clear()
+    }
+  }, [])
+
+  const createLogEntry = useCallback(
+    (
+      message: string,
+      level: ScriptExecutionLogEntry['level'] = 'info',
+      timestamp = new Date().toISOString(),
+    ): ScriptExecutionLogEntry => ({
+      id: nanoid(),
+      message,
+      timestamp,
+      level,
+    }),
+    [],
+  )
+
+  const clearAutoCompleteTimer = useCallback((executionId: string) => {
+    if (typeof window === 'undefined') {
+      return
+    }
+    const timers = executionTimersRef.current
+    const timerId = timers.get(executionId)
+    if (timerId) {
+      window.clearTimeout(timerId)
+      timers.delete(executionId)
+    }
+  }, [])
+
+  const applyExecutionUpdate = useCallback(
+    (executionId: string, reducer: (execution: ScriptExecution) => ScriptExecution | null) => {
+      let nextExecution: ScriptExecution | null = null
+      setExecutions((prev) =>
+        prev.map((execution) => {
+          if (execution.id !== executionId) {
+            return execution
+          }
+          const updated = reducer(execution)
+          if (!updated) {
+            return execution
+          }
+          nextExecution = updated
+          return updated
+        }),
+      )
+      return nextExecution
+    },
+    [],
+  )
+
+  const finalizeExecution = useCallback(
+    (executionId: string, status: ScriptExecutionStatus = 'completed', message?: string) => {
+      clearAutoCompleteTimer(executionId)
+      applyExecutionUpdate(executionId, (execution) => {
+        if (execution.status !== 'running') {
+          return null
+        }
+        const timestamp = new Date().toISOString()
+        const duration = new Date(timestamp).getTime() - new Date(execution.startedAt).getTime()
+        return {
+          ...execution,
+          status,
+          endedAt: timestamp,
+          updatedAt: timestamp,
+          durationMs: duration,
+          logs: [
+            ...execution.logs,
+            createLogEntry(
+              message ?? (status === 'completed' ? 'Execution completed successfully.' : 'Execution finalized.'),
+              status === 'completed' ? 'info' : 'warning',
+              timestamp,
+            ),
+          ],
+        }
+      })
+    },
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry],
+  )
+
+  const scheduleAutoComplete = useCallback(
+    (executionId: string) => {
+      if (!EXECUTION_AUTO_COMPLETE_MS || typeof window === 'undefined') {
+        return
+      }
+      clearAutoCompleteTimer(executionId)
+      const timerId = window.setTimeout(() => finalizeExecution(executionId), EXECUTION_AUTO_COMPLETE_MS)
+      executionTimersRef.current.set(executionId, timerId)
+    },
+    [clearAutoCompleteTimer, finalizeExecution],
+  )
+
+  const removeExecutionsForScript = useCallback(
+    (scriptIds: string | string[]) => {
+      const ids = Array.isArray(scriptIds) ? scriptIds : [scriptIds]
+      if (!ids.length) {
+        return
+      }
+      setExecutions((prev) => {
+        prev.forEach((execution) => {
+          if (ids.includes(execution.scriptId)) {
+            clearAutoCompleteTimer(execution.id)
+          }
+        })
+        return prev.filter((execution) => !ids.includes(execution.scriptId))
+      })
+    },
+    [clearAutoCompleteTimer],
+  )
+
+  const createExecutionRecord = useCallback(
+    (script: Script): ScriptExecution => {
+      const timestamp = new Date().toISOString()
+      return {
+        id: nanoid(),
+        scriptId: script.id,
+        status: 'running',
+        startedAt: timestamp,
+        updatedAt: timestamp,
+        durationMs: 0,
+        logs: [createLogEntry(`Started execution for ${script.name}`, 'info', timestamp)],
+      }
+    },
+    [createLogEntry],
+  )
+
+  const startExecutions = useCallback(
+    async (scriptIds: string[]) => {
+      if (!scriptIds.length) {
+        return []
+      }
+      const scriptsMap = new Map(scriptsRef.current.map((script) => [script.id, script]))
+      const started: ScriptExecution[] = []
+      setExecutions((prev) => {
+        const next = [...prev]
+        scriptIds.forEach((scriptId) => {
+          const script = scriptsMap.get(scriptId)
+          if (!script) {
+            return
+          }
+          const execution = createExecutionRecord(script)
+          next.unshift(execution)
+          started.push(execution)
+        })
+        return next
+      })
+      started.forEach((execution) => scheduleAutoComplete(execution.id))
+      await simulateLatency()
+      return started
+    },
+    [createExecutionRecord, scheduleAutoComplete],
+  )
+
+  const pauseExecution = useCallback(
+    (executionId: string) => {
+      clearAutoCompleteTimer(executionId)
+      applyExecutionUpdate(executionId, (execution) => {
+        if (execution.status !== 'running') {
+          return null
+        }
+        const timestamp = new Date().toISOString()
+        const duration = new Date(timestamp).getTime() - new Date(execution.startedAt).getTime()
+        return {
+          ...execution,
+          status: 'paused',
+          updatedAt: timestamp,
+          durationMs: duration,
+          logs: [...execution.logs, createLogEntry('Execution paused', 'warning', timestamp)],
+        }
+      })
+    },
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry],
+  )
+
+  const resumeExecution = useCallback(
+    (executionId: string) => {
+      const updated = applyExecutionUpdate(executionId, (execution) => {
+        if (execution.status !== 'paused') {
+          return null
+        }
+        const timestamp = new Date().toISOString()
+        return {
+          ...execution,
+          status: 'running',
+          updatedAt: timestamp,
+          logs: [...execution.logs, createLogEntry('Execution resumed', 'info', timestamp)],
+        }
+      })
+      if (updated) {
+        scheduleAutoComplete(executionId)
+      }
+    },
+    [applyExecutionUpdate, createLogEntry, scheduleAutoComplete],
+  )
+
+  const stopExecution = useCallback(
+    (executionId: string) => {
+      clearAutoCompleteTimer(executionId)
+      applyExecutionUpdate(executionId, (execution) => {
+        if (execution.status === 'completed' || execution.status === 'stopped') {
+          return null
+        }
+        const timestamp = new Date().toISOString()
+        const duration = new Date(timestamp).getTime() - new Date(execution.startedAt).getTime()
+        return {
+          ...execution,
+          status: 'stopped',
+          endedAt: timestamp,
+          updatedAt: timestamp,
+          durationMs: duration,
+          logs: [...execution.logs, createLogEntry('Execution stopped by user', 'warning', timestamp)],
+        }
+      })
+    },
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry],
+  )
+
+  const storeExecutionLog = useCallback(
+    (executionId: string) => {
+      applyExecutionUpdate(executionId, (execution) => {
+        const timestamp = new Date().toISOString()
+        return {
+          ...execution,
+          savedAt: timestamp,
+          updatedAt: timestamp,
+          logs: [...execution.logs, createLogEntry('Execution log stored for debugging', 'info', timestamp)],
+        }
+      })
+    },
+    [applyExecutionUpdate, createLogEntry],
+  )
 
   const runMutation = useCallback(
     async <T,>(info: ScriptMutation, updater: (prev: Script[]) => { next: Script[]; result?: T }) => {
@@ -182,8 +445,9 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
       await runMutation<void>({ type: 'delete', targetId: id }, (prev) => ({
         next: prev.filter((script) => script.id !== id),
       }))
+      removeExecutionsForScript(id)
     },
-    [runMutation],
+    [removeExecutionsForScript, runMutation],
   )
 
   const cloneScript = useCallback(
@@ -285,7 +549,14 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
       setScripts((prevScripts) => {
         const timestamp = new Date().toISOString()
         if (options?.cascadeScripts) {
-          return prevScripts.filter((script) => !script.folderId || !idsToRemove.has(script.folderId))
+          const surviving = prevScripts.filter((script) => !script.folderId || !idsToRemove.has(script.folderId))
+          const removedIds = prevScripts
+            .filter((script) => script.folderId && idsToRemove.has(script.folderId))
+            .map((script) => script.id)
+          if (removedIds.length) {
+            removeExecutionsForScript(removedIds)
+          }
+          return surviving
         }
         return prevScripts.map((script) =>
           script.folderId && idsToRemove.has(script.folderId)
@@ -302,6 +573,7 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
     () => ({
       scripts,
       folders,
+      executions,
       mutation,
       createScript,
       updateScript,
@@ -311,6 +583,11 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
       createFolder,
       updateFolder,
       deleteFolder,
+      startExecutions,
+      pauseExecution,
+      resumeExecution,
+      stopExecution,
+      storeExecutionLog,
     }),
     [
       cloneScript,
@@ -318,10 +595,16 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
       createScript,
       deleteFolder,
       deleteScript,
+      executions,
       folders,
       importScripts,
       mutation,
+      pauseExecution,
+      resumeExecution,
       scripts,
+      startExecutions,
+      stopExecution,
+      storeExecutionLog,
       updateFolder,
       updateScript,
     ],

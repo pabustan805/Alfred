@@ -64,6 +64,48 @@ function HarnessInner() {
   )
 }
 
+function ExecutionHarness() {
+  const {
+    scripts,
+    executions,
+    startExecutions,
+    pauseExecution,
+    resumeExecution,
+    stopExecution,
+    storeExecutionLog,
+  } = useScripts()
+  const firstScriptId = scripts[0]?.id ?? null
+  const activeExecutionId = executions[0]?.id ?? null
+
+  return (
+    <div>
+      <button type="button" onClick={() => firstScriptId && startExecutions([firstScriptId])}>
+        Start run
+      </button>
+      <button type="button" onClick={() => activeExecutionId && pauseExecution(activeExecutionId)}>
+        Pause run
+      </button>
+      <button type="button" onClick={() => activeExecutionId && resumeExecution(activeExecutionId)}>
+        Resume run
+      </button>
+      <button type="button" onClick={() => activeExecutionId && stopExecution(activeExecutionId)}>
+        Stop run
+      </button>
+      <button type="button" onClick={() => activeExecutionId && storeExecutionLog(activeExecutionId)}>
+        Save log
+      </button>
+      <ul aria-label="executions-state">
+        {executions.map((execution) => (
+          <li key={execution.id}>
+            Status: {execution.status} | Logs: {execution.logs.length} | Saved:{' '}
+            {execution.savedAt ? 'yes' : 'no'}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 describe('ScriptsProvider', () => {
   it('creates scripts with defaults and persists updates', async () => {
     const user = userEvent.setup()
@@ -92,6 +134,29 @@ describe('ScriptsProvider', () => {
     await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(1))
   })
 
+  it('manages script execution lifecycle and logs', async () => {
+    const user = userEvent.setup()
+    render(
+      <ScriptsProvider initialScripts={[baseScript]}>
+        <ExecutionHarness />
+      </ScriptsProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: /start run/i }))
+    await screen.findByText(/Status: running/i)
+
+    await user.click(screen.getByRole('button', { name: /pause run/i }))
+    await screen.findByText(/Status: paused/i)
+
+    await user.click(screen.getByRole('button', { name: /resume run/i }))
+    await screen.findByText(/Status: running/i)
+
+    await user.click(screen.getByRole('button', { name: /stop run/i }))
+    await screen.findByText(/Status: stopped/i)
+
+    await user.click(screen.getByRole('button', { name: /save log/i }))
+    await screen.findByText(/Saved: yes/i)
+  })
 })
 
 describe('scriptLanguageCatalog', () => {
