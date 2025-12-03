@@ -1,7 +1,7 @@
 # Alfred
 
 ## Introduction
-Alfred is a modern command-center for cron automation—pairing an Apple-inspired workspace with powerful tooling for teams that script, schedule, and observe jobs every day. The app combines a folder-aware script library, inline editor, and AI-assisted reviews with one-click execution controls, live run telemetry, audit-ready history, and comprehensive tests across unit and end-to-end flows. Whether you’re onboarding non-experts or giving power users a faster runway, Alfred keeps every script organized, explainable, and ready to run safely.
+Alfred is a sleek control center for cron automation. It blends a folder-aware script library, inline editor, and AI review with one-click runs, live telemetry, and audit-ready history—keeping every job organized, explainable, and safe for both new operators and power users.
 
 ## Features
 - Simple, elegant UI inspired by apple.com
