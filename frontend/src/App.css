@@ -541,6 +541,10 @@ main {
   text-align: right;
 }
 
+.scripts-fullscreen-active {
+  overflow-y: auto;
+}
+
 .scripts__hero-meta strong {
   display: block;
   font-size: 1.1rem;
@@ -559,10 +563,6 @@ main {
   width: calc(100% + 2rem);
   margin-left: -1rem;
   margin-right: -1rem;
-}
-
-body.scripts-fullscreen-active {
-  overflow: hidden;
 }
 
 .scripts__workspace.is-folder-fullscreen,
@@ -595,6 +595,7 @@ body.scripts-fullscreen-active {
 .scripts__panel--editor {
   position: relative;
   padding-right: 1rem;
+  overflow-y: auto;
 }
 
 .scripts__ai-panel {
