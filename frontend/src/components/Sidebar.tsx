@@ -6,7 +6,7 @@ const navItems = [
   { icon: Home, label: 'Dashboard', to: '/' },
   { icon: CalendarClock, label: 'Schedules', to: '/schedules' },
   { icon: ListChecks, label: 'Scripts', to: '/scripts' },
-  { icon: ShieldCheck, label: 'Audit Trail' },
+  { icon: ShieldCheck, label: 'Audit Trail', to: '/audit' },
 ]
 
 const preferences = [

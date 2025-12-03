@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { SchedulesPage } from './pages/SchedulesPage'
 import { ScriptsProvider } from './scripts/ScriptContext'
 import { ScriptsPage } from './pages/ScriptsPage'
+import { AuditPage } from './pages/AuditPage'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/" element={<DashboardPage jobs={mockCronJobs} />} />
                 <Route path="/schedules" element={<SchedulesPage jobs={mockCronJobs} />} />
                 <Route path="/scripts" element={<ScriptsPage />} />
+                <Route path="/audit" element={<AuditPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>

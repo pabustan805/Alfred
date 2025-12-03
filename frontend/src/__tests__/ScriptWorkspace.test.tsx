@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { ScriptsProvider } from '../scripts/ScriptContext'
 import { ScriptWorkspace } from '../components/ScriptWorkspace'
 import type { Script, ScriptExecution, ScriptFolder } from '../types/script'
@@ -51,9 +52,11 @@ const renderWorkspace = (
   executions?: ScriptExecution[],
 ) =>
   render(
-    <ScriptsProvider initialScripts={scripts} initialFolders={folders} initialExecutions={executions}>
-      <ScriptWorkspace />
-    </ScriptsProvider>,
+    <MemoryRouter>
+      <ScriptsProvider initialScripts={scripts} initialFolders={folders} initialExecutions={executions}>
+        <ScriptWorkspace />
+      </ScriptsProvider>
+    </MemoryRouter>,
   )
 
 let executionCounter = 0
