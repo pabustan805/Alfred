@@ -1,37 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { AuditLogRecord } from '../types/audit'
 import { clearAuditLogs, subscribeToAuditLogs } from './auditLogService'
+import { formatAuditTimestamp, summarizeAuditDetails } from './auditLogUtils'
 
 const MAX_VISIBLE = 6
-const timestampFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' })
-
-type DetailSummary = string | null
-
-type DetailRecord = Record<string, unknown>
-
-const formatTimestamp = (iso: string) => timestampFormatter.format(new Date(iso))
-
-const summarizeDetails = (record: AuditLogRecord): DetailSummary => {
-  const { details } = record
-  if (!details || typeof details !== 'object' || Array.isArray(details)) {
-    return null
-  }
-  const detailRecord = details as DetailRecord
-  const parts: string[] = []
-  if (typeof detailRecord.name === 'string') {
-    parts.push(detailRecord.name)
-  }
-  if (typeof detailRecord.scriptId === 'string') {
-    parts.push(`#${detailRecord.scriptId.slice(0, 6)}`)
-  }
-  if (typeof detailRecord.executionId === 'string') {
-    parts.push(`Run ${detailRecord.executionId.slice(0, 6)}`)
-  }
-  if (!parts.length && typeof detailRecord.action === 'string') {
-    parts.push(detailRecord.action)
-  }
-  return parts.length ? parts.join(' · ') : null
-}
 
 export function AuditLogPanel() {
   const [records, setRecords] = useState<AuditLogRecord[]>([])
@@ -42,19 +15,40 @@ export function AuditLogPanel() {
   }, [])
 
   const visibleRecords = useMemo(() => records.slice(0, MAX_VISIBLE), [records])
+  const scriptEventCount = useMemo(() => records.filter((record) => record.entityName === 'Script').length, [records])
+  const executionEventCount = useMemo(
+    () => records.filter((record) => record.entityName === 'ScriptExecution').length,
+    [records],
+  )
+  const latestTimestamp = records[0]?.timestamp ?? null
 
   return (
     <section className="scripts__editor-card scripts__audit-panel" aria-label="Audit trail" data-testid="audit-log-panel">
       <header className="scripts__audit-panel__header">
         <div>
           <p>Audit trail</p>
-          <span>{records.length ? `${records.length} recorded event${records.length === 1 ? '' : 's'}` : 'Tracking upcoming events'}</span>
+          <span>
+            {records.length
+              ? `${records.length} recorded event${records.length === 1 ? '' : 's'}`
+              : 'Tracking upcoming events'}
+          </span>
+          {latestTimestamp && (
+            <small className="scripts__audit-panel__meta">Updated {formatAuditTimestamp(latestTimestamp)}</small>
+          )}
+          <small className="scripts__audit-panel__meta" data-testid="audit-counts">
+            Scripts {scriptEventCount} · Executions {executionEventCount}
+          </small>
         </div>
-        {records.length > 0 && (
-          <button type="button" className="ghost" onClick={clearAuditLogs} aria-label="Clear audit trail">
-            Clear
-          </button>
-        )}
+        <div className="scripts__audit-panel__actions">
+          {records.length > 0 && (
+            <button type="button" className="ghost" onClick={clearAuditLogs} aria-label="Clear audit trail">
+              Clear
+            </button>
+          )}
+          <Link className="scripts__audit-panel__link" to="/audit" aria-label="View full audit trail">
+            View all
+          </Link>
+        </div>
       </header>
 
       {records.length === 0 ? (
@@ -62,12 +56,12 @@ export function AuditLogPanel() {
       ) : (
         <ol className="scripts__audit-panel__list">
           {visibleRecords.map((record) => {
-            const detailSummary = summarizeDetails(record)
+            const detailSummary = summarizeAuditDetails(record)
             return (
               <li key={record.id} data-testid="audit-log-entry">
                 <div>
                   <strong>{`${record.entityName} ${record.action}`}</strong>
-                  <span>{formatTimestamp(record.timestamp)}</span>
+                  <span>{formatAuditTimestamp(record.timestamp)}</span>
                 </div>
                 {detailSummary && <p>{detailSummary}</p>}
               </li>

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { mockScripts } from '../data/mockScripts'
 import { mockFolders } from '../data/mockFolders'
 import { logAuditEvent } from '../audit/auditLogService'
+import { recordExecutionLogEvent } from '../logging/executionLogService'
 import type {
   Script,
   ScriptExecution,
@@ -179,6 +180,26 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
     [getScriptById],
   )
 
+  const recordExecutionTimeline = useCallback(
+    (
+      execution: ScriptExecution,
+      message: string,
+      level: 'info' | 'warning' | 'error' = 'info',
+      scriptOverride?: Script | null,
+    ) => {
+      const script = scriptOverride ?? getScriptById(execution.scriptId)
+      recordExecutionLogEvent({
+        executionId: execution.id,
+        scriptId: execution.scriptId,
+        scriptName: script?.name ?? null,
+        message,
+        level,
+        timestamp: new Date().toISOString(),
+      })
+    },
+    [getScriptById],
+  )
+
   useEffect(() => {
     scriptsRef.current = scripts
   }, [scripts])
@@ -274,9 +295,14 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       })
       if (updated) {
         recordExecutionAudit(status === 'completed' ? 'Completed' : 'Finalized', updated)
+        recordExecutionTimeline(
+          updated,
+          status === 'completed' ? 'Execution completed' : 'Execution finalized',
+          status === 'completed' ? 'info' : 'warning',
+        )
       }
     },
-    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit],
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit, recordExecutionTimeline],
   )
 
   const scheduleAutoComplete = useCallback(
@@ -430,13 +456,15 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
         return next
       })
       started.forEach((execution) => {
+        const script = scriptsMap.get(execution.scriptId)
         scheduleAutoComplete(execution.id)
-        recordExecutionAudit('Started', execution, scriptsMap.get(execution.scriptId))
+        recordExecutionAudit('Started', execution, script)
+        recordExecutionTimeline(execution, 'Execution started', 'info', script ?? undefined)
       })
       await simulateLatency()
       return started
     },
-    [createExecutionRecord, recordExecutionAudit, scheduleAutoComplete],
+    [createExecutionRecord, recordExecutionAudit, recordExecutionTimeline, scheduleAutoComplete],
   )
 
   const pauseExecution = useCallback(
@@ -458,9 +486,10 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       })
       if (updated) {
         recordExecutionAudit('Paused', updated)
+        recordExecutionTimeline(updated, 'Execution paused', 'warning')
       }
     },
-    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit],
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit, recordExecutionTimeline],
   )
 
   const resumeExecution = useCallback(
@@ -480,9 +509,10 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       if (updated) {
         scheduleAutoComplete(executionId)
         recordExecutionAudit('Resumed', updated)
+        recordExecutionTimeline(updated, 'Execution resumed')
       }
     },
-    [applyExecutionUpdate, createLogEntry, recordExecutionAudit, scheduleAutoComplete],
+    [applyExecutionUpdate, createLogEntry, recordExecutionAudit, recordExecutionTimeline, scheduleAutoComplete],
   )
 
   const stopExecution = useCallback(
@@ -505,9 +535,10 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       })
       if (updated) {
         recordExecutionAudit('Stopped', updated)
+        recordExecutionTimeline(updated, 'Execution stopped', 'warning')
       }
     },
-    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit],
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit, recordExecutionTimeline],
   )
 
   const storeExecutionLog = useCallback(
@@ -523,9 +554,10 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       })
       if (updated) {
         recordExecutionAudit('LogSaved', updated)
+        recordExecutionTimeline(updated, 'Execution log stored')
       }
     },
-    [applyExecutionUpdate, createLogEntry, recordExecutionAudit],
+    [applyExecutionUpdate, createLogEntry, recordExecutionAudit, recordExecutionTimeline],
   )
 
   const runMutation = useCallback(

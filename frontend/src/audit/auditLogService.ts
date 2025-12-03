@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import { useEffect, useState } from 'react'
 import type { AuditLogInput, AuditLogListener, AuditLogRecord } from '../types/audit'
 
 const STORAGE_KEY = 'alfred:audit-log:v1'
@@ -80,4 +81,13 @@ export const resetAuditLogStore = (initialRecords: AuditLogRecord[] = []) => {
 
 export const clearAuditLogs = () => {
   resetAuditLogStore()
+}
+
+export const useAuditLogs = () => {
+  const [records, setRecords] = useState<AuditLogRecord[]>(() => getAuditLogRecords())
+  useEffect(() => {
+    const unsubscribe = subscribeToAuditLogs(setRecords)
+    return () => unsubscribe()
+  }, [])
+  return records
 }
