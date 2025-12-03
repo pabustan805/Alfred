@@ -151,6 +151,8 @@ export function ScriptWorkspace() {
   const sortMenuRef = useRef<HTMLDivElement | null>(null)
   const [bulkSelection, setBulkSelection] = useState<string[]>([])
   const [bulkActionFeedback, setBulkActionFeedback] = useState<string | null>(null)
+  const pendingSelectionRef = useRef<string | null>(null)
+  const lastSyncedScriptIdRef = useRef<string | null>(scripts[0]?.id ?? null)
 
   const normalizedQuery = query.trim().toLowerCase()
 
@@ -299,16 +301,55 @@ export function ScriptWorkspace() {
     if (!scripts.length) {
       setSelectedId(null)
       setDraft(null)
+      pendingSelectionRef.current = null
+      setBulkSelection([])
+      lastSyncedScriptIdRef.current = null
       return
     }
-    if (!selectedId || !scripts.some((script) => script.id === selectedId)) {
-      setSelectedId(scripts[0].id)
-      setPendingDeleteId(null)
+
+    const pendingId = pendingSelectionRef.current
+    if (pendingId) {
+      const pendingScript = scripts.find((script) => script.id === pendingId)
+      if (pendingScript) {
+        if (selectedId !== pendingId) {
+          setSelectedId(pendingId)
+        }
+        setDraft(toBlankDraft(pendingScript.language, pendingScript.folderId, pendingScript.origin))
+        setBulkSelection([pendingId])
+        lastSyncedScriptIdRef.current = pendingId
+        pendingSelectionRef.current = null
+        return
+      }
+
+      if (selectedId !== pendingId) {
+        setSelectedId(pendingId)
+      }
       return
     }
-    const active = scripts.find((script) => script.id === selectedId)
-    if (active) {
-      setDraft(toDraft(active))
+
+    if (selectedId) {
+      const active = scripts.find((script) => script.id === selectedId)
+      if (active && lastSyncedScriptIdRef.current !== selectedId) {
+        setDraft(toDraft(active))
+        lastSyncedScriptIdRef.current = selectedId
+        return
+      }
+      if (active) {
+        return
+      }
+    }
+
+    const fallback = scripts[0]
+    if (fallback) {
+      if (selectedId !== fallback.id) {
+        setSelectedId(fallback.id)
+        setPendingDeleteId(null)
+      } else {
+        if (lastSyncedScriptIdRef.current !== fallback.id) {
+          setDraft(toDraft(fallback))
+          lastSyncedScriptIdRef.current = fallback.id
+        }
+      }
     }
   }, [scripts, selectedId])
 
@@ -330,8 +371,16 @@ export function ScriptWorkspace() {
 
   const handleCreate = async () => {
     const script = await createScript(activeScript ? { folderId: activeScript.folderId ?? null } : undefined)
+    pendingSelectionRef.current = script.id
     setSelectedId(script.id)
     setPendingDeleteId(null)
+    const blankDraft = toBlankDraft(script.language, script.folderId)
+    setDraft(blankDraft)
+    lastSyncedScriptIdRef.current = script.id
+    setBulkSelection([script.id])
+    setQuery('')
+    const targetFolderId = script.folderId ?? UNGROUPED_FOLDER_KEY
+    setExpandedFolders((prev) => (prev.includes(targetFolderId) ? prev : [...prev, targetFolderId]))
   }
 
   const handleImportClick = () => {
@@ -1377,6 +1426,15 @@ const toDraft = (script: Script): Draft => ({
   content: script.content,
   origin: script.origin,
   folderId: script.folderId,
+})
+
+const toBlankDraft = (language: ScriptLanguage, folderId: string | null, origin: Script['origin'] = 'manual'): Draft => ({
+  name: '',
+  description: '',
+  language,
+  content: '',
+  origin,
+  folderId,
 })
 
 const formatUpdatedAt = (iso: string) => {

@@ -123,13 +123,13 @@ export function ScriptsProvider({ children, initialScripts, initialFolders }: Sc
   const runMutation = useCallback(
     async <T,>(info: ScriptMutation, updater: (prev: Script[]) => { next: Script[]; result?: T }) => {
       setMutation(info)
-      await simulateLatency()
       let payload: T | undefined
       setScripts((prev) => {
         const { next, result } = updater(prev)
         payload = result
         return next
       })
+      await simulateLatency()
       setMutation(null)
       return payload
     },
