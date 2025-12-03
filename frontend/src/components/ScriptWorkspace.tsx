@@ -1181,8 +1181,8 @@ export function ScriptWorkspace() {
             </label>
 
             <div className="scripts__editor-row">
-              <label>
-                Language
+              <div className="scripts__field-inline">
+                <span>Language</span>
                 <select
                   value={draft.language}
                   onChange={(event) =>
@@ -1200,9 +1200,9 @@ export function ScriptWorkspace() {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                Folder
+              </div>
+              <div className="scripts__field-inline">
+                <span>Folder</span>
                 <select
                   value={draft.folderId ?? ''}
                   onChange={(event) =>
@@ -1220,7 +1220,7 @@ export function ScriptWorkspace() {
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             </div>
 
             <label className="field">

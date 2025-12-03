@@ -1208,7 +1208,7 @@ body.scripts-fullscreen-active {
 
 .scripts__editor-row {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
   flex-wrap: wrap;
   align-items: center;
 }
@@ -1218,6 +1218,32 @@ body.scripts-fullscreen-active {
   flex-direction: column;
   gap: 0.35rem;
   font-weight: 600;
+}
+
+.scripts__field-inline {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  min-height: 2.5rem;
+}
+
+.scripts__field-inline span {
+  font-weight: 500;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.scripts__field-inline select {
+  min-width: 160px;
+  width: auto;
+  border-radius: 0.45rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--panel-border);
 }
 
 .scripts__status {
