@@ -1632,94 +1632,99 @@ export function ScriptWorkspace() {
               </section>
             )}
 
-            <label className="field">
-              Script name
-              <input value={draft.name} onChange={(event) => setDraft((prev) => prev && { ...prev, name: event.target.value })} />
-            </label>
-
-            <label className="field">
-              Script description
-              <textarea
-                value={draft.description}
-                rows={3}
-                onChange={(event) => setDraft((prev) => prev && { ...prev, description: event.target.value })}
-              />
-            </label>
-
-            <div className="scripts__editor-row">
-              <label className="scripts__field-inline">
-                <span>Language</span>
-                <select
-                  value={draft.language}
-                  onChange={(event) =>
-                    setDraft((prev) =>
-                      prev && {
-                        ...prev,
-                        language: event.target.value as ScriptLanguage,
-                      },
-                    )
-                  }
-                >
-                  {languageOptions.map(([value, meta]) => (
-                    <option key={value} value={value}>
-                      {meta.label}
-                    </option>
-                  ))}
-                </select>
+            <section className="scripts__editor-card" aria-label="Script details">
+              <label className="field">
+                Script name
+                <input
+                  value={draft.name}
+                  onChange={(event) => setDraft((prev) => prev && { ...prev, name: event.target.value })}
+                />
               </label>
-              <label className="scripts__field-inline">
-                <span>Folder</span>
-                <select
-                  value={draft.folderId ?? ''}
-                  onChange={(event) =>
-                    setDraft((prev) =>
-                      prev && {
-                        ...prev,
-                        folderId: event.target.value ? event.target.value : null,
-                      },
-                    )
-                  }
-                >
-                  {folderSelectOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+
+              <label className="field">
+                Script description
+                <textarea
+                  value={draft.description}
+                  rows={3}
+                  onChange={(event) => setDraft((prev) => prev && { ...prev, description: event.target.value })}
+                />
               </label>
-            </div>
 
-            <label className="field">
-              Script content
-              <CodeMirror
-                value={draft.content}
-                height={editorContentHeight}
-                theme={oneDark}
-                extensions={[languageExtensions[draft.language]]}
-                aria-label="Script content"
-                onChange={(value) => setDraft((prev) => prev && { ...prev, content: value })}
-              />
-            </label>
+              <div className="scripts__editor-row">
+                <label className="scripts__field-inline">
+                  <span>Language</span>
+                  <select
+                    value={draft.language}
+                    onChange={(event) =>
+                      setDraft((prev) =>
+                        prev && {
+                          ...prev,
+                          language: event.target.value as ScriptLanguage,
+                        },
+                      )
+                    }
+                  >
+                    {languageOptions.map(([value, meta]) => (
+                      <option key={value} value={value}>
+                        {meta.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="scripts__field-inline">
+                  <span>Folder</span>
+                  <select
+                    value={draft.folderId ?? ''}
+                    onChange={(event) =>
+                      setDraft((prev) =>
+                        prev && {
+                          ...prev,
+                          folderId: event.target.value ? event.target.value : null,
+                        },
+                      )
+                    }
+                  >
+                    {folderSelectOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
 
-            <div className="scripts__editor-footer">
-              <button
-                type="button"
-                className="ghost"
-                onClick={() => draft && activeScript && setDraft(toDraft(activeScript))}
-                disabled={!isDirty}
-              >
-                <RefreshCw size={16} />
-                <span>Revert</span>
-              </button>
-              <button type="button" className="primary" onClick={handleSave} disabled={!isDirty}>
-                Save changes
-              </button>
-              {formFeedback && (
-                <span className="scripts__sync-indicator" role="status">
-                  {formFeedback}
-                </span>
-              )}
-            </div>
+              <label className="field">
+                Script content
+                <CodeMirror
+                  value={draft.content}
+                  height={editorContentHeight}
+                  theme={oneDark}
+                  extensions={[languageExtensions[draft.language]]}
+                  aria-label="Script content"
+                  onChange={(value) => setDraft((prev) => prev && { ...prev, content: value })}
+                />
+              </label>
+
+              <div className="scripts__editor-footer">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => draft && activeScript && setDraft(toDraft(activeScript))}
+                  disabled={!isDirty}
+                >
+                  <RefreshCw size={16} />
+                  <span>Revert</span>
+                </button>
+                <button type="button" className="primary" onClick={handleSave} disabled={!isDirty}>
+                  Save changes
+                </button>
+                {formFeedback && (
+                  <span className="scripts__sync-indicator" role="status">
+                    {formFeedback}
+                  </span>
+                )}
+              </div>
+            </section>
 
             {isAiPanelVisible && (
               <section

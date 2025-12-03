@@ -766,6 +766,16 @@ main {
   gap: 0.9rem;
 }
 
+.scripts__editor-card {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .scripts__execution-panel header,
 .scripts__execution-history header {
   display: flex;
@@ -1518,6 +1528,12 @@ main {
   flex-direction: column;
   gap: 0.35rem;
   font-weight: 600;
+}
+
+.scripts__editor-row .scripts__field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
 }
 
 .scripts__field-inline {
