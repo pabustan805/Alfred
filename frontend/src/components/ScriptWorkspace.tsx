@@ -190,23 +190,8 @@ export function ScriptWorkspace() {
     () => buildFolderTree(folders, scripts, normalizedQuery, sortConfig),
     [folders, scripts, normalizedQuery, sortConfig],
   )
-  const visibleScriptIds = useMemo(() => {
-    const ids: string[] = []
-    const walk = (nodes: FolderTreeNode[]) => {
-      nodes.forEach((node) => {
-        node.scripts.forEach((script) => ids.push(script.id))
-        if (node.children.length) {
-          walk(node.children)
-        }
-      })
-    }
-    walk(folderTree)
-    return ids
-  }, [folderTree])
-  const visibleScriptIdSet = useMemo(() => new Set(visibleScriptIds), [visibleScriptIds])
   const bulkSelectionSet = useMemo(() => new Set(bulkSelection), [bulkSelection])
   const bulkSelectionCount = bulkSelection.length
-  const allVisibleSelected = visibleScriptIds.length > 0 && visibleScriptIds.every((id) => bulkSelectionSet.has(id))
   const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
   const folderSelectOptions = useMemo(() => [{ id: '', label: 'Ungrouped' }, ...folderOptions], [folderOptions])
   const folderDeleteDestinationOptions = useMemo(() => {
@@ -444,25 +429,6 @@ export function ScriptWorkspace() {
 
   const toggleScriptSelection = (scriptId: string) => {
     setBulkSelection((prev) => (prev.includes(scriptId) ? prev.filter((id) => id !== scriptId) : [...prev, scriptId]))
-  }
-
-  const handleToggleSelectVisible = () => {
-    if (!visibleScriptIds.length) {
-      return
-    }
-    if (allVisibleSelected) {
-      setBulkSelection((prev) => prev.filter((id) => !visibleScriptIdSet.has(id)))
-      return
-    }
-    setBulkSelection((prev) => {
-      const next = new Set(prev)
-      visibleScriptIds.forEach((id) => next.add(id))
-      return Array.from(next)
-    })
-  }
-
-  const handleClearBulkSelection = () => {
-    setBulkSelection([])
   }
 
   const handleBulkRun = () => {
@@ -994,36 +960,6 @@ export function ScriptWorkspace() {
                 </span>
               )}
             </div>
-            <div className="scripts__bulk-actions">
-              <button
-                type="button"
-                className="text"
-                onClick={handleToggleSelectVisible}
-                disabled={!visibleScriptIds.length}
-                data-testid="scripts-select-visible"
-              >
-                {allVisibleSelected ? 'Deselect visible' : 'Select visible'}
-              </button>
-              <button
-                type="button"
-                className="text"
-                onClick={handleClearBulkSelection}
-                disabled={!bulkSelectionCount}
-                data-testid="scripts-clear-selection"
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                className="ghost scripts__bulk-run"
-                onClick={handleBulkRun}
-                disabled={bulkSelectionCount < 2}
-                data-testid="scripts-bulk-run"
-              >
-                <Play size={16} />
-                <span>Run now</span>
-              </button>
-            </div>
           </div>
         )}
 
@@ -1182,9 +1118,20 @@ export function ScriptWorkspace() {
                   onClick={handleAiReview}
                   disabled={Boolean(mutation) || !activeScript || aiReviewState.status === 'loading'}
                   aria-label="Run AI review"
+                  title="AI Review"
                 >
                   <Sparkles size={16} />
-                  <span>AI Review</span>
+                </button>
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={handleBulkRun}
+                  disabled={bulkSelectionCount < 2}
+                  data-testid="scripts-bulk-run"
+                  aria-label="Run selected scripts"
+                  title="Run now"
+                >
+                  <Play size={16} />
                 </button>
                 <button
                   type="button"
@@ -1192,9 +1139,9 @@ export function ScriptWorkspace() {
                   onClick={() => activeScript && handleClone(activeScript.id)}
                   disabled={Boolean(mutation) || !activeScript}
                   aria-label="Clone selected script"
+                  title="Clone"
                 >
                   <Copy size={16} />
-                  <span>Clone</span>
                 </button>
                 <button
                   type="button"
@@ -1202,9 +1149,9 @@ export function ScriptWorkspace() {
                   onClick={() => activeScript && requestDelete(activeScript.id)}
                   disabled={Boolean(mutation) || !activeScript}
                   aria-label="Delete selected script"
+                  title="Delete"
                 >
                   <Trash2 size={16} />
-                  <span>Delete</span>
                 </button>
                 <button
                   type="button"
