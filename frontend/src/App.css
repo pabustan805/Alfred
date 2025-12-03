@@ -595,7 +595,7 @@ main {
 .scripts__panel--editor {
   position: relative;
   padding-right: 1rem;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .scripts__ai-panel {
