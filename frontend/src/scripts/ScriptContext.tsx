@@ -261,9 +261,57 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
     [clearAutoCompleteTimer],
   )
 
+  const stripWrappingQuotes = useCallback((value: string) => value.replace(/^['"`]|['"`]$/g, ''), [])
+
+  const inferCommandOutput = useCallback(
+    (command: string): string | null => {
+      const patterns = [
+        /^echo\s+(.+)/i,
+        /^printf\s+(.+)/i,
+        /^print\s*\((.+)\)/i,
+        /^print\s+(.+)/i,
+        /^console\.log\s*\((.+)\)/i,
+        /^System\.out\.println\s*\((.+)\)/i,
+      ]
+      for (const pattern of patterns) {
+        const match = command.match(pattern)
+        if (match && match[1]) {
+          return stripWrappingQuotes(match[1].trim())
+        }
+      }
+      return null
+    },
+    [stripWrappingQuotes],
+  )
+
+  const deriveScriptCommandLogs = useCallback(
+    (script: Script, startedAt: string): ScriptExecutionLogEntry[] => {
+      const baseTimestamp = new Date(startedAt).getTime()
+      let offset = 180
+      const trimmedLines = script.content
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length && !line.startsWith('#') && !line.startsWith('//'))
+      return trimmedLines.flatMap((line) => {
+        const entries: ScriptExecutionLogEntry[] = []
+        const commandTimestamp = new Date(baseTimestamp + offset).toISOString()
+        offset += 140
+        entries.push(createLogEntry(`$ ${line}`, 'info', commandTimestamp))
+        const output = inferCommandOutput(line)
+        const outputMessage = output ?? `✔ Completed: ${line}`
+        const outputTimestamp = new Date(baseTimestamp + offset).toISOString()
+        offset += 140
+        entries.push(createLogEntry(outputMessage, 'info', outputTimestamp))
+        return entries
+      })
+    },
+    [createLogEntry, inferCommandOutput],
+  )
+
   const createExecutionRecord = useCallback(
     (script: Script): ScriptExecution => {
       const timestamp = new Date().toISOString()
+      const commandLogs = deriveScriptCommandLogs(script, timestamp)
       return {
         id: nanoid(),
         scriptId: script.id,
@@ -271,10 +319,10 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
         startedAt: timestamp,
         updatedAt: timestamp,
         durationMs: 0,
-        logs: [createLogEntry(`Started execution for ${script.name}`, 'info', timestamp)],
+        logs: [createLogEntry(`Started execution for ${script.name}`, 'info', timestamp), ...commandLogs],
       }
     },
-    [createLogEntry],
+    [createLogEntry, deriveScriptCommandLogs],
   )
 
   const startExecutions = useCallback(

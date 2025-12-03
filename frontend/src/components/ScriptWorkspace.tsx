@@ -40,6 +40,7 @@ import {
   PlayCircle,
   StopCircle,
   Save,
+  FileText,
   Loader2,
 } from 'lucide-react'
 import type { Script, ScriptExecution, ScriptLanguage, ScriptFolder } from '../types/script'
@@ -163,6 +164,7 @@ export function ScriptWorkspace() {
   const [bulkSelection, setBulkSelection] = useState<string[]>([])
   const [bulkActionFeedback, setBulkActionFeedback] = useState<string | null>(null)
   const [executionFeedback, setExecutionFeedback] = useState<string | null>(null)
+  const [executionDetailId, setExecutionDetailId] = useState<string | null>(null)
   const pendingSelectionRef = useRef<string | null>(null)
   const lastSyncedScriptIdRef = useRef<string | null>(scripts[0]?.id ?? null)
 
@@ -233,6 +235,24 @@ export function ScriptWorkspace() {
     }
     return sortedActiveExecutions.filter((execution) => execution.id !== primaryExecution.id)
   }, [primaryExecution, sortedActiveExecutions])
+  const executionDetail = useMemo(() => {
+    if (!executionDetailId) {
+      return null
+    }
+    return executions.find((execution) => execution.id === executionDetailId) ?? null
+  }, [executionDetailId, executions])
+  const executionDetailScript = executionDetail ? scriptLookup.get(executionDetail.scriptId) ?? null : null
+  const executionDetailConsoleText = useMemo(() => {
+    if (!executionDetail) {
+      return 'No console output yet.'
+    }
+    if (!executionDetail.logs.length) {
+      return 'No console output yet.'
+    }
+    return executionDetail.logs
+      .map((entry) => `[${formatTimeLabel(entry.timestamp)}] (${entry.level.toUpperCase()}) ${entry.message}`)
+      .join('\n')
+  }, [executionDetail])
   const folderOptions = useMemo(() => buildFolderOptions(folders), [folders])
   const folderSelectOptions = useMemo(() => [{ id: '', label: 'Ungrouped' }, ...folderOptions], [folderOptions])
   const folderDeleteDestinationOptions = useMemo(() => {
@@ -307,6 +327,12 @@ export function ScriptWorkspace() {
     const timeout = window.setTimeout(() => setExecutionFeedback(null), 3500)
     return () => window.clearTimeout(timeout)
   }, [executionFeedback])
+
+  useEffect(() => {
+    if (executionDetailId && !executionDetail) {
+      setExecutionDetailId(null)
+    }
+  }, [executionDetail, executionDetailId])
 
   useEffect(() => {
     setBulkSelection((prev) => prev.filter((id) => scripts.some((script) => script.id === id)))
@@ -566,6 +592,12 @@ export function ScriptWorkspace() {
     storeExecutionLog(executionId)
     setExecutionFeedback('Execution log stored for debugging.')
   }
+
+  const handleViewExecutionDetail = (executionId: string) => {
+    setExecutionDetailId(executionId)
+  }
+
+  const closeExecutionDetail = () => setExecutionDetailId(null)
 
   const collectDescendantIds = (targetId: string) => {
     const ids: string[] = []
@@ -1372,6 +1404,14 @@ export function ScriptWorkspace() {
                     <button
                       type="button"
                       className="ghost"
+                      onClick={() => handleViewExecutionDetail(primaryExecution.id)}
+                      aria-label="View execution detail"
+                    >
+                      <FileText size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
                       onClick={() => handleStoreExecutionLog(primaryExecution.id)}
                       aria-label="Save execution log"
                     >
@@ -1418,6 +1458,14 @@ export function ScriptWorkspace() {
                     aria-label="Save execution log"
                   >
                     <Save size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={() => handleViewExecutionDetail(sortedActiveExecutions[0].id)}
+                    aria-label="View execution detail"
+                  >
+                    <FileText size={16} />
                   </button>
                 </header>
                 <div className="scripts__execution-meta">
@@ -1471,10 +1519,50 @@ export function ScriptWorkspace() {
                         >
                           <Save size={14} />
                         </button>
+                        <button
+                          type="button"
+                          className="ghost"
+                          onClick={() => handleViewExecutionDetail(execution.id)}
+                          aria-label="View execution detail"
+                        >
+                          <FileText size={14} />
+                        </button>
                       </div>
                     </li>
                   ))}
                 </ul>
+              </section>
+            )}
+
+            {executionDetail && (
+              <section className="scripts__execution-details" aria-label="Execution detail" data-testid="scripts-execution-detail">
+                <header>
+                  <div>
+                    <p>Execution detail</p>
+                    <strong>{executionDetailScript?.name ?? 'Script detail'}</strong>
+                  </div>
+                  <button type="button" className="ghost" onClick={closeExecutionDetail} aria-label="Close execution detail">
+                    <X size={16} />
+                  </button>
+                </header>
+                <div className="scripts__execution-meta">
+                  <span className={`scripts__execution-status scripts__execution-status--${executionDetail.status}`}>
+                    {executionDetail.status}
+                  </span>
+                  <span>Started {formatUpdatedAt(executionDetail.startedAt)}</span>
+                  {executionDetail.savedAt && <span>Log saved {formatUpdatedAt(executionDetail.savedAt)}</span>}
+                </div>
+                <div className="scripts__execution-code" role="region" aria-label="Script content">
+                  <pre>
+                    <code>{executionDetailScript?.content ?? 'Script content unavailable.'}</code>
+                  </pre>
+                </div>
+                <div className="scripts__execution-console" role="log" aria-label="Execution console output">
+                  <span>Console</span>
+                  <div className="scripts__execution-console-pill">
+                    <pre>{executionDetailConsoleText}</pre>
+                  </div>
+                </div>
               </section>
             )}
 
