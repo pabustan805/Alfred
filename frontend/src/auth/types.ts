@@ -8,6 +8,11 @@ export interface AuthUser {
   createdAt: string
 }
 
+export interface UpdateProfilePayload {
+  name: string
+  email: string
+}
+
 export interface Credentials {
   email: string
   password: string

@@ -525,6 +525,115 @@ main {
   gap: 2rem;
 }
 
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.settings__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.8fr);
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.settings__panel {
+  background: var(--panel-bg);
+  border-radius: 2rem;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-soft);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings__panel--danger {
+  border-color: rgba(222, 59, 64, 0.35);
+  background: linear-gradient(160deg, rgba(222, 59, 64, 0.07), rgba(15, 23, 42, 0.02));
+}
+
+.settings__panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.settings__panel-header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.settings__panel-header h2 {
+  margin: 0.25rem 0 0.35rem;
+}
+
+.settings__panel-header span {
+  color: var(--text-muted);
+}
+
+.settings__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.settings__meta div {
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.settings__meta dt {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.settings__meta dd {
+  margin: 0.35rem 0 0;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.settings__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings__actions {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.settings__status {
+  min-height: 1.2rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.settings__panel--danger .settings__status {
+  color: var(--critical);
+}
+
+.settings__hint {
+  margin: -0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .scripts__hero {
   background: var(--panel-bg);
   border-radius: 2rem;

@@ -101,6 +101,35 @@ test.describe('Alfred authentication and workspace', () => {
     await expect(page.getByRole('heading', { name: /secure access to alfred/i })).toBeVisible()
   })
 
+  test('edits profile information and deletes the account from settings', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Profile Owner',
+      email: 'profile.owner@example.com',
+    })
+
+    await page.getByRole('link', { name: /settings/i }).click()
+    await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
+
+    const nameInput = page.getByLabel('Full name')
+    const emailInput = page.getByLabel('Work email')
+
+    await nameInput.fill('Platform Steward')
+    await emailInput.fill('steward@example.com')
+
+    await page.getByRole('button', { name: /save changes/i }).click()
+    await expect(page.getByText(/profile updated/i)).toBeVisible()
+
+    const topbar = page.getByRole('banner', { name: 'Workspace header' })
+    await expect(topbar.getByText('Platform Steward')).toBeVisible()
+    await expect(topbar.getByText('steward@example.com')).toBeVisible()
+
+    const confirmInput = page.getByLabel('Confirm email')
+    await confirmInput.fill('steward@example.com')
+    await page.getByRole('button', { name: /delete account/i }).click()
+
+    await expect(page.getByRole('heading', { name: /secure access to alfred/i })).toBeVisible()
+  })
+
   test('manages scripts in the editor workspace', async ({ page }) => {
     await registerAndEnterWorkspace(page, {
       name: 'Automation Ops',

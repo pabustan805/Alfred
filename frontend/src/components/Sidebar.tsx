@@ -9,9 +9,7 @@ const navItems = [
   { icon: ShieldCheck, label: 'Audit Trail', to: '/audit' },
 ]
 
-const preferences = [
-  { icon: Settings, label: 'Settings' },
-]
+const preferences = [{ icon: Settings, label: 'Settings', to: '/settings' }]
 
 export function Sidebar() {
   const { signOut, user } = useAuth()
@@ -58,10 +56,20 @@ export function Sidebar() {
         <ul>
           {preferences.map((item) => (
             <li key={item.label}>
-              <button className="sidebar__link" type="button">
-                <item.icon size={18} />
-                <span>{item.label}</span>
-              </button>
+              {item.to ? (
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) => `sidebar__link${isActive ? ' is-active' : ''}`}
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </NavLink>
+              ) : (
+                <button className="sidebar__link" type="button">
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </button>
+              )}
             </li>
           ))}
         </ul>

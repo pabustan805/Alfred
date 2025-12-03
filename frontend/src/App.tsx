@@ -9,6 +9,7 @@ import { SchedulesPage } from './pages/SchedulesPage'
 import { ScriptsProvider } from './scripts/ScriptContext'
 import { ScriptsPage } from './pages/ScriptsPage'
 import { AuditPage } from './pages/AuditPage'
+import { SettingsPage } from './pages/SettingsPage'
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
                 <Route path="/schedules" element={<SchedulesPage jobs={mockCronJobs} />} />
                 <Route path="/scripts" element={<ScriptsPage />} />
                 <Route path="/audit" element={<AuditPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>

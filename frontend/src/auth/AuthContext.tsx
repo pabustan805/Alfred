@@ -2,7 +2,7 @@
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import { authService } from './service'
-import type { AuthUser, Credentials, RegistrationPayload } from './types'
+import type { AuthUser, Credentials, RegistrationPayload, UpdateProfilePayload } from './types'
 
 type AuthContextValue = {
   user: AuthUser | null
@@ -11,6 +11,8 @@ type AuthContextValue = {
   signUp: (payload: RegistrationPayload) => AuthUser
   signIn: (payload: Credentials) => AuthUser
   signOut: () => void
+  updateProfile: (payload: UpdateProfilePayload) => AuthUser
+  deleteAccount: () => void
   clearError: () => void
 }
 
@@ -41,9 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = runAction(authService.register)
   const signIn = runAction(authService.signIn)
+  const updateProfile = runAction(authService.updateProfile)
 
   const signOut = () => {
     authService.signOut()
+    setUser(null)
+    setError(null)
+  }
+
+  const deleteAccount = () => {
+    authService.deleteAccount()
     setUser(null)
     setError(null)
   }
@@ -57,6 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signIn,
     signOut,
+    updateProfile,
+    deleteAccount,
     clearError,
   }
 
