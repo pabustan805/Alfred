@@ -271,6 +271,16 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
                   />
                 </label>
                 <label className="jobs__field">
+                  <span>Owner</span>
+                  <input
+                    value={editDraft.owner}
+                    onChange={(event) => handleEditFieldChange('owner', event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className="field-grid">
+                <label className="jobs__field">
                   <span>Cluster target</span>
                   <input
                     value={editDraft.target}

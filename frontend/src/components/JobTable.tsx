@@ -1,5 +1,5 @@
 import type { CronJob } from '../types/cron'
-import { Play, Pause, MoreHorizontal, PencilLine, CheckSquare, ArrowUpDown, Loader2 } from 'lucide-react'
+import { Play, Pause, PencilLine, CheckSquare, ArrowUpDown, Loader2 } from 'lucide-react'
 
 interface JobTableProps {
   jobs: CronJob[]
@@ -72,9 +72,6 @@ export function JobTable({
           <button type="button" className="ghost">
             <Pause size={16} />
             <span>Pause</span>
-          </button>
-          <button type="button" className="ghost">
-            <MoreHorizontal size={16} />
           </button>
         </div>
       </header>

@@ -6,6 +6,7 @@ export interface CronJob {
   id: string
   name: string
   description: string
+  owner: string
   schedule: string
   readableSchedule: string
   nextRun: string
