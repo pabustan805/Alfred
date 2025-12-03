@@ -777,6 +777,7 @@ export function ScriptWorkspace() {
                         onClick={() => {
                           setSelectedId(script.id)
                           setPendingDeleteId(null)
+                          setBulkSelection([script.id])
                         }}
                         className={`scripts__list-item scripts__list-item--compact${selectedId === script.id ? ' is-selected' : ''}`}
                       >
@@ -1098,7 +1099,6 @@ export function ScriptWorkspace() {
           <form className="scripts__editor" onSubmit={(event) => event.preventDefault()}>
             <header>
               <div>
-                <p>Editing</p>
                 <h3>{activeScript.name}</h3>
                 <div className="scripts__editor-details">
                   <div className="scripts__editor-tags">
