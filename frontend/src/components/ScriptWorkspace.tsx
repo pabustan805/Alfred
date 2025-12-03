@@ -592,7 +592,6 @@ export function ScriptWorkspace() {
   }, [isResizing])
 
   const hasScripts = scripts.length > 0
-  const statusLabel = mutation ? `${mutation.type}…` : isDirty ? 'Unsaved changes' : 'Synced'
 
   const isFolderPaneHidden = isEditorFullscreen
   const isEditorPaneHidden = isFolderFullscreen
@@ -1222,9 +1221,6 @@ export function ScriptWorkspace() {
                   ))}
                 </select>
               </label>
-              <div className="scripts__status" aria-live="polite">
-                {statusLabel}
-              </div>
             </div>
 
             <label className="field">
