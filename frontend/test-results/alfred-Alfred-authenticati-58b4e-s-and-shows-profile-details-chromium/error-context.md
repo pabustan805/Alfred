@@ -1,0 +1,115 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary "Primary" [ref=e4]:
+    - img "Alfred – Script & Schedule Simplified" [ref=e6]
+    - navigation "Main navigation" [ref=e7]:
+      - text: Overview
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - link "Dashboard" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+            - generic [ref=e14]: Dashboard
+        - listitem [ref=e15]:
+          - link "Schedules" [ref=e16] [cursor=pointer]:
+            - /url: /schedules
+            - img [ref=e17]
+            - generic [ref=e21]: Schedules
+        - listitem [ref=e22]:
+          - link "Scripts" [ref=e23] [cursor=pointer]:
+            - /url: /scripts
+            - img [ref=e24]
+            - generic [ref=e27]: Scripts
+        - listitem [ref=e28]:
+          - button "Audit Trail" [ref=e29] [cursor=pointer]:
+            - img [ref=e30]
+            - generic [ref=e33]: Audit Trail
+    - navigation "Preferences" [ref=e34]:
+      - text: Workspace
+      - list [ref=e35]:
+        - listitem [ref=e36]:
+          - button "Workspace" [ref=e37] [cursor=pointer]:
+            - img [ref=e38]
+            - generic [ref=e41]: Workspace
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: System uptime
+        - strong [ref=e45]: 99.99%
+        - text: Last incident 42 days ago
+      - button "Sign out of Alfred" [ref=e46] [cursor=pointer]:
+        - img [ref=e47]
+        - generic [ref=e50]: Sign out
+  - generic [ref=e51]:
+    - banner "Workspace header" [ref=e52]:
+      - generic [ref=e53]:
+        - generic "Search scripts" [ref=e54]:
+          - img [ref=e55]
+          - textbox "Search scripts" [ref=e58]:
+            - /placeholder: Search by script, owner, or tag
+        - generic [ref=e59]:
+          - button "Notifications" [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+            - generic [ref=e64]: "5"
+          - generic [ref=e65]:
+            - generic [ref=e67]: QO
+            - generic [ref=e68]:
+              - strong [ref=e69]: QA Operator
+              - generic [ref=e70]: qa.operator@example.com
+    - main [ref=e71]:
+      - generic "Dashboard overview" [ref=e72]:
+        - generic [ref=e73]:
+          - paragraph [ref=e74]: Operational pulse
+          - heading "Dashboard" [level=1] [ref=e75]
+          - text: Review fleet health, execution velocity, and high-signal alerts.
+        - generic [ref=e76]:
+          - button "Export snapshot" [ref=e77] [cursor=pointer]
+          - button "Launch workflow" [ref=e78] [cursor=pointer]
+      - region "System overview" [ref=e79]:
+        - article [ref=e80]:
+          - heading "Active cron jobs" [level=3] [ref=e81]
+          - strong [ref=e82]: "48"
+          - generic [ref=e83]: +6 new this week
+        - article [ref=e84]:
+          - heading "Reliability score" [level=3] [ref=e85]
+          - strong [ref=e86]: 99.2%
+          - generic [ref=e87]: ↑ 0.4% vs last week
+        - article [ref=e88]:
+          - heading "Avg execution time" [level=3] [ref=e89]
+          - strong [ref=e90]: 2m 34s
+          - generic [ref=e91]: ↓ 18s vs baseline
+        - article [ref=e92]:
+          - heading "Critical monitors" [level=3] [ref=e93]
+          - strong [ref=e94]: "2"
+          - generic [ref=e95]: Prioritized workflows
+        - article [ref=e96]:
+          - heading "Paused jobs" [level=3] [ref=e97]
+          - strong [ref=e98]: "1"
+          - generic [ref=e99]: Requires review
+      - region "Quick actions" [ref=e100]:
+        - generic [ref=e101]:
+          - heading "Quick actions" [level=3] [ref=e102]
+          - paragraph [ref=e103]: High-trust surfaces, curated for operators.
+        - generic [ref=e104]:
+          - button "Schedule new cron Launch the guided workflow to create a job in under a minute." [ref=e105] [cursor=pointer]:
+            - img [ref=e106]
+            - generic [ref=e108]:
+              - strong [ref=e109]: Schedule new cron
+              - generic [ref=e110]: Launch the guided workflow to create a job in under a minute.
+          - button "Run diagnostics Trigger Alfred health checks and capture execution traces." [ref=e111] [cursor=pointer]:
+            - img [ref=e112]
+            - generic [ref=e114]:
+              - strong [ref=e115]: Run diagnostics
+              - generic [ref=e116]: Trigger Alfred health checks and capture execution traces.
+          - button "Import scripts Bring existing crontab entries or YAML configs into Alfred." [ref=e117] [cursor=pointer]:
+            - img [ref=e118]
+            - generic [ref=e121]:
+              - strong [ref=e122]: Import scripts
+              - generic [ref=e123]: Bring existing crontab entries or YAML configs into Alfred.
+          - button "Review guardrails Audit RBAC, approvals, and notification settings." [ref=e124] [cursor=pointer]:
+            - img [ref=e125]
+            - generic [ref=e127]:
+              - strong [ref=e128]: Review guardrails
+              - generic [ref=e129]: Audit RBAC, approvals, and notification settings.
+```

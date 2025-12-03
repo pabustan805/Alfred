@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { ScriptsProvider } from '../scripts/ScriptContext'
 import { ScriptWorkspace } from '../components/ScriptWorkspace'
-import type { Script, ScriptFolder } from '../types/script'
+import type { Script, ScriptExecution, ScriptFolder } from '../types/script'
 
 vi.mock('../ai/reviewer', () => ({
   runAiReview: vi.fn(),
@@ -45,12 +45,29 @@ const fixture: Script = {
   tags: ['edge'],
 }
 
-const renderWorkspace = (scripts: Script[] = [fixture], folders?: ScriptFolder[]) =>
+const renderWorkspace = (
+  scripts: Script[] = [fixture],
+  folders?: ScriptFolder[],
+  executions?: ScriptExecution[],
+) =>
   render(
-    <ScriptsProvider initialScripts={scripts} initialFolders={folders}>
+    <ScriptsProvider initialScripts={scripts} initialFolders={folders} initialExecutions={executions}>
       <ScriptWorkspace />
     </ScriptsProvider>,
   )
+
+let executionCounter = 0
+const createExecution = (overrides: Partial<ScriptExecution> = {}): ScriptExecution => ({
+  id: overrides.id ?? `execution-${executionCounter++}`,
+  scriptId: overrides.scriptId ?? fixture.id,
+  status: overrides.status ?? 'completed',
+  startedAt: overrides.startedAt ?? '2025-12-01T00:00:00.000Z',
+  updatedAt: overrides.updatedAt ?? '2025-12-01T00:05:00.000Z',
+  durationMs: overrides.durationMs ?? 300000,
+  logs: overrides.logs ?? [],
+  endedAt: overrides.endedAt,
+  savedAt: overrides.savedAt,
+})
 
 const createDataTransfer = () => {
   const store = new Map<string, string>()
@@ -72,6 +89,7 @@ const createDataTransfer = () => {
 }
 
 beforeEach(() => {
+  executionCounter = 0
   mockedRunAiReview.mockImplementation(
     () =>
       new Promise<AIReviewResult>((resolve) => {
@@ -99,7 +117,7 @@ describe('ScriptWorkspace', () => {
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await screen.findAllByText('Edge guardian')
-    expect(screen.getByText(/synced/i)).toBeVisible()
+    expect(screen.getByText('Synced')).toBeVisible()
   })
 
   it('lists all supported languages in the editor select', async () => {
@@ -257,8 +275,8 @@ describe('ScriptWorkspace', () => {
 
     const scriptOrder = () =>
       screen
-        .getAllByTestId(/script-/i)
-        .map((button) => within(button).getByText(/job/).textContent?.trim())
+        .getAllByTestId(/script-name-/i)
+        .map((nameNode) => nameNode.textContent?.trim())
 
     await screen.findByTestId('script-script-alpha')
 
@@ -298,8 +316,10 @@ describe('ScriptWorkspace', () => {
 
     renderWorkspace(scripts)
 
-    const scriptButtons = await screen.findAllByTestId(/script-/)
-    const names = scriptButtons.map((button) => within(button).getByText(/runner|watcher/i).textContent?.trim())
+    await screen.findAllByTestId(/script-/)
+    const names = screen
+      .getAllByTestId(/script-name-/i)
+      .map((nameNode) => nameNode.textContent?.trim())
 
     expect(names[0]).toBe('Zulu watcher')
     expect(names[1]).toBe('Alpha runner')
@@ -309,7 +329,7 @@ describe('ScriptWorkspace', () => {
     const user = userEvent.setup()
     renderWorkspace()
 
-    await screen.findByText('Edge patcher')
+    await screen.findAllByText('Edge patcher')
     const checkbox = screen.getByLabelText('Select Edge patcher')
     await user.click(checkbox)
 
@@ -324,11 +344,11 @@ describe('ScriptWorkspace', () => {
 
     const pauseButton = within(executionPanel).getByRole('button', { name: /pause execution/i })
     await user.click(pauseButton)
-    await within(executionPanel).findByText(/paused/i)
+    await screen.findByText('Execution paused.')
 
     const resumeButton = within(executionPanel).getByRole('button', { name: /resume execution/i })
     await user.click(resumeButton)
-    await within(executionPanel).findByText(/running/i)
+    await screen.findByText('Execution resumed.')
 
     const stopButton = within(executionPanel).getByRole('button', { name: /stop execution/i })
     await user.click(stopButton)
@@ -341,5 +361,43 @@ describe('ScriptWorkspace', () => {
     await within(recentPanel).findByText(/Log saved/i)
 
     expect(screen.getByText(/Execution history/i)).toBeVisible()
+  })
+
+  it('deletes an individual execution history entry', async () => {
+    const user = userEvent.setup()
+    const executions = [
+      createExecution({ id: 'execution-old-a', startedAt: '2025-12-01T00:00:00.000Z' }),
+      createExecution({ id: 'execution-old-b', startedAt: '2025-12-02T00:00:00.000Z' }),
+    ]
+
+    renderWorkspace([fixture], undefined, executions)
+
+    await screen.findByText(/Execution history/i)
+    const deleteButton = screen.getByTestId('execution-history-delete-execution-old-a')
+    await user.click(deleteButton)
+
+    await waitFor(() =>
+      expect(screen.queryByTestId('execution-history-delete-execution-old-a')).not.toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('execution-history-delete-execution-old-b')).toBeVisible()
+  })
+
+  it('clears all execution history entries while preserving live runs', async () => {
+    const user = userEvent.setup()
+    const executions = [
+      createExecution({ id: 'execution-history-a', startedAt: '2025-12-01T00:00:00.000Z' }),
+      createExecution({ id: 'execution-history-b', startedAt: '2025-12-02T00:00:00.000Z' }),
+      createExecution({ id: 'execution-live', status: 'running' }),
+    ]
+
+    renderWorkspace([fixture], undefined, executions)
+
+    const clearButton = await screen.findByTestId('execution-history-clear-all')
+    await user.click(clearButton)
+
+    await waitFor(() =>
+      expect(screen.queryByRole('region', { name: /execution history/i })).not.toBeInTheDocument(),
+    )
+    expect(screen.getByTestId('scripts-execution-panel')).toBeVisible()
   })
 })

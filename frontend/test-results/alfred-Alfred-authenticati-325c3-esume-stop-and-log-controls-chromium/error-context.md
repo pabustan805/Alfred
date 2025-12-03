@@ -1,0 +1,252 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary "Primary" [ref=e4]:
+    - img "Alfred – Script & Schedule Simplified" [ref=e6]
+    - navigation "Main navigation" [ref=e7]:
+      - text: Overview
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - link "Dashboard" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+            - generic [ref=e14]: Dashboard
+        - listitem [ref=e15]:
+          - link "Schedules" [ref=e16] [cursor=pointer]:
+            - /url: /schedules
+            - img [ref=e17]
+            - generic [ref=e21]: Schedules
+        - listitem [ref=e22]:
+          - link "Scripts" [ref=e23] [cursor=pointer]:
+            - /url: /scripts
+            - img [ref=e24]
+            - generic [ref=e27]: Scripts
+        - listitem [ref=e28]:
+          - button "Audit Trail" [ref=e29] [cursor=pointer]:
+            - img [ref=e30]
+            - generic [ref=e33]: Audit Trail
+    - navigation "Preferences" [ref=e34]:
+      - text: Workspace
+      - list [ref=e35]:
+        - listitem [ref=e36]:
+          - button "Workspace" [ref=e37] [cursor=pointer]:
+            - img [ref=e38]
+            - generic [ref=e41]: Workspace
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: System uptime
+        - strong [ref=e45]: 99.99%
+        - text: Last incident 42 days ago
+      - button "Sign out of Alfred" [ref=e46] [cursor=pointer]:
+        - img [ref=e47]
+        - generic [ref=e50]: Sign out
+  - generic [ref=e51]:
+    - banner "Workspace header" [ref=e52]:
+      - generic [ref=e53]:
+        - generic "Search scripts" [ref=e54]:
+          - img [ref=e55]
+          - textbox "Search scripts" [ref=e58]:
+            - /placeholder: Search by script, owner, or tag
+        - generic [ref=e59]:
+          - button "Notifications" [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+            - generic [ref=e64]: "5"
+          - generic [ref=e65]:
+            - generic [ref=e67]: AO
+            - generic [ref=e68]:
+              - strong [ref=e69]: Automation Ops
+              - generic [ref=e70]: automation.ops@example.com
+    - main [ref=e71]:
+      - region "Scripts workspace" [ref=e72]:
+        - generic "Scripts hero" [ref=e73]:
+          - generic [ref=e74]:
+            - paragraph [ref=e75]: Advanced control center
+            - heading "Scripts" [level=1] [ref=e76]
+            - text: Author, review, and orchestrate every script artifact in one canvas.
+          - generic [ref=e78]:
+            - strong [ref=e79]: Multi-language
+            - text: bash · python · node · ruby · perl · groovy
+        - region "Scripts workspace" [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - generic [ref=e83]:
+                - img [ref=e84]
+                - textbox "Search scripts" [ref=e87]
+              - generic [ref=e88]:
+                - button "Import scripts" [ref=e89] [cursor=pointer]:
+                  - img
+                  - generic [ref=e90]: Import scripts
+                - button "New script" [ref=e91] [cursor=pointer]:
+                  - img
+                  - generic [ref=e92]: New script
+                - button "New folder" [ref=e93] [cursor=pointer]:
+                  - img
+                  - generic [ref=e94]: New folder
+                - button "Sort scripts" [ref=e96] [cursor=pointer]:
+                  - img
+                  - generic [ref=e97]: Sort scripts
+                - button "Enter folder pane fullscreen" [ref=e98] [cursor=pointer]:
+                  - img
+                  - generic: fullscreen
+            - region "Bulk script actions" [ref=e99]:
+              - generic [ref=e100]:
+                - strong [ref=e101]: "1"
+                - generic [ref=e102]: selected
+            - region "Live script executions" [ref=e103]:
+              - generic [ref=e104]:
+                - generic [ref=e105]:
+                  - paragraph [ref=e106]: Live executions
+                  - strong [ref=e107]: "1"
+                - generic [ref=e108]: Tap a script to inspect its run
+              - list [ref=e109]:
+                - listitem [ref=e110]:
+                  - button "Notify salesforce drift Dec 2, 2025, 11:26 PM running" [ref=e111]:
+                    - generic [ref=e112]:
+                      - strong [ref=e113]: Notify salesforce drift
+                      - text: Dec 2, 2025, 11:26 PM
+                    - generic [ref=e114]:
+                      - text: running
+                      - img [ref=e115]
+            - tree [ref=e117]:
+              - listitem [ref=e118]:
+                - generic [ref=e119]:
+                  - button "Collapse Integrations" [ref=e120] [cursor=pointer]:
+                    - img [ref=e121]
+                  - img [ref=e123]
+                  - strong [ref=e125]: Integrations
+                  - generic "1 scripts" [ref=e126]: "1"
+                  - button "Delete folder Integrations" [ref=e127] [cursor=pointer]:
+                    - img [ref=e128]
+                - group [ref=e131]:
+                  - listitem [ref=e132]:
+                    - generic [ref=e133]:
+                      - generic [ref=e134]: "01"
+                      - checkbox "Select Notify salesforce drift" [checked] [ref=e136]
+                      - button "Notify salesforce drift" [ref=e137] [cursor=pointer]:
+                        - generic [ref=e138]: Notify salesforce drift
+                    - generic [ref=e139]:
+                      - button "Clone Notify salesforce drift" [ref=e140] [cursor=pointer]:
+                        - img [ref=e141]
+                      - button "Delete Notify salesforce drift" [ref=e144] [cursor=pointer]:
+                        - img [ref=e145]
+                      - button "Move Notify salesforce drift" [ref=e148] [cursor=pointer]:
+                        - img [ref=e149]
+              - listitem [ref=e152]:
+                - generic [ref=e153]:
+                  - button "Collapse Operations" [ref=e154] [cursor=pointer]:
+                    - img [ref=e155]
+                  - img [ref=e157]
+                  - strong [ref=e159]: Operations
+                  - generic "2 scripts" [ref=e160]: "2"
+                  - button "Delete folder Operations" [ref=e161] [cursor=pointer]:
+                    - img [ref=e162]
+                - group [ref=e165]:
+                  - listitem [ref=e166]:
+                    - generic [ref=e167]:
+                      - generic [ref=e168]: "01"
+                      - checkbox "Select Clean orphaned pods" [ref=e170]
+                      - button "Clean orphaned pods" [ref=e171] [cursor=pointer]:
+                        - generic [ref=e172]: Clean orphaned pods
+                    - generic [ref=e173]:
+                      - button "Clone Clean orphaned pods" [ref=e174] [cursor=pointer]:
+                        - img [ref=e175]
+                      - button "Delete Clean orphaned pods" [ref=e178] [cursor=pointer]:
+                        - img [ref=e179]
+                      - button "Move Clean orphaned pods" [ref=e182] [cursor=pointer]:
+                        - img [ref=e183]
+                - group [ref=e186]:
+                  - listitem [ref=e187]:
+                    - generic [ref=e188]:
+                      - button "Collapse Site Reliability" [ref=e189] [cursor=pointer]:
+                        - img [ref=e190]
+                      - img [ref=e192]
+                      - strong [ref=e194]: Site Reliability
+                      - generic "1 scripts" [ref=e195]: "1"
+                      - button "Delete folder Site Reliability" [ref=e196] [cursor=pointer]:
+                        - img [ref=e197]
+                    - group [ref=e200]:
+                      - listitem [ref=e201]:
+                        - generic [ref=e202]:
+                          - generic [ref=e203]: "01"
+                          - checkbox "Select Rotate Edge Certificates" [ref=e205]
+                          - button "Rotate Edge Certificates" [ref=e206] [cursor=pointer]:
+                            - generic [ref=e207]: Rotate Edge Certificates
+                        - generic [ref=e208]:
+                          - button "Clone Rotate Edge Certificates" [ref=e209] [cursor=pointer]:
+                            - img [ref=e210]
+                          - button "Delete Rotate Edge Certificates" [ref=e213] [cursor=pointer]:
+                            - img [ref=e214]
+                          - button "Move Rotate Edge Certificates" [ref=e217] [cursor=pointer]:
+                            - img [ref=e218]
+              - listitem [ref=e221]:
+                - generic [ref=e222]:
+                  - img [ref=e223]
+                  - strong [ref=e225]: Ungrouped
+                  - generic "0 scripts" [ref=e226]: "0"
+          - separator "Resize scripts panes" [ref=e227]
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - generic [ref=e231]:
+                - heading "Rotate Edge Certificates" [level=3] [ref=e232]
+                - generic [ref=e233]:
+                  - generic [ref=e234]:
+                    - text: Bashwizard
+                    - time [ref=e235]: Nov 25, 2025, 2:20 AM
+                  - paragraph [ref=e236]: Fetches fresh TLS certs and deploys them to the edge proxy tier.
+              - generic [ref=e237]:
+                - button "Run AI review" [ref=e238] [cursor=pointer]:
+                  - img [ref=e239]
+                - button "Run selected scripts" [active] [ref=e242] [cursor=pointer]:
+                  - img [ref=e243]
+                - button "Clone selected script" [ref=e245] [cursor=pointer]:
+                  - img [ref=e246]
+                - button "Delete selected script" [ref=e249] [cursor=pointer]:
+                  - img [ref=e250]
+                - button "Enter editor pane fullscreen" [ref=e253] [cursor=pointer]:
+                  - img
+                  - generic: fullscreen
+            - generic [ref=e254]:
+              - text: Script name
+              - textbox "Script name" [ref=e255]: Rotate Edge Certificates
+            - generic [ref=e256]:
+              - text: Script description
+              - textbox "Script description" [ref=e257]: Fetches fresh TLS certs and deploys them to the edge proxy tier.
+            - generic [ref=e258]:
+              - generic [ref=e259]:
+                - generic [ref=e260]: Language
+                - combobox "Language" [ref=e261]:
+                  - option "Bash" [selected]
+                  - option "Python"
+                  - option "Node.js"
+                  - option "Ruby"
+                  - option "Perl"
+                  - option "Groovy"
+              - generic [ref=e262]:
+                - generic [ref=e263]: Folder
+                - combobox "Folder" [ref=e264]:
+                  - option "Ungrouped"
+                  - option "Integrations"
+                  - option "Operations"
+                  - option "— Site Reliability" [selected]
+            - generic [ref=e265]:
+              - text: Script content
+              - generic "Script content" [ref=e266]:
+                - generic [ref=e268]:
+                  - generic [ref=e270]:
+                    - generic [ref=e271]: "1"
+                    - generic [ref=e272]: "2"
+                    - generic [ref=e273]: "3"
+                    - generic [ref=e274]: "4"
+                    - generic [ref=e275]: "5"
+                  - textbox [ref=e278]:
+                    - generic [ref=e279]: "#!/bin/bash"
+                    - generic [ref=e280]: set -euo pipefail
+                    - generic [ref=e281]: acmectl fetch --env=prod
+                    - generic [ref=e282]: systemctl reload edge-proxy
+            - generic [ref=e284]:
+              - button "Revert" [disabled] [ref=e285] [cursor=pointer]:
+                - img [ref=e286]
+                - generic [ref=e291]: Revert
+              - button "Save changes" [disabled] [ref=e292] [cursor=pointer]
+```

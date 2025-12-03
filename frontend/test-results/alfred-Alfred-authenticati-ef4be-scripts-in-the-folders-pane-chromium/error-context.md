@@ -1,0 +1,270 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary "Primary" [ref=e4]:
+    - img "Alfred – Script & Schedule Simplified" [ref=e6]
+    - navigation "Main navigation" [ref=e7]:
+      - text: Overview
+      - list [ref=e8]:
+        - listitem [ref=e9]:
+          - link "Dashboard" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img [ref=e11]
+            - generic [ref=e14]: Dashboard
+        - listitem [ref=e15]:
+          - link "Schedules" [ref=e16] [cursor=pointer]:
+            - /url: /schedules
+            - img [ref=e17]
+            - generic [ref=e21]: Schedules
+        - listitem [ref=e22]:
+          - link "Scripts" [ref=e23] [cursor=pointer]:
+            - /url: /scripts
+            - img [ref=e24]
+            - generic [ref=e27]: Scripts
+        - listitem [ref=e28]:
+          - button "Audit Trail" [ref=e29] [cursor=pointer]:
+            - img [ref=e30]
+            - generic [ref=e33]: Audit Trail
+    - navigation "Preferences" [ref=e34]:
+      - text: Workspace
+      - list [ref=e35]:
+        - listitem [ref=e36]:
+          - button "Workspace" [ref=e37] [cursor=pointer]:
+            - img [ref=e38]
+            - generic [ref=e41]: Workspace
+    - generic [ref=e42]:
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: System uptime
+        - strong [ref=e45]: 99.99%
+        - text: Last incident 42 days ago
+      - button "Sign out of Alfred" [ref=e46] [cursor=pointer]:
+        - img [ref=e47]
+        - generic [ref=e50]: Sign out
+  - generic [ref=e51]:
+    - banner "Workspace header" [ref=e52]:
+      - generic [ref=e53]:
+        - generic "Search scripts" [ref=e54]:
+          - img [ref=e55]
+          - textbox "Search scripts" [ref=e58]:
+            - /placeholder: Search by script, owner, or tag
+        - generic [ref=e59]:
+          - button "Notifications" [ref=e60] [cursor=pointer]:
+            - img [ref=e61]
+            - generic [ref=e64]: "5"
+          - generic [ref=e65]:
+            - generic [ref=e67]: AO
+            - generic [ref=e68]:
+              - strong [ref=e69]: Automation Ops
+              - generic [ref=e70]: automation.ops@example.com
+    - main [ref=e71]:
+      - region "Scripts workspace" [ref=e72]:
+        - generic "Scripts hero" [ref=e73]:
+          - generic [ref=e74]:
+            - paragraph [ref=e75]: Advanced control center
+            - heading "Scripts" [level=1] [ref=e76]
+            - text: Author, review, and orchestrate every script artifact in one canvas.
+          - generic [ref=e78]:
+            - strong [ref=e79]: Multi-language
+            - text: bash · python · node · ruby · perl · groovy
+        - region "Scripts workspace" [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - generic [ref=e83]:
+                - img [ref=e84]
+                - textbox "Search scripts" [ref=e87]
+              - generic [ref=e88]:
+                - button "Import scripts" [ref=e89] [cursor=pointer]:
+                  - img
+                  - generic [ref=e90]: Import scripts
+                - button "New script" [ref=e91] [cursor=pointer]:
+                  - img
+                  - generic [ref=e92]: New script
+                - button "New folder" [ref=e93] [cursor=pointer]:
+                  - img
+                  - generic [ref=e94]: New folder
+                - generic [ref=e95]:
+                  - button "Sort scripts" [expanded] [ref=e96] [cursor=pointer]:
+                    - img
+                    - generic [ref=e97]: Sort scripts
+                  - menu "Sort scripts" [ref=e98]:
+                    - paragraph [ref=e99]: Sort by
+                    - generic [ref=e100]:
+                      - generic [ref=e101] [cursor=pointer]:
+                        - radio "Title" [ref=e102]
+                        - generic [ref=e103]: Title
+                      - generic [ref=e104] [cursor=pointer]:
+                        - radio "Created date" [checked] [active] [ref=e105]
+                        - generic [ref=e106]: Created date
+                      - generic [ref=e107] [cursor=pointer]:
+                        - radio "Tag" [ref=e108]
+                        - generic [ref=e109]: Tag
+                    - generic [ref=e110]:
+                      - generic [ref=e111]: Direction
+                      - button "Ascending (A → Z)" [ref=e112] [cursor=pointer]
+                - button "Enter folder pane fullscreen" [ref=e113] [cursor=pointer]:
+                  - img
+                  - generic: fullscreen
+            - region "Bulk script actions" [ref=e114]:
+              - generic [ref=e115]:
+                - strong [ref=e116]: "1"
+                - generic [ref=e117]: selected
+            - tree [ref=e118]:
+              - listitem [ref=e119]:
+                - generic [ref=e120]:
+                  - button "Collapse Integrations" [ref=e121] [cursor=pointer]:
+                    - img [ref=e122]
+                  - img [ref=e124]
+                  - strong [ref=e126]: Integrations
+                  - generic "1 scripts" [ref=e127]: "1"
+                  - button "Delete folder Integrations" [ref=e128] [cursor=pointer]:
+                    - img [ref=e129]
+                - group [ref=e132]:
+                  - listitem [ref=e133]:
+                    - generic [ref=e134]:
+                      - generic [ref=e135]: "01"
+                      - checkbox "Select Notify salesforce drift" [ref=e137]
+                      - button "Notify salesforce drift" [ref=e138] [cursor=pointer]:
+                        - generic [ref=e139]: Notify salesforce drift
+                    - generic [ref=e140]:
+                      - button "Clone Notify salesforce drift" [ref=e141] [cursor=pointer]:
+                        - img [ref=e142]
+                      - button "Delete Notify salesforce drift" [ref=e145] [cursor=pointer]:
+                        - img [ref=e146]
+                      - button "Move Notify salesforce drift" [ref=e149] [cursor=pointer]:
+                        - img [ref=e150]
+              - listitem [ref=e153]:
+                - generic [ref=e154]:
+                  - button "Collapse Operations" [ref=e155] [cursor=pointer]:
+                    - img [ref=e156]
+                  - img [ref=e158]
+                  - strong [ref=e160]: Operations
+                  - generic "4 scripts" [ref=e161]: "4"
+                  - button "Delete folder Operations" [ref=e162] [cursor=pointer]:
+                    - img [ref=e163]
+                - group [ref=e166]:
+                  - listitem [ref=e167]:
+                    - generic [ref=e168]:
+                      - generic [ref=e169]: "01"
+                      - checkbox "Select Clean orphaned pods" [ref=e171]
+                      - button "Clean orphaned pods" [ref=e172] [cursor=pointer]:
+                        - generic [ref=e173]: Clean orphaned pods
+                    - generic [ref=e174]:
+                      - button "Clone Clean orphaned pods" [ref=e175] [cursor=pointer]:
+                        - img [ref=e176]
+                      - button "Delete Clean orphaned pods" [ref=e179] [cursor=pointer]:
+                        - img [ref=e180]
+                      - button "Move Clean orphaned pods" [ref=e183] [cursor=pointer]:
+                        - img [ref=e184]
+                - group [ref=e187]:
+                  - listitem [ref=e188]:
+                    - generic [ref=e189]:
+                      - button "Collapse Site Reliability" [ref=e190] [cursor=pointer]:
+                        - img [ref=e191]
+                      - img [ref=e193]
+                      - strong [ref=e195]: Site Reliability
+                      - generic "3 scripts" [ref=e196]: "3"
+                      - button "Delete folder Site Reliability" [ref=e197] [cursor=pointer]:
+                        - img [ref=e198]
+                    - group [ref=e201]:
+                      - listitem [ref=e202]:
+                        - generic [ref=e203]:
+                          - generic [ref=e204]: "01"
+                          - checkbox "Select Rotate Edge Certificates" [ref=e206]
+                          - button "Rotate Edge Certificates" [ref=e207] [cursor=pointer]:
+                            - generic [ref=e208]: Rotate Edge Certificates
+                        - generic [ref=e209]:
+                          - button "Clone Rotate Edge Certificates" [ref=e210] [cursor=pointer]:
+                            - img [ref=e211]
+                          - button "Delete Rotate Edge Certificates" [ref=e214] [cursor=pointer]:
+                            - img [ref=e215]
+                          - button "Move Rotate Edge Certificates" [ref=e218] [cursor=pointer]:
+                            - img [ref=e219]
+                      - listitem [ref=e222]:
+                        - generic [ref=e223]:
+                          - generic [ref=e224]: "02"
+                          - checkbox "Select Alpha script" [ref=e226]
+                          - button "Alpha script" [ref=e227] [cursor=pointer]:
+                            - generic [ref=e228]: Alpha script
+                        - generic [ref=e229]:
+                          - button "Clone Alpha script" [ref=e230] [cursor=pointer]:
+                            - img [ref=e231]
+                          - button "Delete Alpha script" [ref=e234] [cursor=pointer]:
+                            - img [ref=e235]
+                          - button "Move Alpha script" [ref=e238] [cursor=pointer]:
+                            - img [ref=e239]
+                      - listitem [ref=e242]:
+                        - generic [ref=e243]:
+                          - generic [ref=e244]: "03"
+                          - checkbox "Select Zulu script" [checked] [ref=e246]
+                          - button "Zulu script" [ref=e247] [cursor=pointer]:
+                            - generic [ref=e248]: Zulu script
+                        - generic [ref=e249]:
+                          - button "Clone Zulu script" [ref=e250] [cursor=pointer]:
+                            - img [ref=e251]
+                          - button "Delete Zulu script" [ref=e254] [cursor=pointer]:
+                            - img [ref=e255]
+                          - button "Move Zulu script" [ref=e258] [cursor=pointer]:
+                            - img [ref=e259]
+              - listitem [ref=e262]:
+                - generic [ref=e263]:
+                  - img [ref=e264]
+                  - strong [ref=e266]: Ungrouped
+                  - generic "0 scripts" [ref=e267]: "0"
+          - separator "Resize scripts panes" [ref=e268]
+          - generic [ref=e270]:
+            - generic [ref=e271]:
+              - generic [ref=e272]:
+                - heading "Zulu script" [level=3] [ref=e273]
+                - generic [ref=e274]:
+                  - generic [ref=e275]:
+                    - text: Bashmanual
+                    - time [ref=e276]: Dec 2, 2025, 11:26 PM
+                  - paragraph
+              - generic [ref=e277]:
+                - button "Run AI review" [ref=e278] [cursor=pointer]:
+                  - img [ref=e279]
+                - button "Run selected scripts" [ref=e282] [cursor=pointer]:
+                  - img [ref=e283]
+                - button "Clone selected script" [ref=e285] [cursor=pointer]:
+                  - img [ref=e286]
+                - button "Delete selected script" [ref=e289] [cursor=pointer]:
+                  - img [ref=e290]
+                - button "Enter editor pane fullscreen" [ref=e293] [cursor=pointer]:
+                  - img
+                  - generic: fullscreen
+            - generic [ref=e294]:
+              - text: Script name
+              - textbox "Script name" [ref=e295]
+            - generic [ref=e296]:
+              - text: Script description
+              - textbox "Script description" [ref=e297]
+            - generic [ref=e298]:
+              - generic [ref=e299]:
+                - generic [ref=e300]: Language
+                - combobox "Language" [ref=e301]:
+                  - option "Bash" [selected]
+                  - option "Python"
+                  - option "Node.js"
+                  - option "Ruby"
+                  - option "Perl"
+                  - option "Groovy"
+              - generic [ref=e302]:
+                - generic [ref=e303]: Folder
+                - combobox "Folder" [ref=e304]:
+                  - option "Ungrouped"
+                  - option "Integrations"
+                  - option "Operations"
+                  - option "— Site Reliability" [selected]
+            - generic [ref=e305]:
+              - text: Script content
+              - generic "Script content" [ref=e306]:
+                - generic [ref=e308]:
+                  - generic [ref=e311]: "1"
+                  - textbox [ref=e314]
+            - generic [ref=e316]:
+              - button "Revert" [ref=e317] [cursor=pointer]:
+                - img [ref=e318]
+                - generic [ref=e323]: Revert
+              - button "Save changes" [ref=e324] [cursor=pointer]
+```

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Locator, type Page } from '@playwright/test'
 
 const wizardRegion = 'Cron creation wizard'
 
@@ -11,6 +11,14 @@ test.describe('Alfred authentication and workspace', () => {
     await page.getByLabel('Password').fill('StrongPass1!')
     await page.getByRole('button', { name: /create account/i }).click()
   }
+
+  const openScriptsWorkspace = async (page: Page) => {
+    await page.getByRole('link', { name: /scripts/i }).click()
+    await page.getByRole('heading', { name: /scripts/i }).waitFor()
+    return page.getByRole('region', { name: /scripts workspace/i })
+  }
+
+  const firstScriptCheckbox = (workspace: Locator) => workspace.locator('[data-testid^="script-select-"]').first()
 
   test('registers and schedules cron jobs from dedicated view', async ({ page }) => {
     await registerAndEnterWorkspace(page, {
@@ -70,9 +78,7 @@ test.describe('Alfred authentication and workspace', () => {
       email: 'automation.ops@example.com',
     })
 
-    await page.getByRole('link', { name: /scripts/i }).click()
-
-    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    const workspace = await openScriptsWorkspace(page)
     await workspace.getByRole('button', { name: /new script/i }).click()
 
     const languageSelect = workspace.getByLabel('Language')
@@ -101,9 +107,7 @@ test.describe('Alfred authentication and workspace', () => {
       email: 'automation.ops@example.com',
     })
 
-    await page.getByRole('link', { name: /scripts/i }).click()
-
-    const workspace = page.locator('.scripts__workspace[role="region"][aria-label="Scripts workspace"]')
+    const workspace = await openScriptsWorkspace(page)
     await expect(page.getByRole('heading', { name: 'Scripts' })).toBeVisible()
 
     await workspace.getByRole('button', { name: /new script/i }).click()
@@ -166,9 +170,7 @@ test.describe('Alfred authentication and workspace', () => {
       email: 'automation.ops@example.com',
     })
 
-    await page.getByRole('link', { name: /scripts/i }).click()
-
-    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    const workspace = await openScriptsWorkspace(page)
     const integrationsFolder = workspace.locator('[data-folder-label="Integrations"]')
     const operationsFolder = workspace.locator('[data-folder-label="Operations"]')
     const integrationsCount = integrationsFolder.locator('.scripts__folder-count')
@@ -191,9 +193,7 @@ test.describe('Alfred authentication and workspace', () => {
       email: 'automation.ops@example.com',
     })
 
-    await page.getByRole('link', { name: /scripts/i }).click()
-
-    const workspace = page.getByRole('region', { name: /scripts workspace/i })
+    const workspace = await openScriptsWorkspace(page)
     const newScriptButton = workspace.getByRole('button', { name: /new script/i })
     const saveButton = workspace.getByRole('button', { name: /save changes/i })
     const nameInput = workspace.getByLabel('Script name')
@@ -233,13 +233,8 @@ test.describe('Alfred authentication and workspace', () => {
       email: 'automation.ops@example.com',
     })
 
-    await page.getByRole('link', { name: /scripts/i }).click()
-
-    const workspace = page.getByRole('region', { name: /scripts workspace/i })
-    await workspace.getByText('Edge patcher').waitFor()
-
-    const firstScriptCheckbox = workspace.getByLabel('Select Edge patcher')
-    await firstScriptCheckbox.click()
+    const workspace = await openScriptsWorkspace(page)
+    await firstScriptCheckbox(workspace).check()
 
     const runButton = workspace.getByTestId('scripts-bulk-run')
     await runButton.click()
@@ -268,5 +263,67 @@ test.describe('Alfred authentication and workspace', () => {
     await expect(workspace.getByText(/Log saved/i)).toBeVisible()
 
     await expect(workspace.getByText(/Execution history/i)).toBeVisible()
+  })
+
+  test('allows deleting individual execution history entries', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
+
+    const workspace = await openScriptsWorkspace(page)
+    const selectAnyScript = async () => {
+      await firstScriptCheckbox(workspace).check()
+    }
+    const runButton = workspace.getByTestId('scripts-bulk-run')
+    const historyItems = workspace.locator('.scripts__execution-history li')
+
+    const runScriptOnce = async (expectedHistoryCount: number) => {
+      await selectAnyScript()
+      await runButton.click()
+      const executionPanel = workspace.getByTestId('scripts-execution-panel')
+      await executionPanel.waitFor()
+      await executionPanel.getByRole('button', { name: /stop execution/i }).click()
+      await expect.poll(async () => historyItems.count()).toBe(expectedHistoryCount)
+    }
+
+    await runScriptOnce(1)
+    await runScriptOnce(2)
+
+    const deleteButtons = workspace.locator('[data-testid^="execution-history-delete-"]')
+    await expect(deleteButtons).toHaveCount(2)
+    await deleteButtons.first().click()
+
+    await expect.poll(async () => historyItems.count()).toBe(1)
+    await expect(deleteButtons.first()).toBeVisible()
+  })
+
+  test('clears all execution history entries', async ({ page }) => {
+    await registerAndEnterWorkspace(page, {
+      name: 'Automation Ops',
+      email: 'automation.ops@example.com',
+    })
+
+    const workspace = await openScriptsWorkspace(page)
+    const selectAnyScript = async () => {
+      await firstScriptCheckbox(workspace).check()
+    }
+    const runButton = workspace.getByTestId('scripts-bulk-run')
+    const historyItems = workspace.locator('.scripts__execution-history li')
+
+    await selectAnyScript()
+    await runButton.click()
+    const executionPanel = workspace.getByTestId('scripts-execution-panel')
+    await executionPanel.waitFor()
+    await executionPanel.getByRole('button', { name: /stop execution/i }).click()
+
+    await expect.poll(async () => historyItems.count()).toBe(1)
+
+    const clearButton = workspace.getByTestId('execution-history-clear-all')
+    await clearButton.click()
+
+    await expect.poll(async () => historyItems.count()).toBe(0)
+    const historyRegion = workspace.getByRole('region', { name: /execution history/i })
+    await expect(historyRegion).toBeHidden()
   })
 })

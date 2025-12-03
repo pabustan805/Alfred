@@ -881,6 +881,12 @@ main {
   gap: 0.55rem;
 }
 
+.scripts__execution-history__title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 .scripts__execution-history li {
   display: flex;
   justify-content: space-between;
@@ -1552,6 +1558,11 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.scripts__sync-indicator {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .scripts__confirm {

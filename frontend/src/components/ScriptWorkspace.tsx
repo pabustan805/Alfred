@@ -122,6 +122,8 @@ export function ScriptWorkspace() {
     resumeExecution,
     stopExecution,
     storeExecutionLog,
+    removeExecutionEntry,
+    clearExecutionsForScript,
   } = useScripts()
   const [selectedId, setSelectedId] = useState<string | null>(scripts[0]?.id ?? null)
   const [draft, setDraft] = useState<Draft | null>(scripts[0] ? toDraft(scripts[0]) : null)
@@ -164,6 +166,7 @@ export function ScriptWorkspace() {
   const [bulkSelection, setBulkSelection] = useState<string[]>([])
   const [bulkActionFeedback, setBulkActionFeedback] = useState<string | null>(null)
   const [executionFeedback, setExecutionFeedback] = useState<string | null>(null)
+  const [formFeedback, setFormFeedback] = useState<string | null>(null)
   const [executionDetailId, setExecutionDetailId] = useState<string | null>(null)
   const pendingSelectionRef = useRef<string | null>(null)
   const lastSyncedScriptIdRef = useRef<string | null>(scripts[0]?.id ?? null)
@@ -329,6 +332,14 @@ export function ScriptWorkspace() {
   }, [executionFeedback])
 
   useEffect(() => {
+    if (!formFeedback) {
+      return
+    }
+    const timeout = window.setTimeout(() => setFormFeedback(null), 2500)
+    return () => window.clearTimeout(timeout)
+  }, [formFeedback])
+
+  useEffect(() => {
     if (executionDetailId && !executionDetail) {
       setExecutionDetailId(null)
     }
@@ -442,6 +453,12 @@ export function ScriptWorkspace() {
     )
   }, [activeScript, draft])
 
+  useEffect(() => {
+    if (isDirty) {
+      setFormFeedback(null)
+    }
+  }, [isDirty])
+
   const handleScriptSelection = useCallback((scriptId: string) => {
     setSelectedId(scriptId)
     setPendingDeleteId(null)
@@ -498,6 +515,7 @@ export function ScriptWorkspace() {
     }
     await updateScript(activeScript.id, draft)
     setPendingDeleteId(null)
+    setFormFeedback('Synced')
   }
 
   const handleAiReview = useCallback(async () => {
@@ -591,6 +609,26 @@ export function ScriptWorkspace() {
   const handleStoreExecutionLog = (executionId: string) => {
     storeExecutionLog(executionId)
     setExecutionFeedback('Execution log stored for debugging.')
+  }
+
+  const handleDeleteHistoryEntry = (executionId: string) => {
+    removeExecutionEntry(executionId)
+    if (executionDetailId === executionId) {
+      setExecutionDetailId(null)
+    }
+    setExecutionFeedback('Execution history entry deleted.')
+  }
+
+  const handleClearExecutionHistory = () => {
+    if (!activeScript?.id || !secondaryExecutions.length) {
+      return
+    }
+    const protectedIds = primaryExecution ? [primaryExecution.id] : []
+    clearExecutionsForScript(activeScript.id, { excludeIds: protectedIds })
+    if (executionDetailId && !protectedIds.includes(executionDetailId)) {
+      setExecutionDetailId(null)
+    }
+    setExecutionFeedback('Execution history cleared.')
   }
 
   const handleViewExecutionDetail = (executionId: string) => {
@@ -938,7 +976,9 @@ export function ScriptWorkspace() {
                         className={`scripts__list-item scripts__list-item--compact${selectedId === script.id ? ' is-selected' : ''}`}
                       >
                         <div className="scripts__list-primary">
-                          <span className="scripts__script-name">{script.name}</span>
+                          <span className="scripts__script-name" data-testid={`script-name-${script.id}`}>
+                            {script.name}
+                          </span>
                         </div>
                       </button>
                     </div>
@@ -1497,8 +1537,22 @@ export function ScriptWorkspace() {
             {secondaryExecutions.length > 0 && (
               <section className="scripts__execution-history" aria-label="Execution history">
                 <header>
-                  <p>Execution history</p>
-                  <span>{secondaryExecutions.length} prior {secondaryExecutions.length === 1 ? 'run' : 'runs'}</span>
+                  <div className="scripts__execution-history__title">
+                    <p>Execution history</p>
+                    <span>
+                      {secondaryExecutions.length} prior {secondaryExecutions.length === 1 ? 'run' : 'runs'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="ghost"
+                    onClick={handleClearExecutionHistory}
+                    aria-label="Clear execution history"
+                    title="Clear all history"
+                    data-testid="execution-history-clear-all"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </header>
                 <ul>
                   {secondaryExecutions.map((execution) => (
@@ -1516,6 +1570,7 @@ export function ScriptWorkspace() {
                           className="ghost"
                           onClick={() => handleStoreExecutionLog(execution.id)}
                           aria-label="Store execution log"
+                          title="Save this log"
                         >
                           <Save size={14} />
                         </button>
@@ -1524,8 +1579,19 @@ export function ScriptWorkspace() {
                           className="ghost"
                           onClick={() => handleViewExecutionDetail(execution.id)}
                           aria-label="View execution detail"
+                          title="View detailed output"
                         >
                           <FileText size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="ghost"
+                          onClick={() => handleDeleteHistoryEntry(execution.id)}
+                          aria-label="Delete history entry"
+                          title="Delete this entry"
+                          data-testid={`execution-history-delete-${execution.id}`}
+                        >
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </li>
@@ -1581,7 +1647,7 @@ export function ScriptWorkspace() {
             </label>
 
             <div className="scripts__editor-row">
-              <div className="scripts__field-inline">
+              <label className="scripts__field-inline">
                 <span>Language</span>
                 <select
                   value={draft.language}
@@ -1600,8 +1666,8 @@ export function ScriptWorkspace() {
                     </option>
                   ))}
                 </select>
-              </div>
-              <div className="scripts__field-inline">
+              </label>
+              <label className="scripts__field-inline">
                 <span>Folder</span>
                 <select
                   value={draft.folderId ?? ''}
@@ -1620,7 +1686,7 @@ export function ScriptWorkspace() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </label>
             </div>
 
             <label className="field">
@@ -1648,6 +1714,11 @@ export function ScriptWorkspace() {
               <button type="button" className="primary" onClick={handleSave} disabled={!isDirty}>
                 Save changes
               </button>
+              {formFeedback && (
+                <span className="scripts__sync-indicator" role="status">
+                  {formFeedback}
+                </span>
+              )}
             </div>
 
             {isAiPanelVisible && (

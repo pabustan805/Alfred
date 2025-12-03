@@ -50,6 +50,8 @@ interface ScriptsContextValue {
   resumeExecution: (executionId: string) => void
   stopExecution: (executionId: string) => void
   storeExecutionLog: (executionId: string) => void
+  removeExecutionEntry: (executionId: string) => void
+  clearExecutionsForScript: (scriptId: string, options?: { excludeIds?: string[] }) => void
 }
 
 const ScriptsContext = createContext<ScriptsContextValue | undefined>(undefined)
@@ -256,6 +258,42 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
           }
         })
         return prev.filter((execution) => !ids.includes(execution.scriptId))
+      })
+    },
+    [clearAutoCompleteTimer],
+  )
+
+  const removeExecutionEntry = useCallback(
+    (executionId: string) => {
+      if (!executionId) {
+        return
+      }
+      clearAutoCompleteTimer(executionId)
+      setExecutions((prev) => prev.filter((execution) => execution.id !== executionId))
+    },
+    [clearAutoCompleteTimer],
+  )
+
+  const clearExecutionsForScript = useCallback(
+    (scriptId: string, options?: { excludeIds?: string[] }) => {
+      if (!scriptId) {
+        return
+      }
+      const excludeSet = new Set(options?.excludeIds ?? [])
+      setExecutions((prev) => {
+        let changed = false
+        const next = prev.filter((execution) => {
+          if (execution.scriptId !== scriptId) {
+            return true
+          }
+          if (excludeSet.has(execution.id)) {
+            return true
+          }
+          changed = true
+          clearAutoCompleteTimer(execution.id)
+          return false
+        })
+        return changed ? next : prev
       })
     },
     [clearAutoCompleteTimer],
@@ -636,25 +674,29 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       resumeExecution,
       stopExecution,
       storeExecutionLog,
+      removeExecutionEntry,
+      clearExecutionsForScript,
     }),
     [
-      cloneScript,
-      createFolder,
-      createScript,
-      deleteFolder,
-      deleteScript,
-      executions,
+      scripts,
       folders,
-      importScripts,
+      executions,
       mutation,
+      createScript,
+      updateScript,
+      deleteScript,
+      cloneScript,
+      importScripts,
+      createFolder,
+      updateFolder,
+      deleteFolder,
+      startExecutions,
       pauseExecution,
       resumeExecution,
-      scripts,
-      startExecutions,
       stopExecution,
       storeExecutionLog,
-      updateFolder,
-      updateScript,
+      removeExecutionEntry,
+      clearExecutionsForScript,
     ],
   )
 
