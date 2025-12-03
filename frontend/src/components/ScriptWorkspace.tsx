@@ -163,7 +163,7 @@ export function ScriptWorkspace() {
   const [sortConfig, setSortConfig] = useState<ScriptSortConfig>(() => loadStoredSortConfig())
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false)
   const sortMenuRef = useRef<HTMLDivElement | null>(null)
-  const [bulkSelection, setBulkSelection] = useState<string[]>([])
+  const [bulkSelection, setBulkSelection] = useState<string[]>(() => (scripts[0]?.id ? [scripts[0].id] : []))
   const [bulkActionFeedback, setBulkActionFeedback] = useState<string | null>(null)
   const [executionFeedback, setExecutionFeedback] = useState<string | null>(null)
   const [formFeedback, setFormFeedback] = useState<string | null>(null)
@@ -570,10 +570,6 @@ export function ScriptWorkspace() {
     setPendingDeleteId(id)
   }
 
-  const toggleScriptSelection = (scriptId: string) => {
-    setBulkSelection((prev) => (prev.includes(scriptId) ? prev.filter((id) => id !== scriptId) : [...prev, scriptId]))
-  }
-
   const handleBulkRun = useCallback(async () => {
     if (bulkSelectionCount === 0) {
       return
@@ -958,10 +954,11 @@ export function ScriptWorkspace() {
                       </span>
                       <div className="scripts__script-select">
                         <input
-                          type="checkbox"
+                          type="radio"
+                          name="script-select"
                           aria-label={`Select ${script.name}`}
                           checked={bulkSelectionSet.has(script.id)}
-                          onChange={() => toggleScriptSelection(script.id)}
+                          onChange={() => handleScriptSelection(script.id)}
                           data-testid={`script-select-${script.id}`}
                         />
                       </div>
