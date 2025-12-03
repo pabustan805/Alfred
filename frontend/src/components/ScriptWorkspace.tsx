@@ -54,6 +54,7 @@ import {
   type ScriptSortField,
 } from '../scripts/folderUtils'
 import { useScripts } from '../scripts/ScriptContext'
+import { AuditLogPanel } from '../audit/AuditLogPanel'
 import { runAiReview } from '../ai/reviewer'
 import type { AIReviewResult } from '../ai/reviewer'
 
@@ -167,6 +168,7 @@ export function ScriptWorkspace() {
   const [bulkActionFeedback, setBulkActionFeedback] = useState<string | null>(null)
   const [executionFeedback, setExecutionFeedback] = useState<string | null>(null)
   const [formFeedback, setFormFeedback] = useState<string | null>(null)
+  const [scriptToast, setScriptToast] = useState<string | null>(null)
   const [executionDetailId, setExecutionDetailId] = useState<string | null>(null)
   const pendingSelectionRef = useRef<string | null>(null)
   const lastSyncedScriptIdRef = useRef<string | null>(scripts[0]?.id ?? null)
@@ -340,6 +342,14 @@ export function ScriptWorkspace() {
   }, [formFeedback])
 
   useEffect(() => {
+    if (!scriptToast) {
+      return
+    }
+    const timeout = window.setTimeout(() => setScriptToast(null), 3500)
+    return () => window.clearTimeout(timeout)
+  }, [scriptToast])
+
+  useEffect(() => {
     if (executionDetailId && !executionDetail) {
       setExecutionDetailId(null)
     }
@@ -465,10 +475,15 @@ export function ScriptWorkspace() {
     setBulkSelection([scriptId])
   }, [])
 
+  const announceScriptToast = useCallback((message: string) => {
+    setScriptToast(message)
+  }, [])
+
   const handleCreate = async () => {
     const script = await createScript(activeScript ? { folderId: activeScript.folderId ?? null } : undefined)
     pendingSelectionRef.current = script.id
     handleScriptSelection(script.id)
+    announceScriptToast(`Created script “${script.name}”`)
     const blankDraft = toBlankDraft(script.language, script.folderId)
     setDraft(blankDraft)
     lastSyncedScriptIdRef.current = script.id
@@ -516,6 +531,7 @@ export function ScriptWorkspace() {
     await updateScript(activeScript.id, draft)
     setPendingDeleteId(null)
     setFormFeedback('Synced')
+    announceScriptToast(`Saved script “${draft.name || activeScript.name}”`)
   }
 
   const handleAiReview = useCallback(async () => {
@@ -555,6 +571,7 @@ export function ScriptWorkspace() {
     const clone = await cloneScript(targetId)
     if (clone) {
       handleScriptSelection(clone.id)
+      announceScriptToast(`Cloned script “${clone.name}”`)
     }
   }
 
@@ -563,7 +580,14 @@ export function ScriptWorkspace() {
       return
     }
     await deleteScript(pendingDeleteId)
+    if (pendingDeleteId === selectedId) {
+      setSelectedId(null)
+      setDraft(null)
+    }
     setPendingDeleteId(null)
+    if (pendingDeleteScript) {
+      announceScriptToast(`Deleted script “${pendingDeleteScript.name}”`)
+    }
   }
 
   const requestDelete = (id: string) => {
@@ -1159,6 +1183,12 @@ export function ScriptWorkspace() {
                 </span>
               )}
             </div>
+          </div>
+        )}
+
+        {scriptToast && (
+          <div className="scripts__toast" role="status" aria-live="polite" data-testid="script-toast">
+            {scriptToast}
           </div>
         )}
 
@@ -1802,6 +1832,8 @@ export function ScriptWorkspace() {
                 </div>
               </section>
             )}
+
+            <AuditLogPanel />
 
             {pendingDeleteScript && (
               <div className="scripts__confirm" role="alertdialog" aria-labelledby="delete-title">

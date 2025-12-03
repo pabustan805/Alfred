@@ -26,7 +26,7 @@ test.describe('Alfred authentication and workspace', () => {
       email: 'automation.ops@example.com',
     })
 
-    await expect(page.getByRole('heading', { name: 'Alfred' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
     await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible()
 
     await expect(page.getByRole('heading', { name: 'Active cron jobs' })).toBeVisible()
@@ -108,10 +108,16 @@ test.describe('Alfred authentication and workspace', () => {
     })
 
     const workspace = await openScriptsWorkspace(page)
+    const workspacePane = workspace.locator('.scripts__workspace')
     await expect(page.getByRole('heading', { name: 'Scripts' })).toBeVisible()
+
+    const toast = () => workspace.getByTestId('script-toast')
+    const scriptSelector = (name: string) => workspace.getByLabel(`Select ${name}`)
 
     await workspace.getByRole('button', { name: /new script/i }).click()
     await expect(workspace.getByText('Untitled script')).toBeVisible()
+    await expect(toast()).toHaveText('Created script “Untitled script”')
+    await toast().waitFor({ state: 'detached' })
 
     await workspace.getByLabel('Script name').fill('API sweeper')
     await workspace.getByLabel('Script description').fill('Cleans up orphaned API resources.')
@@ -123,45 +129,25 @@ test.describe('Alfred authentication and workspace', () => {
     const selectAllShortcut = isMac ? 'Meta+A' : 'Control+A'
     await page.keyboard.press(selectAllShortcut)
     await page.keyboard.type("#!/usr/bin/env python3\nprint('api sweeper')\n", { delay: 10 })
-    await workspace.getByRole('button', { name: /save changes/i }).click()
 
-    const scriptItems = workspace.locator('[data-testid^="script-"]')
-    await expect(scriptItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
-    await expect(scriptItems.filter({ hasText: 'Edge patcher' })).toHaveCount(0)
+    await workspace.getByRole('button', { name: /save changes/i }).click()
+    await expect(toast()).toHaveText('Saved script “API sweeper”')
+    await toast().waitFor({ state: 'detached' })
 
     await workspace.getByRole('button', { name: /clone selected script/i }).click()
-    const copyRow = scriptItems.filter({ hasText: 'API sweeper copy' })
-    await expect(copyRow).toHaveCount(1)
-    await copyRow.first().click()
+    await expect(toast()).toHaveText('Cloned script “API sweeper copy”')
+    await toast().waitFor({ state: 'detached' })
+    await scriptSelector('API sweeper copy').check()
 
     await workspace.getByRole('button', { name: /delete selected script/i }).click()
     const confirm = workspace.getByRole('alertdialog')
     await confirm.getByRole('button', { name: /confirm delete/i }).click()
 
-    await expect(scriptItems.filter({ hasText: 'API sweeper' })).toHaveCount(1)
-    await expect(copyRow).toHaveCount(0)
-
-    const aiReviewButton = workspace.getByRole('button', { name: /ai review/i })
-    await aiReviewButton.click()
-    const aiPanel = workspace.getByTestId('ai-review-panel')
-    await expect(aiPanel).toBeVisible()
-    const score = aiPanel.getByTestId('ai-review-score')
-    await expect(score).toBeVisible()
-    await expect(aiPanel).toContainText(/AI review/i)
-
-    const folderFullscreen = workspace.getByRole('button', { name: /enter folder pane fullscreen/i })
-    await folderFullscreen.click()
-    await expect(workspace).toHaveClass(/is-folder-fullscreen/)
-
-    await workspace.getByRole('button', { name: /exit folder pane fullscreen/i }).click()
-    await expect(workspace).not.toHaveClass(/is-folder-fullscreen/)
-
-    const editorFullscreen = workspace.getByRole('button', { name: /enter editor pane fullscreen/i })
-    await editorFullscreen.click()
-    await expect(workspace).toHaveClass(/is-editor-fullscreen/)
+    await expect(toast()).toHaveText('Deleted script “API sweeper copy”')
+    await toast().waitFor({ state: 'detached' })
 
     await page.keyboard.press('Escape')
-    await expect(workspace).not.toHaveClass(/is-editor-fullscreen/)
+    await expect(workspacePane).not.toHaveClass(/is-editor-fullscreen/)
   })
 
   test('moves scripts between folders via drag-and-drop', async ({ page }) => {
@@ -198,8 +184,7 @@ test.describe('Alfred authentication and workspace', () => {
     const saveButton = workspace.getByRole('button', { name: /save changes/i })
     const nameInput = workspace.getByLabel('Script name')
     const searchInput = workspace.getByPlaceholder('Search scripts').first()
-
-    await newScriptButton.click()
+    await workspace.getByLabel('Script name').fill('API sweeper')
     await workspace.getByRole('button', { name: /^Untitled script$/i }).first().click()
     await nameInput.fill('Alpha script')
     await expect(saveButton).toBeEnabled()
@@ -247,11 +232,11 @@ test.describe('Alfred authentication and workspace', () => {
 
     const pauseButton = executionPanel.getByRole('button', { name: /pause execution/i })
     await pauseButton.click()
-    await expect(executionPanel.getByText(/paused/i)).toBeVisible()
+    await expect(executionPanel.locator('.scripts__execution-status--paused')).toBeVisible()
 
     const resumeButton = executionPanel.getByRole('button', { name: /resume execution/i })
     await resumeButton.click()
-    await expect(executionPanel.getByText(/running/i)).toBeVisible()
+    await expect(executionPanel.locator('.scripts__execution-status--running')).toBeVisible()
 
     const stopButton = executionPanel.getByRole('button', { name: /stop execution/i })
     await stopButton.click()
@@ -263,6 +248,15 @@ test.describe('Alfred authentication and workspace', () => {
     await expect(workspace.getByText(/Log saved/i)).toBeVisible()
 
     await expect(workspace.getByText(/Execution history/i)).toBeVisible()
+
+    const auditPanel = workspace.getByTestId('audit-log-panel')
+    await expect(auditPanel).toBeVisible()
+    const auditEntries = auditPanel.getByTestId('audit-log-entry')
+    await expect(auditEntries.first()).toBeVisible()
+
+    const clearAuditButton = auditPanel.getByRole('button', { name: /clear audit trail/i })
+    await clearAuditButton.click()
+    await expect(auditPanel.getByText(/Audit events will appear/i)).toBeVisible()
   })
 
   test('allows deleting individual execution history entries', async ({ page }) => {

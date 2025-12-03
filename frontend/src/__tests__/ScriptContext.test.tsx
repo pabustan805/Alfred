@@ -1,9 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { ScriptsProvider, useScripts } from '../scripts/ScriptContext'
 import type { Script } from '../types/script'
 import { scriptLanguageCatalog } from '../types/script'
+
+vi.mock('../audit/auditLogService', () => ({
+  logAuditEvent: vi.fn(),
+}))
 
 const baseScript: Script = {
   id: 'script-fixture-1',

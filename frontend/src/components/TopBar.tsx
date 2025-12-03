@@ -1,4 +1,4 @@
-import { Bell, Search } from 'lucide-react'
+import { Bell, LogOut, Search } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 
 const getInitials = (name: string) =>
@@ -10,7 +10,7 @@ const getInitials = (name: string) =>
     .join('') || 'AL'
 
 export function TopBar() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
 
   return (
     <header className="topbar" aria-label="Workspace header">
@@ -29,7 +29,7 @@ export function TopBar() {
           </button>
 
           {user && (
-            <div className="topbar__profile">
+            <div className="topbar__profile" role="group" aria-label="Account controls">
               <div className="avatar" aria-hidden>
                 <span>{getInitials(user.name)}</span>
               </div>
@@ -37,6 +37,10 @@ export function TopBar() {
                 <strong>{user.name}</strong>
                 <small>{user.email}</small>
               </div>
+              <button type="button" className="ghost" onClick={signOut} aria-label="Sign out">
+                <LogOut size={16} />
+                <span className="sr-only">Sign out</span>
+              </button>
             </div>
           )}
         </div>

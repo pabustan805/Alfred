@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid'
 import type { ReactNode } from 'react'
 import { mockScripts } from '../data/mockScripts'
 import { mockFolders } from '../data/mockFolders'
+import { logAuditEvent } from '../audit/auditLogService'
 import type {
   Script,
   ScriptExecution,
@@ -136,6 +137,48 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
   const scriptsRef = useRef<Script[]>(scripts)
   const executionTimersRef = useRef<Map<string, number>>(new Map())
 
+  const getScriptById = useCallback((scriptId: string) => {
+    return scriptsRef.current.find((script) => script.id === scriptId) ?? null
+  }, [])
+
+  const recordScriptAudit = useCallback((action: string, script: Script, extra: Record<string, unknown> = {}) => {
+    logAuditEvent({
+      entityName: 'Script',
+      action,
+      details: {
+        scriptId: script.id,
+        name: script.name,
+        language: script.language,
+        origin: script.origin,
+        folderId: script.folderId,
+        ...extra,
+      },
+    })
+  }, [])
+
+  const recordExecutionAudit = useCallback(
+    (
+      action: string,
+      execution: ScriptExecution,
+      scriptOverride?: Script | null,
+      extra: Record<string, unknown> = {},
+    ) => {
+      const script = scriptOverride ?? getScriptById(execution.scriptId)
+      logAuditEvent({
+        entityName: 'ScriptExecution',
+        action,
+        details: {
+          executionId: execution.id,
+          scriptId: execution.scriptId,
+          status: execution.status,
+          scriptName: script?.name ?? null,
+          ...extra,
+        },
+      })
+    },
+    [getScriptById],
+  )
+
   useEffect(() => {
     scriptsRef.current = scripts
   }, [scripts])
@@ -207,7 +250,7 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
   const finalizeExecution = useCallback(
     (executionId: string, status: ScriptExecutionStatus = 'completed', message?: string) => {
       clearAutoCompleteTimer(executionId)
-      applyExecutionUpdate(executionId, (execution) => {
+      const updated = applyExecutionUpdate(executionId, (execution) => {
         if (execution.status !== 'running') {
           return null
         }
@@ -229,8 +272,11 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
           ],
         }
       })
+      if (updated) {
+        recordExecutionAudit(status === 'completed' ? 'Completed' : 'Finalized', updated)
+      }
     },
-    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry],
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit],
   )
 
   const scheduleAutoComplete = useCallback(
@@ -383,17 +429,20 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
         })
         return next
       })
-      started.forEach((execution) => scheduleAutoComplete(execution.id))
+      started.forEach((execution) => {
+        scheduleAutoComplete(execution.id)
+        recordExecutionAudit('Started', execution, scriptsMap.get(execution.scriptId))
+      })
       await simulateLatency()
       return started
     },
-    [createExecutionRecord, scheduleAutoComplete],
+    [createExecutionRecord, recordExecutionAudit, scheduleAutoComplete],
   )
 
   const pauseExecution = useCallback(
     (executionId: string) => {
       clearAutoCompleteTimer(executionId)
-      applyExecutionUpdate(executionId, (execution) => {
+      const updated = applyExecutionUpdate(executionId, (execution) => {
         if (execution.status !== 'running') {
           return null
         }
@@ -407,8 +456,11 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
           logs: [...execution.logs, createLogEntry('Execution paused', 'warning', timestamp)],
         }
       })
+      if (updated) {
+        recordExecutionAudit('Paused', updated)
+      }
     },
-    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry],
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit],
   )
 
   const resumeExecution = useCallback(
@@ -427,15 +479,16 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       })
       if (updated) {
         scheduleAutoComplete(executionId)
+        recordExecutionAudit('Resumed', updated)
       }
     },
-    [applyExecutionUpdate, createLogEntry, scheduleAutoComplete],
+    [applyExecutionUpdate, createLogEntry, recordExecutionAudit, scheduleAutoComplete],
   )
 
   const stopExecution = useCallback(
     (executionId: string) => {
       clearAutoCompleteTimer(executionId)
-      applyExecutionUpdate(executionId, (execution) => {
+      const updated = applyExecutionUpdate(executionId, (execution) => {
         if (execution.status === 'completed' || execution.status === 'stopped') {
           return null
         }
@@ -450,13 +503,16 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
           logs: [...execution.logs, createLogEntry('Execution stopped by user', 'warning', timestamp)],
         }
       })
+      if (updated) {
+        recordExecutionAudit('Stopped', updated)
+      }
     },
-    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry],
+    [applyExecutionUpdate, clearAutoCompleteTimer, createLogEntry, recordExecutionAudit],
   )
 
   const storeExecutionLog = useCallback(
     (executionId: string) => {
-      applyExecutionUpdate(executionId, (execution) => {
+      const updated = applyExecutionUpdate(executionId, (execution) => {
         const timestamp = new Date().toISOString()
         return {
           ...execution,
@@ -465,8 +521,11 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
           logs: [...execution.logs, createLogEntry('Execution log stored for debugging', 'info', timestamp)],
         }
       })
+      if (updated) {
+        recordExecutionAudit('LogSaved', updated)
+      }
     },
-    [applyExecutionUpdate, createLogEntry],
+    [applyExecutionUpdate, createLogEntry, recordExecutionAudit],
   )
 
   const runMutation = useCallback(
@@ -507,33 +566,48 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
         }
         return { next: [newScript, ...prev], result: newScript }
       })
-      return result as Script
+      if (!result) {
+        throw new Error('Failed to create script')
+      }
+      recordScriptAudit('Created', result, { source: origin })
+      return result
     },
-    [runMutation],
+    [recordScriptAudit, runMutation],
   )
 
   const updateScript = useCallback(
     async (id: string, update: ScriptUpdate) => {
-      await runMutation<void>({ type: 'update', targetId: id }, (prev) => {
-        const next = prev.map((script) =>
-          script.id === id
-            ? { ...script, ...update, updatedAt: new Date().toISOString() }
-            : script,
-        )
-        return { next }
+      const updated = await runMutation<Script | null>({ type: 'update', targetId: id }, (prev) => {
+        let nextScript: Script | null = null
+        const next = prev.map((script) => {
+          if (script.id !== id) {
+            return script
+          }
+          nextScript = { ...script, ...update, updatedAt: new Date().toISOString() }
+          return nextScript
+        })
+        return { next, result: nextScript }
       })
+      if (updated) {
+        const changedFields = Object.keys(update)
+        recordScriptAudit('Updated', updated, { changedFields })
+      }
     },
-    [runMutation],
+    [recordScriptAudit, runMutation],
   )
 
   const deleteScript = useCallback(
     async (id: string) => {
+      const script = getScriptById(id)
       await runMutation<void>({ type: 'delete', targetId: id }, (prev) => ({
-        next: prev.filter((script) => script.id !== id),
+        next: prev.filter((item) => item.id !== id),
       }))
+      if (script) {
+        recordScriptAudit('Deleted', script)
+      }
       removeExecutionsForScript(id)
     },
-    [removeExecutionsForScript, runMutation],
+    [getScriptById, recordScriptAudit, removeExecutionsForScript, runMutation],
   )
 
   const cloneScript = useCallback(
@@ -556,9 +630,12 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
         }
         return { next: [clone, ...prev], result: clone }
       })
+      if (result) {
+        recordScriptAudit('Cloned', result, { sourceScriptId: id })
+      }
       return result ?? null
     },
-    [runMutation],
+    [recordScriptAudit, runMutation],
   )
 
   const importScripts = useCallback(
@@ -584,9 +661,10 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
         })
         return { next: [...imported, ...prev], result: imported }
       })
+      result?.forEach((script) => recordScriptAudit('Imported', script))
       return result ?? []
     },
-    [runMutation],
+    [recordScriptAudit, runMutation],
   )
 
   const createFolder = useCallback(
