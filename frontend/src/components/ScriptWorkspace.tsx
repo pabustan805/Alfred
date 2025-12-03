@@ -432,7 +432,7 @@ export function ScriptWorkspace() {
   }
 
   const handleBulkRun = () => {
-    if (bulkSelectionCount < 2) {
+    if (bulkSelectionCount === 0) {
       return
     }
     setBulkActionFeedback(`Queued ${bulkSelectionCount} scripts for immediate execution.`)
@@ -1125,7 +1125,7 @@ export function ScriptWorkspace() {
                   type="button"
                   className="ghost"
                   onClick={handleBulkRun}
-                  disabled={bulkSelectionCount < 2}
+                  disabled={bulkSelectionCount === 0}
                   data-testid="scripts-bulk-run"
                   aria-label="Run selected scripts"
                   title="Run now"
