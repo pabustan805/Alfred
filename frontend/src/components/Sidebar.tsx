@@ -10,7 +10,7 @@ const navItems = [
 ]
 
 const preferences = [
-  { icon: Settings, label: 'Workspace' },
+  { icon: Settings, label: 'Settings' },
 ]
 
 export function Sidebar() {
