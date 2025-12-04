@@ -33,4 +33,4 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
 Please open an issue describing the bug or feature request before submitting a pull request. Follow the repository's coding standards, include tests when possible, and ensure your changes pass existing checks.
 
 ## License
-MIT (placeholder)
+This project is released under the [MIT License](./LICENSE).
