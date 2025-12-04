@@ -20,6 +20,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Add fullscreen controls for both script folders and editor panes to improve focus (✅ Dec 1, 2025).
 - [x] Introduce sortable folder pane (title/created date/tag) with toolbar toggle (✅ Dec 2, 2025).
 - [x] Expand script workspace language support to Ruby, Perl, and Groovy with editor + test coverage (✅ Dec 2, 2025).
+- [ ] Prep lightweight RBAC: add `role` enum field, expose in auth payloads/context, and wire up backend middleware plan (in progress)
 
 ## Phase 3: AI Integration (✅ Dec 2, 2025)
 - [x] Add AI validation for cron scripts, including a scripts-page AI Review button powered by the in-app reviewer service with logging.
@@ -28,6 +29,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 ## Phase 4: Logging & Audit Trail
 - Implement logging for every script execution.
 - Build an audit trail view for debugging and compliance reviews.
+- Integrate RBAC denial events into the audit log once middleware is in place.
 
 ## Phase 5: Testing & Debugging
 - Write unit tests for frontend and backend components.

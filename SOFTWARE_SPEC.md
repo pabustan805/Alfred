@@ -18,6 +18,16 @@ Alfred simplifies cron management through a modern web interface with AI validat
 - **Scalability**: Capable of handling multiple users, large script libraries, and high-frequency schedules.
 - **Security**: Role-based access control, encrypted storage of scripts, and protected audit logs.
 
+## Upcoming RBAC Implementation
+To satisfy the security requirement, Alfred will adopt a lightweight role-based access control model that works with the future Node.js backend as well as the current mock authentication layer:
+
+1. **User schema** – extend the `Users` table (and temporary frontend storage) with a `role` enum (`viewer`, `operator`, `admin`) defaulting to `operator`, seeded via migration so existing accounts remain valid.
+2. **Session payloads** – include the `role` claim in issued JWTs/session objects so the frontend can branch on capabilities without additional network calls.
+3. **Backend middleware** – add an Express helper `requireRole(allowedRoles)` that checks `req.user.role` after authentication and returns `403` on mismatches, logging denials to the audit trail.
+4. **Frontend gating** – expose the role through `AuthContext` and add small helpers/components to hide or disable admin-only controls, preventing confusing UX for restricted operators.
+
+This plan keeps the implementation simple (no external policy engine) while making it easy to add richer policies later.
+
 ## Architecture Overview
 - **Frontend**: React-based UI featuring the wizard, editor, dashboard, and logs views.
 - **Backend**: Node.js/Express API handling script management, scheduling, orchestration, and authentication endpoints for credential and OAuth handshakes.

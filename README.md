@@ -6,6 +6,7 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
 ## Features
 - Simple, elegant UI inspired by apple.com
 - Secure authentication with email/password accounts
+- Upcoming lightweight role-based access control (RBAC) with viewer/operator/admin tiers
 - Wizard workflow for creating cron scripts (default option)
 - Integrated script editor for manual editing
 - AI validation to ensure cron scripts are correct
@@ -36,6 +37,15 @@ After the script completes:
 1. Open `frontend/.env` and set `VITE_API_URL` to your backend endpoint.
 2. Start the dev server with `pnpm run dev` (or `npm run dev`) inside `frontend/`.
 3. Run tests with `pnpm test` (or `npm test`).
+
+### Upcoming RBAC implementation
+Before backend work begins, Alfred will introduce a minimal RBAC layer to satisfy security requirements:
+1. Extend the user schema (and temporary frontend storage) with a `role` enum of `viewer`, `operator`, and `admin`, defaulting to `operator`.
+2. Include the `role` in session/JWT payloads so the frontend can gate UI affordances without extra requests.
+3. Add an Express `requireRole(allowedRoles)` helper to protect sensitive endpoints and log access denials to the audit trail.
+4. Surface the role via the React `AuthContext`, adding small helpers to hide or disable admin-only controls for lower-privileged users.
+
+This plan keeps roles easy to reason about now while allowing richer policies later.
 
 ### Frontend deployment prep
 1. Install Node.js 18+ and pnpm (or npm).
