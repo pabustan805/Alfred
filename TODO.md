@@ -25,16 +25,22 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Add AI validation for cron scripts, including a scripts-page AI Review button powered by the in-app reviewer service with logging.
 - [x] Provide error handling, actionable suggestions, and insights modal + e2e/unit coverage for the AI review results.
 
-## Phase 4: Logging & Audit Trail
+## Phase 4: RBAC & Security Hardening
+- [ ] Add `role` and `folder_scope` columns to the users table plus session propagation.
+- [ ] Implement backend `requireRole` middleware and folder-scope validators.
+- [ ] Gate frontend controls via `AuthContext` capability helpers and add insufficient-permission views.
+- [ ] Record denied actions in audit logs for compliance.
+
+## Phase 5: Logging & Audit Trail
 - Implement logging for every script execution.
 - Build an audit trail view for debugging and compliance reviews.
 
-## Phase 5: Testing & Debugging
+## Phase 6: Testing & Debugging
 - Write unit tests for frontend and backend components.
 - Create integration tests covering end-to-end workflows.
 - Conduct user acceptance testing to validate UX.
 
-## Phase 6: Deployment & Maintenance
+## Phase 7: Deployment & Maintenance
 - Prepare deployment checklist including environment setup and CI/CD pipeline.
 - Keep documentation up to date with new capabilities.
 - Plan ongoing maintenance and feature enhancement cycles.

@@ -6,6 +6,7 @@ Alfred simplifies cron management through a modern web interface with AI validat
 ## Functional Requirements
 - UI inspired by apple.com with emphasis on clean, elegant design.
 - Authentication supporting email/password accounts.
+- Role-based access control across viewer, operator, and admin personas.
 - Wizard workflow for guided cron creation.
 - Integrated script editor for manual editing and advanced customization.
 - AI validation of cron scripts to prevent syntax errors and suggest corrections.
@@ -16,7 +17,7 @@ Alfred simplifies cron management through a modern web interface with AI validat
 - **Performance**: Fast script execution, validation, and UI responsiveness.
 - **Usability**: Intuitive workflows suitable for non-technical users while still supporting advanced operations.
 - **Scalability**: Capable of handling multiple users, large script libraries, and high-frequency schedules.
-- **Security**: Role-based access control, encrypted storage of scripts, and protected audit logs.
+- **Security**: RBAC, encrypted storage of scripts, and protected audit logs.
 
 ## Architecture Overview
 - **Frontend**: React-based UI featuring the wizard, editor, dashboard, and logs views.
@@ -43,3 +44,20 @@ Alfred simplifies cron management through a modern web interface with AI validat
 4. **Scheduling or rescheduling scripts**: User adjusts timing via wizard/editor. Backend updates cron schedule and future executions.
 5. **Cloning and deleting scripts**: Dashboard actions duplicate configurations or remove entries, with confirmations and audit logging.
 6. **Reviewing logs for debugging and audit**: Logs page provides searchable execution history, status, runtime, and output for investigation or compliance.
+
+## Security & RBAC Design
+- **Roles**
+  - *Viewer*: read-only access to dashboards, logs, script metadata, and AI review output.
+  - *Operator*: inherits Viewer access plus create/edit scripts, trigger runs, and manage schedules within assigned folders.
+  - *Admin*: inherits Operator access plus manage users, assign folder ownership, and export audit trails.
+- **Data model**
+  - `users` table gains `role` (`viewer|operator|admin`) and optional `folder_scope` (array of folder IDs or `null` for global admins).
+  - Session tokens embed the same information for stateless enforcement.
+- **Backend enforcement**
+  - Express middleware helper `requireRole(minRole)` compares the session user role against the route's minimum requirement.
+  - Folder-aware endpoints call `assertFolderScope(folderId)` to confirm operators are scoped correctly; admins bypass scope checks.
+- **Frontend enforcement**
+  - `AuthContext` exposes capability helpers (e.g., `canRunScripts`, `canManageUsers`). UI elements render or disable accordingly.
+  - RBAC-aware routes redirect unauthorized users to a friendly "insufficient permissions" view.
+- **Auditability**
+  - All blocked attempts are logged with user ID, role, route, and timestamp to maintain a paper trail for compliance reviews.
