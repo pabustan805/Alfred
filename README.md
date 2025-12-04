@@ -21,8 +21,21 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
 6. Review logs to debug or audit past executions.
 
 ## Getting Started
-- Installation instructions (placeholder)
-- Dependencies: Node.js, backend framework, database, etc.
+
+### Prerequisites
+- Node.js 18+
+- pnpm (preferred) or npm
+
+### Quick setup
+From the repo root, run `./setup.sh`. The script will:
+1. Verify you have the required Node.js version and package manager.
+2. Copy `frontend/.env.example` to `frontend/.env` if it does not exist.
+3. Install frontend dependencies and produce a production build.
+
+After the script completes:
+1. Open `frontend/.env` and set `VITE_API_URL` to your backend endpoint.
+2. Start the dev server with `pnpm run dev` (or `npm run dev`) inside `frontend/`.
+3. Run tests with `pnpm test` (or `npm test`).
 
 ### Frontend deployment prep
 1. Install Node.js 18+ and pnpm (or npm).
