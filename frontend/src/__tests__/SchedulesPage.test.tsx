@@ -9,6 +9,7 @@ const sampleJobs: CronJob[] = [
     id: 'cron-test-1',
     name: 'Nightly backup',
     description: 'Copies prod data to cold storage.',
+    owner: 'Platform Ops',
     schedule: '0 1 * * *',
     readableSchedule: 'Daily at 1:00 AM',
     nextRun: 'Tonight 1:00 AM',

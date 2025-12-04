@@ -23,7 +23,11 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
 ## Getting Started
 - Installation instructions (placeholder)
 - Dependencies: Node.js, backend framework, database, etc.
-- Steps to run locally and deploy
+
+### Frontend deployment prep
+1. Install Node.js 18+ and pnpm (or npm).
+2. Copy `frontend/.env.example` to `frontend/.env` and update the values (e.g., `VITE_API_URL`).
+3. From `frontend/`, run `pnpm install` then `pnpm run build`. The optimized assets will be emitted to `frontend/dist/`, ready for Netlify or other static hosts.
 
 ## Contributing
 Please open an issue describing the bug or feature request before submitting a pull request. Follow the repository's coding standards, include tests when possible, and ensure your changes pass existing checks.
