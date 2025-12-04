@@ -1,11 +1,15 @@
 export type AuthProviderType = 'local'
 
+export type UserRole = 'viewer' | 'operator' | 'admin'
+
 export interface AuthUser {
   id: string
   email: string
   name: string
   provider: AuthProviderType
   createdAt: string
+  role: UserRole
+  folderScope: string[] | null
 }
 
 export interface UpdateProfilePayload {
@@ -20,4 +24,17 @@ export interface Credentials {
 
 export interface RegistrationPayload extends Credentials {
   name: string
+  role?: UserRole
+  folderScope?: string[] | null
+}
+
+export interface SessionResponse {
+  user: AuthUser | null
+}
+
+export interface AuthCapabilities {
+  canViewScripts: boolean
+  canRunScripts: boolean
+  canManageScripts: boolean
+  canManageUsers: boolean
 }

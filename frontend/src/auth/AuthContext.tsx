@@ -1,35 +1,63 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { authService } from './service'
-import type { AuthUser, Credentials, RegistrationPayload, UpdateProfilePayload } from './types'
+import type {
+  AuthCapabilities,
+  AuthUser,
+  Credentials,
+  RegistrationPayload,
+  UpdateProfilePayload,
+} from './types'
 
 type AuthContextValue = {
   user: AuthUser | null
   isReady: boolean
   error: string | null
-  signUp: (payload: RegistrationPayload) => AuthUser
-  signIn: (payload: Credentials) => AuthUser
-  signOut: () => void
-  updateProfile: (payload: UpdateProfilePayload) => AuthUser
-  deleteAccount: () => void
+  capabilities: AuthCapabilities
+  signUp: (payload: RegistrationPayload) => Promise<AuthUser>
+  signIn: (payload: Credentials) => Promise<AuthUser>
+  signOut: () => Promise<void>
+  updateProfile: (payload: UpdateProfilePayload) => Promise<AuthUser>
+  deleteAccount: () => Promise<void>
   clearError: () => void
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const isBrowser = typeof window !== 'undefined'
-  const [user, setUser] = useState<AuthUser | null>(() => (isBrowser ? authService.getCurrentUser() : null))
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const isReady = true
+  const [isReady, setIsReady] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    authService
+      .getCurrentUser()
+      .then((currentUser) => {
+        if (isMounted) {
+          setUser(currentUser)
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to hydrate session', err)
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsReady(true)
+        }
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const runAction = <Payload,>(
-    action: (payload: Payload) => AuthUser,
-  ): ((payload: Payload) => AuthUser) => {
-    return (payload: Payload) => {
+    action: (payload: Payload) => Promise<AuthUser>,
+  ): ((payload: Payload) => Promise<AuthUser>) => {
+    return async (payload: Payload) => {
       try {
-        const result = action(payload)
+        const result = await action(payload)
         setUser(result)
         setError(null)
         return result
@@ -45,24 +73,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = runAction(authService.signIn)
   const updateProfile = runAction(authService.updateProfile)
 
-  const signOut = () => {
-    authService.signOut()
-    setUser(null)
-    setError(null)
+  const signOut = async () => {
+    try {
+      await authService.signOut()
+    } finally {
+      setUser(null)
+      setError(null)
+    }
   }
 
-  const deleteAccount = () => {
-    authService.deleteAccount()
-    setUser(null)
-    setError(null)
+  const deleteAccount = async () => {
+    try {
+      await authService.deleteAccount()
+    } finally {
+      setUser(null)
+      setError(null)
+    }
   }
 
   const clearError = () => setError(null)
+
+  const capabilities = useMemo<AuthCapabilities>(() => {
+    if (!user) {
+      return {
+        canViewScripts: false,
+        canRunScripts: false,
+        canManageScripts: false,
+        canManageUsers: false,
+      }
+    }
+    const canManageUsers = user.role === 'admin'
+    const canManageScripts = user.role === 'operator' || user.role === 'admin'
+    const canRunScripts = canManageScripts
+    return {
+      canViewScripts: true,
+      canRunScripts,
+      canManageScripts,
+      canManageUsers,
+    }
+  }, [user])
 
   const value: AuthContextValue = {
     user,
     isReady,
     error,
+    capabilities,
     signUp,
     signIn,
     signOut,
