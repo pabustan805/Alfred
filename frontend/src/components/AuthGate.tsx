@@ -40,6 +40,7 @@ function AuthPanel() {
   const [mode, setMode] = useState<AuthMode>('signin')
   const [form, setForm] = useState<FormState>(initialState)
   const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
   const benefits = useMemo(
     () => [
@@ -52,6 +53,7 @@ function AuthPanel() {
 
   const handleChange = (field: keyof FormState) => (event: ChangeEvent<HTMLInputElement>) => {
     if (error) clearError()
+    if (notice) setNotice(null)
     setForm((current) => ({ ...current, [field]: event.target.value }))
   }
 
@@ -59,6 +61,7 @@ function AuthPanel() {
     if (mode === next) return
     setMode(next)
     if (error) clearError()
+    if (notice) setNotice(null)
     setForm(initialState)
   }
 
@@ -68,8 +71,15 @@ function AuthPanel() {
     try {
       if (mode === 'signin') {
         await Promise.resolve(signIn({ email: form.email, password: form.password }))
+        setNotice(null)
       } else {
         await Promise.resolve(signUp({ name: form.name, email: form.email, password: form.password }))
+        setNotice('Registration received. Your account is pending admin approval.')
+        setMode('signin')
+        setForm((current) => ({
+          ...initialState,
+          email: current.email,
+        }))
       }
     } catch (err) {
       console.warn('Authentication failed', err)
@@ -160,6 +170,11 @@ function AuthPanel() {
           {error && (
             <div className="auth-error" role="alert">
               {error}
+            </div>
+          )}
+          {notice && (
+            <div className="auth-notice" role="status" aria-live="polite">
+              {notice}
             </div>
           )}
 
