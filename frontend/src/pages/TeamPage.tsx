@@ -220,13 +220,15 @@ export function TeamPage() {
                 <article key={member.id} className="team-card">
                   <header className="team-card__header">
                     <div>
-                      <p className="team-role">{roleCopy[member.role]}</p>
                       <h3>{member.name}</h3>
                       <span>{member.email}</span>
                     </div>
-                    <span className={`team-status team-status--${status.tone}`}>
-                      {status.label}
-                    </span>
+                    <div className="team-card__badges">
+                      <span className="team-role-chip">{roleCopy[member.role]}</span>
+                      <span className={`team-status team-status--${status.tone}`}>
+                        {status.label}
+                      </span>
+                    </div>
                   </header>
 
                   <dl className="team-meta">

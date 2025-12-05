@@ -327,6 +327,19 @@ main {
   border-left: 1px solid var(--panel-border);
 }
 
+.topbar__role {
+  display: inline-flex;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f172a;
+}
+
 .topbar__profile strong {
   display: block;
   font-size: 0.95rem;
@@ -1712,6 +1725,24 @@ main {
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+}
+
+.team-card__badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.team-role-chip {
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .team-role {

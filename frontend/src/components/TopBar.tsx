@@ -40,6 +40,7 @@ export function TopBar() {
               <div>
                 <strong>{user.name}</strong>
                 <small>{user.email}</small>
+                <span className="topbar__role">{user.role}</span>
               </div>
               <button type="button" className="ghost" onClick={handleSignOut} aria-label="Sign out">
                 <LogOut size={16} />
