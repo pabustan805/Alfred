@@ -14,6 +14,51 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
 - Script list with options to create, edit, execute, re-schedule, clone, and delete scripts
 - Logging and audit trail for every execution
 
+## Product walkthrough
+> Toggle through each slide to explore the core surfaces of Alfred.
+
+<details open>
+  <summary><strong>1. Dashboard</strong> – Fleet health at a glance</summary>
+  <p align="center">
+    <img src="./docs/screenshots/dashboard.png" alt="Alfred dashboard overview" width="100%" />
+  </p>
+</details>
+
+<details>
+  <summary><strong>2. Schedules</strong> – Manage cron cadences</summary>
+  <p align="center">
+    <img src="./docs/screenshots/schedules.png" alt="Schedules page" width="100%" />
+  </p>
+</details>
+
+<details>
+  <summary><strong>3. Scripts</strong> – Author and orchestrate code</summary>
+  <p align="center">
+    <img src="./docs/screenshots/scripts.png" alt="Scripts workspace" width="100%" />
+  </p>
+</details>
+
+<details>
+  <summary><strong>4. Audit trail</strong> – Review every action</summary>
+  <p align="center">
+    <img src="./docs/screenshots/audit-trail.png" alt="Audit trail page" width="100%" />
+  </p>
+</details>
+
+<details>
+  <summary><strong>5. Team</strong> – Approve and govern access</summary>
+  <p align="center">
+    <img src="./docs/screenshots/team.png" alt="Team access control page" width="100%" />
+  </p>
+</details>
+
+<details>
+  <summary><strong>6. Settings</strong> – Configure the workspace</summary>
+  <p align="center">
+    <img src="./docs/screenshots/settings.png" alt="Settings page" width="100%" />
+  </p>
+</details>
+
 ## Usage
 1. Launch Alfred in your browser.
 2. Sign in with your email/password to access your workspace.
