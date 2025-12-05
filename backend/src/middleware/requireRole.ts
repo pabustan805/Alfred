@@ -1,12 +1,9 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express'
+import type { AuthUser, Role } from '../types/auth.js'
 
-type Role = 'viewer' | 'operator' | 'admin'
-
-export interface AuthenticatedRequest {
-  user?: {
-    id: string
-    role: Role
-  }
+export interface AuthenticatedRequest extends Request {
+  user?: AuthUser
+  sessionId?: string
 }
 
 export const requireRole =
