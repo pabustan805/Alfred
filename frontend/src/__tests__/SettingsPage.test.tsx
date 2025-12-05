@@ -19,8 +19,8 @@ const baseUser: AuthUser = {
 type AuthContextValue = ComponentProps<typeof AuthContext.Provider>['value']
 
 const renderWithAuth = (overrides: Partial<AuthContextValue> = {}) => {
-  const updateProfile = vi.fn().mockReturnValue({ ...baseUser })
-  const deleteAccount = vi.fn()
+  const updateProfile = vi.fn().mockResolvedValue({ ...baseUser })
+  const deleteAccount = vi.fn().mockResolvedValue(undefined)
 
   const effectiveUser = overrides.user ?? baseUser
 
