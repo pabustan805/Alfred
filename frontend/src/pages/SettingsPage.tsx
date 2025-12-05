@@ -12,7 +12,7 @@ const initialForm = (name = '', email = ''): FormState => ({
 })
 
 export function SettingsPage() {
-  const { user, updateProfile, deleteAccount } = useAuth()
+  const { user, updateProfile, deleteAccount, hasRole } = useAuth()
   const [form, setForm] = useState<FormState>(() => initialForm(user?.name, user?.email))
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState<string | null>(null)
@@ -31,10 +31,13 @@ export function SettingsPage() {
     return user.name !== form.name.trim() || user.email !== form.email.trim().toLowerCase()
   }, [form.email, form.name, user])
 
+  const canUpdateProfile = hasRole('operator', 'admin')
+  const canDeleteAccount = hasRole('admin')
+
   const disableDelete = useMemo(() => {
-    if (!user) return true
+    if (!user || !canDeleteAccount) return true
     return confirmEmail.trim().toLowerCase() !== user.email
-  }, [confirmEmail, user])
+  }, [canDeleteAccount, confirmEmail, user])
 
   if (!user) {
     return (
@@ -54,6 +57,11 @@ export function SettingsPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!canUpdateProfile) {
+      setStatus('error')
+      setMessage('Operator or admin role required to update profile.')
+      return
+    }
     setStatus('saving')
     setMessage(null)
     try {
@@ -74,6 +82,10 @@ export function SettingsPage() {
 
   const handleDelete = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!canDeleteAccount) {
+      setDeleteError('Admin role required to delete accounts.')
+      return
+    }
     if (disableDelete) {
       setDeleteError('Enter your email to confirm deletion')
       return
@@ -128,6 +140,7 @@ export function SettingsPage() {
                 onChange={handleChange('name')}
                 placeholder="Ops Captain"
                 minLength={2}
+                disabled={!canUpdateProfile}
                 required
               />
             </label>
@@ -140,6 +153,7 @@ export function SettingsPage() {
                 value={form.email}
                 onChange={handleChange('email')}
                 placeholder="you@company.com"
+                disabled={!canUpdateProfile}
                 required
               />
             </label>
@@ -149,7 +163,12 @@ export function SettingsPage() {
                 {status === 'success' && message}
                 {status === 'error' && message}
               </div>
-              <button type="submit" className="primary" disabled={!isDirty || status === 'saving'}>
+              <button
+                type="submit"
+                className="primary"
+                disabled={!canUpdateProfile || !isDirty || status === 'saving'}
+                title={canUpdateProfile ? undefined : 'Operator or admin role required'}
+              >
                 {status === 'saving' ? 'Saving…' : 'Save changes'}
               </button>
             </div>
@@ -178,6 +197,7 @@ export function SettingsPage() {
                 }}
                 placeholder={user.email}
                 aria-describedby="delete-help"
+                disabled={!canDeleteAccount}
                 required
               />
             </label>
@@ -189,9 +209,19 @@ export function SettingsPage() {
                 {deleteError}
               </div>
             )}
+            {!canDeleteAccount && (
+              <p className="settings__hint" role="note">
+                Only admins can delete accounts. Contact an administrator if you need this action.
+              </p>
+            )}
 
             <div className="settings__actions">
-              <button type="submit" className="danger" disabled={disableDelete || isDeleting}>
+              <button
+                type="submit"
+                className="danger"
+                disabled={!canDeleteAccount || disableDelete || isDeleting}
+                title={canDeleteAccount ? undefined : 'Admin role required'}
+              >
                 {isDeleting ? 'Deleting…' : 'Delete account'}
               </button>
             </div>
