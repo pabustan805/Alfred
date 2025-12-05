@@ -23,12 +23,13 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Add lightweight RBAC: role + status fields, session enforcement, `requireRole` middleware, and AuthContext helpers (✅ Dec 4, 2025)
 - [x] Ship admin Team page with roster filters, approve/reject/delete actions, and vitest coverage (✅ Dec 4, 2025)
 
-## Phase 2.5: Backend Auth Migration (🚧 Planned)
-- [ ] Stand up Express `/auth` API backed by PostgreSQL (`users`, `sessions`, `audit_events` tables) with migrations.
-- [ ] Replace frontend `authService` local storage with REST calls to register/sign in/manage users.
-- [ ] Issue JWT or httpOnly-cookie sessions carrying `userId`, `role`, and `status`, with status enforcement on the backend.
-- [ ] Wire the Team page to backend endpoints (`GET /auth/users`, `PATCH /auth/users/:id/status`, `DELETE /auth/users/:id`) so approvals persist globally.
-- [ ] Add automated tests (unit + integration) covering registration, approval, and deletion flows against the Postgres-backed API.
+## Phase 2.5: Backend Auth Migration (🚧 In Progress)
+- [x] **2.5a – Infrastructure**: Stand up Express `/auth` API backed by PostgreSQL (`users`, `sessions`, `audit_events` tables) with migrations + admin seeding.
+- [x] **2.5b – Services & backend tests**: Issue httpOnly-cookie sessions carrying `userId`, `role`, and `status`; add auth services, middleware wiring, and integration tests for register/login/approvals/deletion.
+- [ ] **2.5c – Frontend integration**
+  - [x] Replace frontend `authService` local storage with REST calls to register/sign in/manage users; hydrate `AuthContext` from `/auth/me`.
+  - [x] Wire the Team page, Settings, Sidebar, TopBar, and AuthGate to backend endpoints (`GET /auth/users`, `PATCH /auth/users/:id/status`, `DELETE /auth/users/:id`, `/auth/me` PATCH/DELETE) so approvals persist globally.
+  - [ ] Refresh frontend regression tests + documentation to cover the new API-driven flows end-to-end.
 
 ## Phase 3: AI Integration (✅ Dec 2, 2025)
 - [x] Add AI validation for cron scripts, including a scripts-page AI Review button powered by the in-app reviewer service with logging.
