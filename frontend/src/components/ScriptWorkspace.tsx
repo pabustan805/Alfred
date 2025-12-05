@@ -12,7 +12,6 @@ import { javascript } from '@codemirror/lang-javascript'
 import { python } from '@codemirror/lang-python'
 import type { Extension } from '@codemirror/state'
 import { StreamLanguage } from '@codemirror/language'
-import { EditorView } from '@codemirror/view'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
 import { ruby as rubyMode } from '@codemirror/legacy-modes/mode/ruby'
 import { perl as perlMode } from '@codemirror/legacy-modes/mode/perl'
@@ -1807,10 +1806,8 @@ export function ScriptWorkspace() {
                   value={draft.content}
                   height={editorContentHeight}
                   theme={oneDark}
-                  extensions={[
-                    languageExtensions[draft.language],
-                    ...(canEditScripts ? [] : [EditorView.editable.of(false)]),
-                  ]}
+                  extensions={[languageExtensions[draft.language]]}
+                  editable={canEditScripts}
                   aria-label="Script content"
                   onChange={(value) => setDraft((prev) => prev && { ...prev, content: value })}
                 />

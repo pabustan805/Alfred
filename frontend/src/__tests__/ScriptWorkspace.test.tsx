@@ -208,11 +208,7 @@ describe('ScriptWorkspace', () => {
     }
     const script: Script = { ...fixture, name: 'Movable script', folderId: null }
 
-    render(
-      <ScriptsProvider initialScripts={[script]} initialFolders={[folder]}>
-        <ScriptWorkspace />
-      </ScriptsProvider>,
-    )
+    renderWorkspace([script], [folder])
 
     const scriptButton = await screen.findByTestId('script-script-fixture')
     const folderNode = await screen.findByTestId('folder-folder-alpha')
@@ -364,6 +360,27 @@ describe('ScriptWorkspace', () => {
 
     expect(names[0]).toBe('Zulu watcher')
     expect(names[1]).toBe('Alpha runner')
+  })
+
+  it('disables privileged actions for viewer role', async () => {
+    renderWorkspace([fixture], undefined, undefined, {
+      authOverrides: {
+        user: {
+          ...adminUser,
+          id: 'viewer-1',
+          email: 'viewer@example.com',
+          role: 'viewer',
+        },
+      },
+    })
+
+    await screen.findByTestId('script-script-fixture')
+
+    const newScriptButton = screen.getByLabelText(/new script/i)
+    expect(newScriptButton).toBeDisabled()
+
+    const bulkRunButton = screen.getByTestId('scripts-bulk-run')
+    expect(bulkRunButton).toBeDisabled()
   })
 
   it('monitors live executions with pause, resume, stop, and log controls', async () => {
