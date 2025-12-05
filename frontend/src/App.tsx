@@ -10,6 +10,8 @@ import { ScriptsProvider } from './scripts/ScriptContext'
 import { ScriptsPage } from './pages/ScriptsPage'
 import { AuditPage } from './pages/AuditPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { RequireRole } from './components/RequireRole'
+import { TeamPage } from './pages/TeamPage'
 
 function App() {
   return (
@@ -25,6 +27,14 @@ function App() {
                 <Route path="/schedules" element={<SchedulesPage jobs={mockCronJobs} />} />
                 <Route path="/scripts" element={<ScriptsPage />} />
                 <Route path="/audit" element={<AuditPage />} />
+                <Route
+                  path="/team"
+                  element={
+                    <RequireRole roles={['admin']} fallback={<Navigate to="/" replace />}>
+                      <TeamPage />
+                    </RequireRole>
+                  }
+                />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

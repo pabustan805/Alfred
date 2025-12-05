@@ -2,17 +2,25 @@ import { CalendarClock, Home, ListChecks, LogOut, Settings, ShieldCheck } from '
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
-const navItems = [
+type NavItem = {
+  icon: typeof Home
+  label: string
+  to?: string
+  roles?: string[]
+}
+
+const navItems: NavItem[] = [
   { icon: Home, label: 'Dashboard', to: '/' },
   { icon: CalendarClock, label: 'Schedules', to: '/schedules' },
   { icon: ListChecks, label: 'Scripts', to: '/scripts' },
   { icon: ShieldCheck, label: 'Audit Trail', to: '/audit' },
+  { icon: ShieldCheck, label: 'Team', to: '/team', roles: ['admin'] },
 ]
 
 const preferences = [{ icon: Settings, label: 'Settings', to: '/settings' }]
 
 export function Sidebar() {
-  const { signOut, user } = useAuth()
+  const { signOut, user, hasRole } = useAuth()
 
   return (
     <aside className="sidebar" aria-label="Primary">
@@ -30,24 +38,26 @@ export function Sidebar() {
       <nav className="sidebar__nav" aria-label="Main navigation">
         <span className="sidebar__section-label">Overview</span>
         <ul>
-          {navItems.map((item) => (
-            <li key={item.label}>
-              {item.to ? (
-                <NavLink
-                  to={item.to}
-                  className={({ isActive }) => `sidebar__link${isActive ? ' is-active' : ''}`}
-                >
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </NavLink>
-              ) : (
-                <button className="sidebar__link" type="button">
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </button>
-              )}
-            </li>
-          ))}
+          {navItems
+            .filter((item) => !item.roles || hasRole(...(item.roles as any)))
+            .map((item) => (
+              <li key={item.label}>
+                {item.to ? (
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) => `sidebar__link${isActive ? ' is-active' : ''}`}
+                  >
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </NavLink>
+                ) : (
+                  <button className="sidebar__link" type="button">
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </button>
+                )}
+              </li>
+            ))}
         </ul>
       </nav>
 
