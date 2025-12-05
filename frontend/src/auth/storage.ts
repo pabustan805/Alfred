@@ -1,6 +1,6 @@
 import type { AuthUser, Role, UserStatus } from './types'
 
-type StoredUser = Omit<AuthUser, 'role'> & {
+type StoredUser = Omit<AuthUser, 'role' | 'status'> & {
   role?: Role
   status?: UserStatus
   password?: string

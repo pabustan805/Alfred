@@ -1,13 +1,19 @@
 import { authStorage, type StoredUser } from './storage'
-import type { AuthUser, Credentials, RegistrationPayload, UpdateProfilePayload } from './types'
+import type {
+  AuthUser,
+  Credentials,
+  RegistrationPayload,
+  UpdateProfilePayload,
+  UserStatus,
+} from './types'
 
 const generateId = () =>
   globalThis.crypto?.randomUUID?.() ?? `user_${Date.now()}_${Math.random().toString(16).slice(2)}`
 
 const toAuthUser = (user: StoredUser): AuthUser => {
-  const { password: _password, role = 'operator', ...rest } = user
+  const { password: _password, role = 'operator', status = 'approved', ...rest } = user
   void _password
-  return { ...rest, role }
+  return { ...rest, role, status }
 }
 
 const persistUsers = <T>(mutate: (users: StoredUser[]) => { nextUsers: StoredUser[]; result: T }): T => {
@@ -29,10 +35,29 @@ const requireSessionUser = () => {
     throw new Error('User not found')
   }
 
+  const user = users[userIndex]
+  ensureApprovedStatus(user)
   return { users, userIndex }
 }
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase()
+
+const ensureApprovedStatus = (user: StoredUser) => {
+  const status = user.status ?? 'approved'
+  if (status === 'pending') {
+    throw new Error('Account is pending admin approval')
+  }
+  if (status === 'rejected') {
+    throw new Error('Account access was rejected by an admin')
+  }
+}
+
+const clearSessionIfMatchingUser = (userId: string) => {
+  const session = authStorage.getSession()
+  if (session?.userId === userId) {
+    authStorage.clearSession()
+  }
+}
 
 export const authService = {
   register(payload: RegistrationPayload): AuthUser {
@@ -49,11 +74,11 @@ export const authService = {
         provider: 'local',
         createdAt: new Date().toISOString(),
         role: 'operator',
+        status: 'pending',
         password: payload.password,
       }
 
       const nextUsers = [...users, nextUser]
-      authStorage.saveSession(nextUser.id, nextUser.role ?? 'operator')
       return { nextUsers, result: toAuthUser(nextUser) }
     })
   },
@@ -66,6 +91,8 @@ export const authService = {
     if (!user || user.password !== credentials.password) {
       throw new Error('Invalid email or password')
     }
+
+    ensureApprovedStatus(user)
 
     authStorage.saveSession(user.id, user.role ?? 'operator')
     return toAuthUser(user)
@@ -106,7 +133,19 @@ export const authService = {
     if (!session) return null
 
     const user = authStorage.getUsers().find((u) => u.id === session.userId)
-    return user ? toAuthUser(user) : null
+    if (!user) {
+      authStorage.clearSession()
+      return null
+    }
+
+    try {
+      ensureApprovedStatus(user)
+    } catch {
+      authStorage.clearSession()
+      return null
+    }
+
+    return toAuthUser(user)
   },
   signOut() {
     authStorage.clearSession()
@@ -116,5 +155,36 @@ export const authService = {
     const nextUsers = users.filter((_, index) => index !== userIndex)
     authStorage.saveUsers(nextUsers)
     authStorage.clearSession()
+  },
+  getAllUsers(): AuthUser[] {
+    return authStorage.getUsers().map(toAuthUser)
+  },
+  updateUserStatus(userId: string, status: UserStatus): AuthUser {
+    const result = persistUsers((users) => {
+      const index = users.findIndex((user) => user.id === userId)
+      if (index === -1) {
+        throw new Error('User not found')
+      }
+      const updatedUser: StoredUser = { ...users[index], status }
+      const nextUsers = [...users]
+      nextUsers[index] = updatedUser
+      return { nextUsers, result: toAuthUser(updatedUser) }
+    })
+
+    if (status !== 'approved') {
+      clearSessionIfMatchingUser(userId)
+    }
+
+    return result
+  },
+  deleteUserById(userId: string) {
+    persistUsers((users) => {
+      const nextUsers = users.filter((user) => user.id !== userId)
+      if (nextUsers.length === users.length) {
+        throw new Error('User not found')
+      }
+      return { nextUsers, result: undefined }
+    })
+    clearSessionIfMatchingUser(userId)
   },
 }

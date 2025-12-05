@@ -31,6 +31,7 @@ const adminUser: AuthUser = {
   provider: 'local',
   createdAt: '2025-01-01T00:00:00.000Z',
   role: 'admin',
+  status: 'approved',
 }
 
 type AuthContextValue = ComponentProps<typeof AuthContext.Provider>['value']

@@ -27,11 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const runAction = <Payload,>(
     action: (payload: Payload) => AuthUser,
+    options: { persistUser?: boolean } = {},
   ): ((payload: Payload) => AuthUser) => {
+    const { persistUser = true } = options
     return (payload: Payload) => {
       try {
         const result = action(payload)
-        setUser(result)
+        if (persistUser) {
+          setUser(result)
+        } else {
+          setUser(null)
+        }
         setError(null)
         return result
       } catch (err) {
@@ -42,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const signUp = runAction(authService.register)
+  const signUp = runAction(authService.register, { persistUser: false })
   const signIn = runAction(authService.signIn)
   const updateProfile = runAction(authService.updateProfile)
 

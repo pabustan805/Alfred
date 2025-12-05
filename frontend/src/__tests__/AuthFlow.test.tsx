@@ -31,6 +31,7 @@ describe('Sidebar', () => {
       provider: 'local',
       createdAt: new Date().toISOString(),
       role: 'operator',
+      status: 'approved',
       password: 'anothersecret',
     }
 
@@ -52,7 +53,7 @@ describe('Sidebar', () => {
 })
 
 describe('AuthGate', () => {
-  it('registers a new user and reveals protected content', async () => {
+  it('registers a new user and shows approval notice without logging in', async () => {
     const user = userEvent.setup()
     renderWithProvider(
       <AuthGate>
@@ -66,7 +67,8 @@ describe('AuthGate', () => {
     await user.type(screen.getByLabelText(/password/i), 'secure123')
     await user.click(screen.getByRole('button', { name: /create account/i }))
 
-    expect(await screen.findByTestId('protected')).toBeVisible()
+    expect(await screen.findByRole('status')).toHaveTextContent(/pending admin approval/i)
+    expect(screen.queryByTestId('protected')).toBeNull()
   })
 
   it('shows an error for invalid credentials and clears it on mode change', async () => {
@@ -107,6 +109,7 @@ describe('TopBar', () => {
       provider: 'local',
       createdAt: new Date().toISOString(),
       role: 'operator',
+      status: 'approved',
       password: 'supersecret',
     }
 

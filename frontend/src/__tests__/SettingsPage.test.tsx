@@ -13,6 +13,7 @@ const baseUser: AuthUser = {
   provider: 'local',
   createdAt: new Date('2024-01-01').toISOString(),
   role: 'admin',
+  status: 'approved',
 }
 
 type AuthContextValue = ComponentProps<typeof AuthContext.Provider>['value']
