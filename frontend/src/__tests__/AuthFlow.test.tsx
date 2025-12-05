@@ -30,11 +30,12 @@ describe('Sidebar', () => {
       name: 'Dev Ops',
       provider: 'local',
       createdAt: new Date().toISOString(),
+      role: 'operator',
       password: 'anothersecret',
     }
 
     authStorage.saveUsers([storedUser])
-    authStorage.saveSession(storedUser.id)
+    authStorage.saveSession(storedUser.id, storedUser.role ?? 'operator')
 
     const user = userEvent.setup()
     renderWithProvider(<Sidebar />)
@@ -105,11 +106,12 @@ describe('TopBar', () => {
       name: 'Ops Captain',
       provider: 'local',
       createdAt: new Date().toISOString(),
+      role: 'operator',
       password: 'supersecret',
     }
 
     authStorage.saveUsers([storedUser])
-    authStorage.saveSession(storedUser.id)
+    authStorage.saveSession(storedUser.id, storedUser.role ?? 'operator')
 
     const user = userEvent.setup()
     renderWithProvider(<TopBar />)

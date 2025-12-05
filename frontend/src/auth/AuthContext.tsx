@@ -2,7 +2,7 @@
 import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import { authService } from './service'
-import type { AuthUser, Credentials, RegistrationPayload, UpdateProfilePayload } from './types'
+import type { AuthUser, Credentials, RegistrationPayload, Role, UpdateProfilePayload } from './types'
 
 type AuthContextValue = {
   user: AuthUser | null
@@ -14,6 +14,7 @@ type AuthContextValue = {
   updateProfile: (payload: UpdateProfilePayload) => AuthUser
   deleteAccount: () => void
   clearError: () => void
+  hasRole: (...roles: Role[]) => boolean
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -59,6 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = () => setError(null)
 
+  const hasRole = (...roles: Role[]) => {
+    if (!user) return false
+    if (roles.length === 0) return true
+    return roles.includes(user.role)
+  }
+
   const value: AuthContextValue = {
     user,
     isReady,
@@ -69,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateProfile,
     deleteAccount,
     clearError,
+    hasRole,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

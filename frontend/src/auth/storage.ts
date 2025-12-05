@@ -7,6 +7,7 @@ type StoredUser = Omit<AuthUser, 'role'> & {
 
 type Session = {
   userId: string
+  role: Role
 }
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
@@ -58,9 +59,9 @@ export const authStorage = {
     const storage = getStorage()
     return safeParse<Session | null>(storage.getItem(SESSION_KEY), null)
   },
-  saveSession(userId: string) {
+  saveSession(userId: string, role: Role) {
     const storage = getStorage()
-    storage.setItem(SESSION_KEY, JSON.stringify({ userId }))
+    storage.setItem(SESSION_KEY, JSON.stringify({ userId, role }))
   },
   clearSession() {
     const storage = getStorage()

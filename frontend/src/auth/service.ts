@@ -53,7 +53,7 @@ export const authService = {
       }
 
       const nextUsers = [...users, nextUser]
-      authStorage.saveSession(nextUser.id)
+      authStorage.saveSession(nextUser.id, nextUser.role ?? 'operator')
       return { nextUsers, result: toAuthUser(nextUser) }
     })
   },
@@ -67,7 +67,7 @@ export const authService = {
       throw new Error('Invalid email or password')
     }
 
-    authStorage.saveSession(user.id)
+    authStorage.saveSession(user.id, user.role ?? 'operator')
     return toAuthUser(user)
   },
   updateProfile(payload: UpdateProfilePayload): AuthUser {
@@ -97,7 +97,7 @@ export const authService = {
     nextUsers[userIndex] = updatedUser
 
     authStorage.saveUsers(nextUsers)
-    authStorage.saveSession(updatedUser.id)
+    authStorage.saveSession(updatedUser.id, updatedUser.role ?? 'operator')
 
     return toAuthUser(updatedUser)
   },
