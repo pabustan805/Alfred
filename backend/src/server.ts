@@ -1,8 +1,14 @@
 import express, { type Request, type Response } from 'express'
+import cookieParser from 'cookie-parser'
 import { pool } from './db/pool.js'
 import { env } from './config/env.js'
+import { sessionParser } from './middleware/sessionParser.js'
+import { authRoutes } from './routes/authRoutes.js'
 
 const app = express()
+app.use(express.json())
+app.use(cookieParser())
+app.use(sessionParser)
 
 app.get('/health', async (_req: Request, res: Response) => {
   try {
@@ -13,6 +19,8 @@ app.get('/health', async (_req: Request, res: Response) => {
     res.status(500).json({ ok: false })
   }
 })
+
+app.use('/auth', authRoutes)
 
 const start = async () => {
   try {

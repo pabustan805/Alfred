@@ -59,7 +59,7 @@ export const userRepository = {
     return mapRow(result.rows[0])
   },
 
-  async listUsers(): Promise<AuthUser[]> {
+  async listUsers(): Promise<DbUser[]> {
     const result = await pool.query<DbUserRow>('SELECT * FROM users ORDER BY created_at DESC')
     return result.rows.map(mapRow)
   },

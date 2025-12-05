@@ -90,4 +90,9 @@ export const authService = {
     await sessionRepository.deleteSessionsForUser(userId)
     await userRepository.deleteUser(userId)
   },
+
+  async listUsers(): Promise<AuthUser[]> {
+    const users = await userRepository.listUsers()
+    return users.map((user) => toAuthUser(user))
+  },
 }
