@@ -29,7 +29,7 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
 - pnpm (preferred) or npm
 
 ### Quick setup
-From the repo root, run `./setup.sh`. The script will:
+From the repo root, run `./setup.sh` (see [`setup.sh`](./setup.sh) if you’d like to inspect or customize the steps). The script will:
 1. Verify you have the required Node.js version and package manager.
 2. Copy `frontend/.env.example` to `frontend/.env` if it does not exist.
 3. Install frontend dependencies and produce a production build.
