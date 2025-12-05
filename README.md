@@ -48,6 +48,15 @@ Alfred now ships a minimal RBAC layer to satisfy security requirements:
 
 This foundation keeps roles easy to reason about now while allowing richer policies later.
 
+### Backend persistence roadmap
+Local storage was sufficient for prototyping, but Alfred will migrate authentication to a centralized backend so users can sign in from any device. The upcoming stack:
+1. **Express API + PostgreSQL** – a `/auth` module backed by Postgres tables (`users`, `sessions`) will own registration, login, approvals, and deletion. Passwords will be hashed (bcrypt/argon2) and user status will be stored server-side.
+2. **Shared session model** – the backend will issue JWT or httpOnly cookie sessions containing `userId`, `role`, and `status`, enabling multi-device access.
+3. **Admin workflows** – the Team page will call the backend (e.g., `GET /auth/users`, `PATCH /auth/users/:id/status`, `DELETE /auth/users/:id`) so approvals update the database instantly.
+4. **Future audits** – central storage unlocks audit logging for sign-ins, approvals, and role changes.
+
+PostgreSQL is the preferred database so we can rely on strong consistency, migrations, and hosted options later.
+
 ### Frontend deployment prep
 1. Install Node.js 18+ and pnpm (or npm).
 2. Copy `frontend/.env.example` to `frontend/.env` and update the values (e.g., `VITE_API_URL`).

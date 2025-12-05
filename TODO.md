@@ -23,6 +23,13 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Add lightweight RBAC: role + status fields, session enforcement, `requireRole` middleware, and AuthContext helpers (✅ Dec 4, 2025)
 - [x] Ship admin Team page with roster filters, approve/reject/delete actions, and vitest coverage (✅ Dec 4, 2025)
 
+## Phase 2.5: Backend Auth Migration (🚧 Planned)
+- [ ] Stand up Express `/auth` API backed by PostgreSQL (`users`, `sessions`, `audit_events` tables) with migrations.
+- [ ] Replace frontend `authService` local storage with REST calls to register/sign in/manage users.
+- [ ] Issue JWT or httpOnly-cookie sessions carrying `userId`, `role`, and `status`, with status enforcement on the backend.
+- [ ] Wire the Team page to backend endpoints (`GET /auth/users`, `PATCH /auth/users/:id/status`, `DELETE /auth/users/:id`) so approvals persist globally.
+- [ ] Add automated tests (unit + integration) covering registration, approval, and deletion flows against the Postgres-backed API.
+
 ## Phase 3: AI Integration (✅ Dec 2, 2025)
 - [x] Add AI validation for cron scripts, including a scripts-page AI Review button powered by the in-app reviewer service with logging.
 - [x] Provide error handling, actionable suggestions, and insights modal + e2e/unit coverage for the AI review results.

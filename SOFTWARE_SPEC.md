@@ -36,6 +36,13 @@ This foundation keeps roles easy to reason about now while allowing richer polic
 - **Actions**: Each user card exposes Approve, Reject, and Delete (with safeguards preventing self-deletion).
 - **Status enforcement**: `authService` utilities ensure only approved accounts can maintain sessions, and deleting/rejecting a user clears any active session tokens.
 
+## Backend Persistence Strategy
+- **Preferred database**: PostgreSQL will be the single source of truth for users, sessions, approvals, and future audit logs. Initial migrations will provision `users`, `sessions`, and `audit_events`.
+- **API surface**: Express routes under `/auth` will own registration, login, logout, roster listing, status changes, and deletion. Each route will authenticate requests, enforce `requireRole`, and persist mutations to Postgres.
+- **Session issuance**: Successful logins return a JWT or httpOnly cookie carrying `userId`, `role`, and `status`. When an admin toggles a user’s status, the backend invalidates existing sessions to prevent stale access.
+- **Frontend integration**: The React app will replace local `authService` calls with REST requests. `AuthContext` will fetch `/auth/me` on load, and the Team page will call `/auth/users` + `/auth/users/:id` to keep the roster consistent across devices.
+- **Scalability**: PostgreSQL enables future extensions (audit logging, reporting, multi-tenant workspaces) without rethinking the persistence model. Hosted options (RDS, Supabase, Neon, etc.) can be adopted later.
+
 
 ## Architecture Overview
 - **Frontend**: React-based UI featuring the wizard, editor, dashboard, and logs views.
