@@ -58,17 +58,17 @@ export const authStorage = {
     const users = safeParse<StoredUser[]>(storage.getItem(USERS_KEY), [])
     if (users.length === 0) {
       const seed = getAdminSeed()
-      return [
-        {
-          id: 'admin-seed',
-          email: seed.email.toLowerCase(),
-          name: seed.name,
-          provider: 'local',
-          createdAt: new Date().toISOString(),
-          role: 'admin',
-          password: seed.password,
-        },
-      ]
+      const seededUser: StoredUser = {
+        id: 'admin-seed',
+        email: seed.email.toLowerCase(),
+        name: seed.name,
+        provider: 'local',
+        createdAt: new Date().toISOString(),
+        role: 'admin',
+        password: seed.password,
+      }
+      this.saveUsers([seededUser])
+      return [seededUser]
     }
     return users.map((user) => (user.role ? user : { ...user, role: 'operator' }))
   },
