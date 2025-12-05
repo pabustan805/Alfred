@@ -22,6 +22,10 @@ const preferences = [{ icon: Settings, label: 'Settings', to: '/settings' }]
 export function Sidebar() {
   const { signOut, user, hasRole } = useAuth()
 
+  const handleSignOut = () => {
+    void signOut()
+  }
+
   return (
     <aside className="sidebar" aria-label="Primary">
       <div className="sidebar__brand">
@@ -92,12 +96,7 @@ export function Sidebar() {
           <span>Last incident 42 days ago</span>
         </div>
         {user && (
-          <button
-            type="button"
-            className="sidebar__signout"
-            onClick={signOut}
-            aria-label="Sign out of Alfred"
-          >
+          <button type="button" className="sidebar__signout" onClick={handleSignOut} aria-label="Sign out of Alfred">
             <LogOut size={16} />
             <span>Sign out</span>
           </button>

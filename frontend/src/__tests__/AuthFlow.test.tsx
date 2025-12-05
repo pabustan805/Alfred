@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, expect } from 'vitest'
+import { describe, it, beforeEach, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { type ReactNode } from 'react'
@@ -7,7 +7,20 @@ import { AuthProvider } from '../auth/AuthContext'
 import { AuthGate } from '../components/AuthGate'
 import { TopBar } from '../components/TopBar'
 import { Sidebar } from '../components/Sidebar'
-import { authStorage, type StoredUser } from '../auth/storage'
+import type { AuthUser } from '../auth/types'
+
+const mockAuthService = vi.hoisted(() => ({
+  register: vi.fn(),
+  signIn: vi.fn(),
+  getCurrentUser: vi.fn(),
+  signOut: vi.fn(),
+  deleteAccount: vi.fn(),
+  updateProfile: vi.fn(),
+}))
+
+vi.mock('../auth/service', () => ({
+  authService: mockAuthService,
+}))
 
 const renderWithProvider = (ui: ReactNode) =>
   render(
@@ -19,12 +32,42 @@ const renderWithProvider = (ui: ReactNode) =>
 const Protected = () => <p data-testid="protected">Alfred workspace</p>
 
 beforeEach(() => {
-  window.localStorage?.clear()
+  vi.resetAllMocks()
+  mockAuthService.getCurrentUser.mockResolvedValue(null)
+  mockAuthService.register.mockResolvedValue({
+    id: 'new-user',
+    email: 'new@example.com',
+    name: 'New User',
+    provider: 'local',
+    createdAt: new Date().toISOString(),
+    role: 'operator',
+    status: 'pending',
+  })
+  mockAuthService.signIn.mockResolvedValue({
+    id: 'user-1',
+    email: 'ops@example.com',
+    name: 'Ops Captain',
+    provider: 'local',
+    createdAt: new Date().toISOString(),
+    role: 'operator',
+    status: 'approved',
+  })
+  mockAuthService.signOut.mockResolvedValue(undefined)
+  mockAuthService.deleteAccount.mockResolvedValue(undefined)
+  mockAuthService.updateProfile.mockImplementation(async (payload) => ({
+    id: 'user-1',
+    email: payload.email,
+    name: payload.name,
+    provider: 'local',
+    createdAt: new Date().toISOString(),
+    role: 'operator',
+    status: 'approved',
+  }))
 })
 
 describe('Sidebar', () => {
   it('shows a sign out button for authenticated users', async () => {
-    const storedUser: StoredUser = {
+    const storedUser: AuthUser = {
       id: 'user-2',
       email: 'dev@example.com',
       name: 'Dev Ops',
@@ -32,21 +75,20 @@ describe('Sidebar', () => {
       createdAt: new Date().toISOString(),
       role: 'operator',
       status: 'approved',
-      password: 'anothersecret',
     }
 
-    authStorage.saveUsers([storedUser])
-    authStorage.saveSession(storedUser.id, storedUser.role ?? 'operator')
+    mockAuthService.getCurrentUser.mockResolvedValueOnce(storedUser)
 
     const user = userEvent.setup()
     renderWithProvider(<Sidebar />)
 
-    const signOutButton = screen.getByRole('button', { name: /sign out/i })
+    const signOutButton = await screen.findByRole('button', { name: /sign out/i })
     expect(signOutButton).toBeVisible()
 
     await user.click(signOutButton)
 
     await waitFor(() => {
+      expect(mockAuthService.signOut).toHaveBeenCalledTimes(1)
       expect(screen.queryByRole('button', { name: /sign out/i })).toBeNull()
     })
   })
@@ -69,9 +111,15 @@ describe('AuthGate', () => {
 
     expect(await screen.findByRole('status')).toHaveTextContent(/pending admin approval/i)
     expect(screen.queryByTestId('protected')).toBeNull()
+    expect(mockAuthService.register).toHaveBeenCalledWith({
+      name: 'Ada Lovelace',
+      email: 'ada@example.com',
+      password: 'secure123',
+    })
   })
 
   it('shows an error for invalid credentials and clears it on mode change', async () => {
+    mockAuthService.signIn.mockRejectedValueOnce(new Error('Invalid email or password'))
     const user = userEvent.setup()
     renderWithProvider(
       <AuthGate>
@@ -102,7 +150,7 @@ describe('AuthGate', () => {
 
 describe('TopBar', () => {
   it('displays user profile details and allows signing out', async () => {
-    const storedUser: StoredUser = {
+    const storedUser: AuthUser = {
       id: 'user-1',
       email: 'ops@example.com',
       name: 'Ops Captain',
@@ -110,20 +158,19 @@ describe('TopBar', () => {
       createdAt: new Date().toISOString(),
       role: 'operator',
       status: 'approved',
-      password: 'supersecret',
     }
 
-    authStorage.saveUsers([storedUser])
-    authStorage.saveSession(storedUser.id, storedUser.role ?? 'operator')
+    mockAuthService.getCurrentUser.mockResolvedValueOnce(storedUser)
 
     const user = userEvent.setup()
     renderWithProvider(<TopBar />)
 
-    expect(screen.getByText('Ops Captain')).toBeVisible()
+    expect(await screen.findByText('Ops Captain')).toBeVisible()
 
     await user.click(screen.getByRole('button', { name: /sign out/i }))
 
     await waitFor(() => {
+      expect(mockAuthService.signOut).toHaveBeenCalledTimes(1)
       expect(screen.queryByText('Ops Captain')).toBeNull()
     })
   })

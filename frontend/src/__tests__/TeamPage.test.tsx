@@ -30,11 +30,11 @@ const renderWithAuth = () => {
     user: adminUser,
     isReady: true,
     error: null,
-    signUp: vi.fn(),
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    updateProfile: vi.fn(),
-    deleteAccount: vi.fn(),
+    signUp: vi.fn().mockResolvedValue(adminUser),
+    signIn: vi.fn().mockResolvedValue(adminUser),
+    signOut: vi.fn().mockResolvedValue(undefined),
+    updateProfile: vi.fn().mockResolvedValue(adminUser),
+    deleteAccount: vi.fn().mockResolvedValue(undefined),
     clearError: vi.fn(),
     hasRole: vi.fn().mockReturnValue(true),
   }
@@ -70,11 +70,12 @@ const sampleUsers: AuthUser[] = [
 describe('TeamPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    mockAuth.getAllUsers.mockReturnValue(sampleUsers)
-    mockAuth.updateUserStatus.mockImplementation((id, status) => ({
+    mockAuth.getAllUsers.mockResolvedValue(sampleUsers)
+    mockAuth.updateUserStatus.mockImplementation(async (id, status) => ({
       ...sampleUsers.find((user) => user.id === id)!,
       status,
     }))
+    mockAuth.deleteUserById.mockResolvedValue(undefined)
   })
 
   it('renders roster stats and pending users by default, with filters switching views', async () => {
@@ -82,12 +83,12 @@ describe('TeamPage', () => {
     renderWithAuth()
 
     expect(await screen.findByText('Team access control')).toBeVisible()
-    expect(screen.getByText('Pending User')).toBeVisible()
+    expect(await screen.findByText('Pending User')).toBeVisible()
     expect(screen.queryByText('Approved User')).toBeNull()
 
     await user.click(screen.getByRole('tab', { name: /All users/i }))
 
-    expect(screen.getByText('Approved User')).toBeVisible()
+    expect(await screen.findByText('Approved User')).toBeVisible()
   })
 
   it('approves a pending user and shows success toast', async () => {
