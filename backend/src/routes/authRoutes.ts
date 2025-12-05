@@ -60,6 +60,25 @@ router.get('/me', (req, res) => {
   res.json(user)
 })
 
+router.patch('/me', async (req, res) => {
+  const authReq = req as AuthenticatedRequest
+  if (!authReq.user) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  const { name, email } = req.body ?? {}
+  if (!name || !email) {
+    return res.status(400).json({ error: 'Name and email are required' })
+  }
+
+  try {
+    const updated = await authService.updateProfile(authReq.user.id, { name, email })
+    res.json(updated)
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message })
+  }
+})
+
 router.get('/users', requireRole('admin'), async (_req, res) => {
   const users = await authService.listUsers()
   res.json(users)
@@ -80,6 +99,21 @@ router.patch('/users/:id/status', requireRole('admin'), async (req, res) => {
 
 router.delete('/users/:id', requireRole('admin'), async (req, res) => {
   await authService.deleteUser(req.params.id)
+  res.status(204).send()
+})
+
+router.delete('/me', async (req, res) => {
+  const authReq = req as AuthenticatedRequest
+  if (!authReq.user) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  await authService.deleteUser(authReq.user.id)
+  res.clearCookie(env.sessionCookieName, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: env.nodeEnv === 'production',
+  })
   res.status(204).send()
 })
 

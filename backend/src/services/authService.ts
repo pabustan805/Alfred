@@ -95,4 +95,15 @@ export const authService = {
     const users = await userRepository.listUsers()
     return users.map((user) => toAuthUser(user))
   },
+
+  async updateProfile(userId: string, updates: { name: string; email: string }): Promise<AuthUser> {
+    if (!updates.name?.trim() || !updates.email?.trim()) {
+      throw new Error('Name and email are required')
+    }
+    const updated = await userRepository.updateProfile(userId, updates)
+    if (!updated) {
+      throw new Error('User not found')
+    }
+    return toAuthUser(updated)
+  },
 }

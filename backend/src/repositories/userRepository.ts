@@ -78,6 +78,20 @@ export const userRepository = {
     return mapRow(result.rows[0])
   },
 
+  async updateProfile(userId: string, updates: { name: string; email: string }): Promise<DbUser | null> {
+    const result = await pool.query<DbUserRow>(
+      `
+        UPDATE users
+        SET name = $2, email = $3, updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [userId, updates.name.trim(), updates.email.toLowerCase()],
+    )
+    if (result.rowCount === 0) return null
+    return mapRow(result.rows[0])
+  },
+
   async deleteUser(userId: string): Promise<boolean> {
     const result = await pool.query('DELETE FROM users WHERE id = $1', [userId])
     return result.rowCount > 0
