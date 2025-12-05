@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { authService } from './service'
 import type { AuthUser, Credentials, RegistrationPayload, Role, UpdateProfilePayload } from './types'
@@ -8,11 +8,11 @@ type AuthContextValue = {
   user: AuthUser | null
   isReady: boolean
   error: string | null
-  signUp: (payload: RegistrationPayload) => AuthUser
-  signIn: (payload: Credentials) => AuthUser
-  signOut: () => void
-  updateProfile: (payload: UpdateProfilePayload) => AuthUser
-  deleteAccount: () => void
+  signUp: (payload: RegistrationPayload) => Promise<AuthUser>
+  signIn: (payload: Credentials) => Promise<AuthUser>
+  signOut: () => Promise<void>
+  updateProfile: (payload: UpdateProfilePayload) => Promise<AuthUser>
+  deleteAccount: () => Promise<void>
   clearError: () => void
   hasRole: (...roles: Role[]) => boolean
 }
@@ -20,19 +20,42 @@ type AuthContextValue = {
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const isBrowser = typeof window !== 'undefined'
-  const [user, setUser] = useState<AuthUser | null>(() => (isBrowser ? authService.getCurrentUser() : null))
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const isReady = true
+  const [isReady, setIsReady] = useState(false)
+
+  useEffect(() => {
+    let isActive = true
+    const hydrate = async () => {
+      try {
+        const current = await authService.getCurrentUser()
+        if (isActive) {
+          setUser(current)
+        }
+      } catch {
+        if (isActive) {
+          setUser(null)
+        }
+      } finally {
+        if (isActive) {
+          setIsReady(true)
+        }
+      }
+    }
+    hydrate()
+    return () => {
+      isActive = false
+    }
+  }, [])
 
   const runAction = <Payload,>(
-    action: (payload: Payload) => AuthUser,
+    action: (payload: Payload) => Promise<AuthUser>,
     options: { persistUser?: boolean } = {},
-  ): ((payload: Payload) => AuthUser) => {
+  ): ((payload: Payload) => Promise<AuthUser>) => {
     const { persistUser = true } = options
-    return (payload: Payload) => {
+    return async (payload: Payload) => {
       try {
-        const result = action(payload)
+        const result = await action(payload)
         if (persistUser) {
           setUser(result)
         } else {
@@ -52,16 +75,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = runAction(authService.signIn)
   const updateProfile = runAction(authService.updateProfile)
 
-  const signOut = () => {
-    authService.signOut()
-    setUser(null)
-    setError(null)
+  const signOut = async () => {
+    try {
+      await authService.signOut()
+    } finally {
+      setUser(null)
+      setError(null)
+    }
   }
 
-  const deleteAccount = () => {
-    authService.deleteAccount()
-    setUser(null)
-    setError(null)
+  const deleteAccount = async () => {
+    try {
+      await authService.deleteAccount()
+    } finally {
+      setUser(null)
+      setError(null)
+    }
   }
 
   const clearError = () => setError(null)

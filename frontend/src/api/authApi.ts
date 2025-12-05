@@ -59,4 +59,16 @@ export const authApi = {
   async deleteUser(userId: string): Promise<void> {
     await apiRequest(`/auth/users/${userId}`, { method: 'DELETE', parseJson: false })
   },
+
+  async updateProfile(payload: { name: string; email: string }): Promise<AuthUser> {
+    const user = await apiRequest<BackendAuthUser>('/auth/me', {
+      method: 'PATCH',
+      body: payload,
+    })
+    return mapUser(user)
+  },
+
+  async deleteSelf(): Promise<void> {
+    await apiRequest('/auth/me', { method: 'DELETE', parseJson: false })
+  },
 }

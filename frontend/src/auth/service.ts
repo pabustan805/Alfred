@@ -14,8 +14,8 @@ export const authService = {
   signOut(): Promise<void> {
     return authApi.logout()
   },
-  deleteAccount(userId: string): Promise<void> {
-    return authApi.deleteUser(userId)
+  deleteAccount(): Promise<void> {
+    return authApi.deleteSelf()
   },
   getAllUsers(): Promise<AuthUser[]> {
     return authApi.listUsers()
@@ -25,5 +25,8 @@ export const authService = {
   },
   deleteUserById(userId: string): Promise<void> {
     return authApi.deleteUser(userId)
+  },
+  updateProfile(payload: { name: string; email: string }): Promise<AuthUser> {
+    return authApi.updateProfile(payload)
   },
 }
