@@ -1,9 +1,9 @@
-import bcrypt from 'bcryptjs'
 import { env } from '../config/env.js'
 import { userRepository } from '../repositories/userRepository.js'
 import { sessionRepository } from '../repositories/sessionRepository.js'
 import type { AuthUser, UserStatus } from '../types/auth.js'
 import type { Session } from '../types/session.js'
+import { hashPassword, comparePassword } from '../utils/password.js'
 
 const toAuthUser = (user: Awaited<ReturnType<typeof userRepository.createUser>>): AuthUser => ({
   id: user.id,
@@ -27,7 +27,7 @@ export const authService = {
       throw new Error('Email is already registered')
     }
 
-    const passwordHash = await bcrypt.hash(payload.password, env.bcryptSaltRounds)
+    const passwordHash = await hashPassword(payload.password)
     const user = await userRepository.createUser({
       email: payload.email,
       name: payload.name,
@@ -44,7 +44,7 @@ export const authService = {
       throw new Error('Invalid email or password')
     }
 
-    const match = await bcrypt.compare(payload.password, user.passwordHash)
+    const match = await comparePassword(payload.password, user.passwordHash)
     if (!match) {
       throw new Error('Invalid email or password')
     }

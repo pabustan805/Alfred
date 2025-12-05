@@ -18,7 +18,7 @@ const toNumber = (value: string | undefined, fallback: number): number => {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 4000),
-  databaseUrl: required('DATABASE_URL'),
+  databaseUrl: required('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/alfred'),
   adminEmail: required('ADMIN_EMAIL', 'admin@example.com').toLowerCase(),
   adminName: required('ADMIN_NAME', 'Admin User'),
   adminPassword: required('ADMIN_PASSWORD', 'changeMe123!'),

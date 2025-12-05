@@ -34,4 +34,8 @@ const start = async () => {
   }
 }
 
-void start()
+if (env.nodeEnv !== 'test') {
+  void start()
+}
+
+export { app }
