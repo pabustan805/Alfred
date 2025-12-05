@@ -4,6 +4,7 @@ import { newDb } from 'pg-mem'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { randomUUID } from 'node:crypto'
 import { app } from '../server.js'
 import { setPool } from '../db/pool.js'
 import { hashPassword } from '../utils/password.js'
@@ -12,17 +13,29 @@ import { userRepository } from '../repositories/userRepository.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+const registerExtensions = (db: ReturnType<typeof newDb>) => {
+  const uuidType = db.public.getType('uuid' as any)
+  db.public.registerFunction({
+    name: 'uuid_generate_v4',
+    returns: uuidType,
+    impure: true,
+    implementation: () => randomUUID(),
+  })
+}
+
 const runMigrations = (db: ReturnType<typeof newDb>) => {
   const migrationFiles = ['../../migrations/0002_init_auth.sql']
   for (const file of migrationFiles) {
     const sqlPath = path.resolve(__dirname, file)
-    const sql = readFileSync(sqlPath, 'utf-8')
+    const rawSql = readFileSync(sqlPath, 'utf-8')
+    const sql = rawSql.replace(/CREATE EXTENSION IF NOT EXISTS "uuid-ossp";?/gi, '')
     db.public.none(sql)
   }
 }
 
 const createTestDb = () => {
   const db = newDb()
+  registerExtensions(db)
   const adapter = db.adapters.createPg()
   setPool(new adapter.Pool())
   runMigrations(db)
