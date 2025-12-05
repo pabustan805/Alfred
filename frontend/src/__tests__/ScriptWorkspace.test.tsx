@@ -2,9 +2,12 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
+import type { ComponentProps } from 'react'
 import { ScriptsProvider } from '../scripts/ScriptContext'
 import { ScriptWorkspace } from '../components/ScriptWorkspace'
 import type { Script, ScriptExecution, ScriptFolder } from '../types/script'
+import type { AuthUser } from '../auth/types'
+import { AuthContext } from '../auth/AuthContext'
 
 vi.mock('../ai/reviewer', () => ({
   runAiReview: vi.fn(),
@@ -46,16 +49,51 @@ const fixture: Script = {
   tags: ['edge'],
 }
 
+const adminUser: AuthUser = {
+  id: 'admin-1',
+  email: 'admin@example.com',
+  name: 'Admin User',
+  provider: 'local',
+  createdAt: '2025-01-01T00:00:00.000Z',
+  role: 'admin',
+}
+
+type AuthContextValue = ComponentProps<typeof AuthContext.Provider>['value']
+
+const createAuthValue = (overrides: Partial<AuthContextValue> = {}): AuthContextValue => {
+  const effectiveUser = overrides.user ?? adminUser
+  return {
+    user: effectiveUser,
+    isReady: true,
+    error: null,
+    signUp: vi.fn(),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    updateProfile: vi.fn(),
+    deleteAccount: vi.fn(),
+    clearError: vi.fn(),
+    hasRole: (...roles) => {
+      if (!effectiveUser) return false
+      if (roles.length === 0) return true
+      return roles.includes(effectiveUser.role)
+    },
+    ...overrides,
+  }
+}
+
 const renderWorkspace = (
   scripts: Script[] = [fixture],
   folders?: ScriptFolder[],
   executions?: ScriptExecution[],
+  options?: { authOverrides?: Partial<AuthContextValue> },
 ) =>
   render(
     <MemoryRouter>
-      <ScriptsProvider initialScripts={scripts} initialFolders={folders} initialExecutions={executions}>
-        <ScriptWorkspace />
-      </ScriptsProvider>
+      <AuthContext.Provider value={createAuthValue(options?.authOverrides)}>
+        <ScriptsProvider initialScripts={scripts} initialFolders={folders} initialExecutions={executions}>
+          <ScriptWorkspace />
+        </ScriptsProvider>
+      </AuthContext.Provider>
     </MemoryRouter>,
   )
 

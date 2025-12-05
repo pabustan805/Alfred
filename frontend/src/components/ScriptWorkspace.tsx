@@ -12,6 +12,7 @@ import { javascript } from '@codemirror/lang-javascript'
 import { python } from '@codemirror/lang-python'
 import type { Extension } from '@codemirror/state'
 import { StreamLanguage } from '@codemirror/language'
+import { EditorView } from '@codemirror/view'
 import { shell } from '@codemirror/legacy-modes/mode/shell'
 import { ruby as rubyMode } from '@codemirror/legacy-modes/mode/ruby'
 import { perl as perlMode } from '@codemirror/legacy-modes/mode/perl'
@@ -54,6 +55,7 @@ import {
   type ScriptSortField,
 } from '../scripts/folderUtils'
 import { useScripts } from '../scripts/ScriptContext'
+import { useAuth } from '../auth/AuthContext'
 import { AuditLogPanel } from '../audit/AuditLogPanel'
 import { runAiReview } from '../ai/reviewer'
 import type { AIReviewResult } from '../ai/reviewer'
@@ -126,6 +128,13 @@ export function ScriptWorkspace() {
     removeExecutionEntry,
     clearExecutionsForScript,
   } = useScripts()
+  const { hasRole } = useAuth()
+  const canEditScripts = hasRole('operator', 'admin')
+  const canRunScripts = hasRole('operator', 'admin')
+  const canManageFolders = hasRole('operator', 'admin')
+  const canDeleteAssets = hasRole('admin')
+  const operatorRoleTooltip = 'Operator or admin role required'
+  const adminRoleTooltip = 'Admin role required'
   const [selectedId, setSelectedId] = useState<string | null>(scripts[0]?.id ?? null)
   const [draft, setDraft] = useState<Draft | null>(scripts[0] ? toDraft(scripts[0]) : null)
   const [query, setQuery] = useState('')
@@ -480,6 +489,10 @@ export function ScriptWorkspace() {
   }, [])
 
   const handleCreate = async () => {
+    if (!canEditScripts) {
+      setScriptToast('Operator or admin role required to create scripts.')
+      return
+    }
     const script = await createScript(activeScript ? { folderId: activeScript.folderId ?? null } : undefined)
     pendingSelectionRef.current = script.id
     handleScriptSelection(script.id)
@@ -493,6 +506,10 @@ export function ScriptWorkspace() {
   }
 
   const handleImportClick = () => {
+    if (!canEditScripts) {
+      setImportError('Operator or admin role required to import scripts.')
+      return
+    }
     fileInputRef.current?.click()
   }
 
@@ -526,6 +543,10 @@ export function ScriptWorkspace() {
 
   const handleSave = async () => {
     if (!activeScript || !draft || !isDirty) {
+      return
+    }
+    if (!canEditScripts) {
+      setFormFeedback('Operator or admin role required to save changes.')
       return
     }
     await updateScript(activeScript.id, draft)
@@ -568,6 +589,10 @@ export function ScriptWorkspace() {
   const aiPanelId = 'ai-review-panel-title'
 
   const handleClone = async (targetId: string) => {
+    if (!canEditScripts) {
+      setScriptToast('Operator or admin role required to clone scripts.')
+      return
+    }
     const clone = await cloneScript(targetId)
     if (clone) {
       handleScriptSelection(clone.id)
@@ -576,6 +601,10 @@ export function ScriptWorkspace() {
   }
 
   const handleDelete = async () => {
+    if (!canDeleteAssets) {
+      setScriptToast('Admin role required to delete scripts.')
+      return
+    }
     if (!pendingDeleteId) {
       return
     }
@@ -591,10 +620,18 @@ export function ScriptWorkspace() {
   }
 
   const requestDelete = (id: string) => {
+    if (!canDeleteAssets) {
+      setScriptToast('Admin role required to delete scripts.')
+      return
+    }
     setPendingDeleteId(id)
   }
 
   const handleBulkRun = useCallback(async () => {
+    if (!canRunScripts) {
+      setExecutionFeedback('Operator or admin role required to run scripts.')
+      return
+    }
     if (bulkSelectionCount === 0) {
       return
     }
@@ -609,7 +646,7 @@ export function ScriptWorkspace() {
       .join(', ')
     setBulkActionFeedback(`Queued ${started.length} scripts: ${names}`)
     setExecutionFeedback('Executions started. Monitor progress on the right panel.')
-  }, [bulkSelection, bulkSelectionCount, scriptLookup, startExecutions])
+  }, [bulkSelection, bulkSelectionCount, canRunScripts, scriptLookup, startExecutions])
 
   const handlePauseResume = (execution: ScriptExecution) => {
     if (execution.status === 'running') {
@@ -670,6 +707,10 @@ export function ScriptWorkspace() {
   }
 
   const requestFolderDelete = (folder: ScriptFolder, totalScripts: number) => {
+    if (!canManageFolders) {
+      setScriptToast('Operator or admin role required to manage folders.')
+      return
+    }
     const descendantIds = collectDescendantIds(folder.id)
     setFolderPendingDelete({ folder, totalScripts, descendantIds })
     setFolderDeleteMode(totalScripts ? 'move' : 'delete')
@@ -682,6 +723,10 @@ export function ScriptWorkspace() {
   }
 
   const handleConfirmFolderDelete = async () => {
+    if (!canManageFolders) {
+      setScriptToast('Operator or admin role required to manage folders.')
+      return
+    }
     if (!folderPendingDelete) {
       return
     }
@@ -885,6 +930,10 @@ export function ScriptWorkspace() {
 
   const handleFolderSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!canManageFolders) {
+      setScriptToast('Operator or admin role required to manage folders.')
+      return
+    }
     const trimmed = folderNameInput.trim()
     if (!trimmed) {
       return
@@ -901,6 +950,14 @@ export function ScriptWorkspace() {
     setCreatingFolder(false)
     setFolderNameInput('')
     setFolderParentInput(TOP_LEVEL_FOLDER_VALUE)
+  }
+
+  const startFolderCreation = () => {
+    if (!canManageFolders) {
+      setScriptToast('Operator or admin role required to manage folders.')
+      return
+    }
+    setCreatingFolder(true)
   }
 
   const renderTree = (nodes: FolderTreeNode[], depth = 0): JSX.Element[] =>
@@ -959,6 +1016,8 @@ export function ScriptWorkspace() {
                   className="scripts__folder-action"
                   onClick={() => requestFolderDelete(node.folder!, node.totalScripts)}
                   aria-label={`Delete folder ${label}`}
+                  disabled={!canManageFolders}
+                  title={canManageFolders ? `Delete folder ${label}` : operatorRoleTooltip}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -1079,7 +1138,8 @@ export function ScriptWorkspace() {
               className="scripts__icon-button"
               onClick={handleImportClick}
               aria-label="Import scripts"
-              title="Import scripts"
+              title={canEditScripts ? 'Import scripts' : operatorRoleTooltip}
+              disabled={!canEditScripts}
             >
               <UploadCloud size={18} />
               <span className="sr-only">Import scripts</span>
@@ -1089,7 +1149,8 @@ export function ScriptWorkspace() {
               className="scripts__icon-button scripts__icon-button--primary"
               onClick={handleCreate}
               aria-label="New script"
-              title="New script"
+              title={canEditScripts ? 'New script' : operatorRoleTooltip}
+              disabled={!canEditScripts}
             >
               <Plus size={18} />
               <span className="sr-only">New script</span>
@@ -1097,9 +1158,10 @@ export function ScriptWorkspace() {
             <button
               type="button"
               className="scripts__icon-button"
-              onClick={() => setCreatingFolder(true)}
+              onClick={startFolderCreation}
               aria-label="New folder"
-              title="New folder"
+              title={canManageFolders ? 'New folder' : operatorRoleTooltip}
+              disabled={!canManageFolders}
             >
               <FolderPlus size={18} />
               <span className="sr-only">New folder</span>
@@ -1245,12 +1307,20 @@ export function ScriptWorkspace() {
           <form className="scripts__folder-form" onSubmit={handleFolderSubmit}>
             <label>
               Folder name
-              <input value={folderNameInput} onChange={(event) => setFolderNameInput(event.target.value)} />
+              <input
+                value={folderNameInput}
+                onChange={(event) => setFolderNameInput(event.target.value)}
+                disabled={!canManageFolders}
+              />
             </label>
             {folderOptions.length > 0 && (
               <label>
                 Parent folder
-                <select value={folderParentInput} onChange={(event) => setFolderParentInput(event.target.value)}>
+                <select
+                  value={folderParentInput}
+                  onChange={(event) => setFolderParentInput(event.target.value)}
+                  disabled={!canManageFolders}
+                >
                   <option value={TOP_LEVEL_FOLDER_VALUE}>Top level</option>
                   {folderOptions.map((option) => (
                     <option key={option.id} value={option.id}>
@@ -1264,7 +1334,12 @@ export function ScriptWorkspace() {
               <button type="button" className="text" onClick={cancelFolderCreation}>
                 Cancel
               </button>
-              <button type="submit" className="primary" disabled={!folderNameInput.trim()}>
+              <button
+                type="submit"
+                className="primary"
+                disabled={!canManageFolders || !folderNameInput.trim()}
+                title={canManageFolders ? 'Create folder' : operatorRoleTooltip}
+              >
                 Create folder
               </button>
             </div>
@@ -1332,10 +1407,12 @@ export function ScriptWorkspace() {
                 className="danger"
                 onClick={handleConfirmFolderDelete}
                 disabled={
-                  Boolean(folderPendingDelete.totalScripts) &&
-                  folderDeleteMode === 'move' &&
-                  folderDeleteDestination === null
+                  !canManageFolders ||
+                  (Boolean(folderPendingDelete.totalScripts) &&
+                    folderDeleteMode === 'move' &&
+                    folderDeleteDestination === null)
                 }
+                title={canManageFolders ? 'Confirm delete' : operatorRoleTooltip}
               >
                 Confirm delete
               </button>
@@ -1397,10 +1474,10 @@ export function ScriptWorkspace() {
                   type="button"
                   className="ghost"
                   onClick={handleBulkRun}
-                  disabled={bulkSelectionCount === 0}
+                  disabled={!canRunScripts || bulkSelectionCount === 0}
                   data-testid="scripts-bulk-run"
                   aria-label="Run selected scripts"
-                  title="Run now"
+                  title={canRunScripts ? 'Run now' : operatorRoleTooltip}
                 >
                   <Play size={16} />
                 </button>
@@ -1408,9 +1485,9 @@ export function ScriptWorkspace() {
                   type="button"
                   className="ghost"
                   onClick={() => activeScript && handleClone(activeScript.id)}
-                  disabled={Boolean(mutation) || !activeScript}
+                  disabled={!canEditScripts || Boolean(mutation) || !activeScript}
                   aria-label="Clone selected script"
-                  title="Clone"
+                  title={canEditScripts ? 'Clone' : operatorRoleTooltip}
                 >
                   <Copy size={16} />
                 </button>
@@ -1418,9 +1495,9 @@ export function ScriptWorkspace() {
                   type="button"
                   className="ghost"
                   onClick={() => activeScript && requestDelete(activeScript.id)}
-                  disabled={Boolean(mutation) || !activeScript}
+                  disabled={!canDeleteAssets || Boolean(mutation) || !activeScript}
                   aria-label="Delete selected script"
-                  title="Delete"
+                  title={canDeleteAssets ? 'Delete' : adminRoleTooltip}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -1664,6 +1741,7 @@ export function ScriptWorkspace() {
                 Script name
                 <input
                   value={draft.name}
+                  disabled={!canEditScripts}
                   onChange={(event) => setDraft((prev) => prev && { ...prev, name: event.target.value })}
                 />
               </label>
@@ -1673,6 +1751,7 @@ export function ScriptWorkspace() {
                 <textarea
                   value={draft.description}
                   rows={3}
+                  disabled={!canEditScripts}
                   onChange={(event) => setDraft((prev) => prev && { ...prev, description: event.target.value })}
                 />
               </label>
@@ -1682,6 +1761,7 @@ export function ScriptWorkspace() {
                   <span>Language</span>
                   <select
                     value={draft.language}
+                    disabled={!canEditScripts}
                     onChange={(event) =>
                       setDraft((prev) =>
                         prev && {
@@ -1702,6 +1782,7 @@ export function ScriptWorkspace() {
                   <span>Folder</span>
                   <select
                     value={draft.folderId ?? ''}
+                    disabled={!canEditScripts}
                     onChange={(event) =>
                       setDraft((prev) =>
                         prev && {
@@ -1726,7 +1807,10 @@ export function ScriptWorkspace() {
                   value={draft.content}
                   height={editorContentHeight}
                   theme={oneDark}
-                  extensions={[languageExtensions[draft.language]]}
+                  extensions={[
+                    languageExtensions[draft.language],
+                    ...(canEditScripts ? [] : [EditorView.editable.of(false)]),
+                  ]}
                   aria-label="Script content"
                   onChange={(value) => setDraft((prev) => prev && { ...prev, content: value })}
                 />
@@ -1737,12 +1821,18 @@ export function ScriptWorkspace() {
                   type="button"
                   className="ghost"
                   onClick={() => draft && activeScript && setDraft(toDraft(activeScript))}
-                  disabled={!isDirty}
+                  disabled={!canEditScripts || !isDirty}
                 >
                   <RefreshCw size={16} />
                   <span>Revert</span>
                 </button>
-                <button type="button" className="primary" onClick={handleSave} disabled={!isDirty}>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={handleSave}
+                  disabled={!canEditScripts || !isDirty}
+                  title={canEditScripts ? 'Save changes' : operatorRoleTooltip}
+                >
                   Save changes
                 </button>
                 {formFeedback && (
@@ -1855,7 +1945,13 @@ export function ScriptWorkspace() {
         ) : (
           <div className="scripts__empty-state">
             <p>No scripts yet.</p>
-            <button type="button" className="primary" onClick={handleCreate}>
+            <button
+              type="button"
+              className="primary"
+              onClick={handleCreate}
+              disabled={!canEditScripts}
+              title={canEditScripts ? 'Start with a blank script' : operatorRoleTooltip}
+            >
               <Plus size={16} />
               <span>Start with a blank script</span>
             </button>
