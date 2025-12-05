@@ -95,6 +95,33 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     })
   }, [jobs])
 
+  useEffect(() => {
+    let active = true
+    const syncBackendScripts = async () => {
+      try {
+        const scripts = await scriptApi.listScripts()
+        if (!active) {
+          return
+        }
+        setJobItems((prev) =>
+          prev.map((job) => {
+            if (job.backendId) {
+              return job
+            }
+            const match = scripts.find((script) => script.name === job.name && script.command === job.command)
+            return match?.backendId ? { ...job, backendId: match.backendId } : job
+          }),
+        )
+      } catch (error) {
+        console.warn('[schedules] failed to hydrate backend scripts', error)
+      }
+    }
+    void syncBackendScripts()
+    return () => {
+      active = false
+    }
+  }, [])
+
   const loadNotificationData = async (job: CronJob) => {
     if (!job.backendId) {
       setNotificationError('This schedule is not connected to the backend yet.')
@@ -122,15 +149,47 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     }
   }
 
+  const ensureJobSyncedWithBackend = async (job: CronJob): Promise<CronJob | null> => {
+    if (job.backendId) {
+      return job
+    }
+    if (!canManageSchedules) {
+      setNotificationError('Only operators or admins can enable notifications for this schedule.')
+      return null
+    }
+    try {
+      setNotificationActionLoading(true)
+      const created = await scriptApi.createScript({
+        name: job.name,
+        description: job.description,
+        schedule: job.schedule,
+        command: job.command,
+      })
+      const updatedJob: CronJob = { ...job, backendId: created.id }
+      setJobItems((prev) => prev.map((item) => (item.id === job.id ? updatedJob : item)))
+      return updatedJob
+    } catch (error) {
+      setNotificationError(error instanceof Error ? error.message : 'Failed to sync schedule with backend.')
+      return null
+    } finally {
+      setNotificationActionLoading(false)
+    }
+  }
+
   const closeWizard = () => setWizardOpen(false)
 
-  const handleManageNotifications = (job: CronJob) => {
-    setNotificationJob(job)
+  const handleManageNotifications = async (job: CronJob) => {
+    setNotificationError(null)
+    const syncedJob = await ensureJobSyncedWithBackend(job)
+    if (!syncedJob) {
+      return
+    }
+    setNotificationJob(syncedJob)
     setSelectedNotificationUser('self')
     setNotificationSubscribers([])
     setNotificationUsers([])
     setNotificationError(null)
-    void loadNotificationData(job)
+    void loadNotificationData(syncedJob)
   }
 
   const closeNotificationModal = () => {

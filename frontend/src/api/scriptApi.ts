@@ -26,6 +26,18 @@ export const scriptApi = {
     return scripts.map(mapScript)
   },
 
+  async createScript(payload: {
+    name: string
+    description?: string
+    schedule: string
+    command: string
+  }): Promise<BackendScript> {
+    return apiRequest<BackendScript>('/scripts', {
+      method: 'POST',
+      body: payload,
+    })
+  },
+
   async listNotifications(scriptId: string): Promise<ScriptNotification[]> {
     return apiRequest<ScriptNotification[]>(`/scripts/${scriptId}/notifications`)
   },
