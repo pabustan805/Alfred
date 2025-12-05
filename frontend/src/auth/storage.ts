@@ -45,10 +45,31 @@ const safeParse = <T>(value: string | null, fallback: T): T => {
   }
 }
 
+const getAdminSeed = () => {
+  const email = import.meta.env.VITE_ADMIN_EMAIL || 'admin@example.com'
+  const password = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'
+  const name = import.meta.env.VITE_ADMIN_NAME || 'Admin User'
+  return { email, password, name }
+}
+
 export const authStorage = {
   getUsers(): StoredUser[] {
     const storage = getStorage()
     const users = safeParse<StoredUser[]>(storage.getItem(USERS_KEY), [])
+    if (users.length === 0) {
+      const seed = getAdminSeed()
+      return [
+        {
+          id: 'admin-seed',
+          email: seed.email.toLowerCase(),
+          name: seed.name,
+          provider: 'local',
+          createdAt: new Date().toISOString(),
+          role: 'admin',
+          password: seed.password,
+        },
+      ]
+    }
     return users.map((user) => (user.role ? user : { ...user, role: 'operator' }))
   },
   saveUsers(users: StoredUser[]) {
