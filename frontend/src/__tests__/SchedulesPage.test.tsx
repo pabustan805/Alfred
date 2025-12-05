@@ -1,11 +1,13 @@
 import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { ComponentProps } from 'react'
-import type { CronJob } from '../types/cron'
+import type { CronJob, ScriptNotification } from '../types/cron'
 import type { AuthUser } from '../auth/types'
 import { AuthContext } from '../auth/AuthContext'
 import { SchedulesPage } from '../pages/SchedulesPage'
+import { scriptApi } from '../api/scriptApi'
+import { authApi } from '../api/authApi'
 
 const sampleJobs: CronJob[] = [
   {
@@ -21,6 +23,7 @@ const sampleJobs: CronJob[] = [
     command: 'node scripts/backup.js',
     lastDuration: '4m 02s',
     target: 'Infra cluster',
+    backendId: 'script-123',
   },
 ]
 
@@ -63,6 +66,35 @@ const renderWithAuth = (overrides: Partial<AuthContextValue> = {}, jobs: CronJob
 }
 
 describe('SchedulesPage', () => {
+  const subscribeMock = vi.spyOn(scriptApi, 'subscribe').mockResolvedValue({} as ScriptNotification)
+  const unsubscribeMock = vi.spyOn(scriptApi, 'unsubscribe').mockResolvedValue()
+  const listNotificationsMock = vi.spyOn(scriptApi, 'listNotifications')
+  const listUsersMock = vi.spyOn(authApi, 'listUsers')
+
+  beforeEach(() => {
+    listNotificationsMock.mockResolvedValue([
+      {
+        id: 'sub-1',
+        scriptId: 'script-123',
+        userId: 'admin-1',
+        channel: 'email',
+        isAutoSubscribed: true,
+        createdAt: '',
+        updatedAt: '',
+        userEmail: 'admin@example.com',
+        userName: 'Admin Ops',
+      },
+    ])
+    listUsersMock.mockResolvedValue([
+      { ...adminUser },
+      { ...adminUser, id: 'operator-1', email: 'operator@example.com', name: 'Operator One', role: 'operator' },
+    ])
+  })
+
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('renders the schedules hero and job table', () => {
     renderWithAuth()
 
@@ -102,5 +134,32 @@ describe('SchedulesPage', () => {
 
     const editButton = screen.getByRole('button', { name: /edit nightly backup/i })
     expect(editButton).toBeDisabled()
+  })
+
+  it('opens notifications modal and lists recipients', async () => {
+    const user = userEvent.setup()
+    renderWithAuth()
+
+    await user.click(screen.getByRole('button', { name: /Manage notifications for Nightly backup/i }))
+
+    const dialog = await screen.findByRole('dialog', { name: /Notifications for Nightly backup/i })
+    expect(dialog).toBeVisible()
+    expect(await within(dialog).findByText(/Admin Ops/)).toBeVisible()
+  })
+
+  it('allows admin to add and remove recipients', async () => {
+    const user = userEvent.setup()
+    renderWithAuth()
+
+    await user.click(screen.getByRole('button', { name: /Manage notifications for Nightly backup/i }))
+    const dialog = await screen.findByRole('dialog', { name: /Notifications for Nightly backup/i })
+
+    await user.selectOptions(within(dialog).getByRole('combobox'), 'operator-1')
+    await user.click(within(dialog).getByRole('button', { name: /Add recipient/i }))
+
+    await waitFor(() => expect(subscribeMock).toHaveBeenCalledWith('script-123', { userId: 'operator-1' }))
+
+    await user.click(within(dialog).getByRole('button', { name: /Remove/i }))
+    await waitFor(() => expect(unsubscribeMock).toHaveBeenCalledWith('script-123', 'sub-1'))
   })
 })
