@@ -78,6 +78,20 @@ export const userRepository = {
     return mapRow(result.rows[0])
   },
 
+  async approveWithRole(userId: string, role: Role): Promise<AuthUser | null> {
+    const result = await pool.query<DbUserRow>(
+      `
+        UPDATE users
+        SET role = $2, status = 'approved', updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `,
+      [userId, role],
+    )
+    if (result.rowCount === 0) return null
+    return mapRow(result.rows[0])
+  },
+
   async updateProfile(userId: string, updates: { name: string; email: string }): Promise<DbUser | null> {
     const result = await pool.query<DbUserRow>(
       `
@@ -94,6 +108,6 @@ export const userRepository = {
 
   async deleteUser(userId: string): Promise<boolean> {
     const result = await pool.query('DELETE FROM users WHERE id = $1', [userId])
-    return result.rowCount > 0
+    return (result.rowCount ?? 0) > 0
   },
 }

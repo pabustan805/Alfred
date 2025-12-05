@@ -105,4 +105,44 @@ describe('Auth routes', () => {
     const listAfterDelete = await adminAgent.get('/auth/users')
     expect(listAfterDelete.body.some((user: any) => user.email === operatorEmail)).toBe(false)
   })
+
+  it('allows admin to approve with a specific role in one action', async () => {
+    const adminPassword = 'Admin123!'
+    const adminPasswordHash = await hashPassword(adminPassword)
+    const admin = await userRepository.createUser({
+      email: 'role-admin@example.com',
+      name: 'Role Admin',
+      passwordHash: adminPasswordHash,
+      role: 'admin',
+      status: 'approved',
+    })
+
+    const adminAgent = request.agent(app)
+    const loginAdmin = await adminAgent.post('/auth/login').send({
+      email: admin.email,
+      password: adminPassword,
+    })
+    expect(loginAdmin.status).toBe(200)
+
+    const pendingEmail = `pending-role-${Date.now()}@example.com`
+    const registerRes = await request(app).post('/auth/register').send({
+      email: pendingEmail,
+      name: 'Role Pending',
+      password: 'Secret123!',
+    })
+    expect(registerRes.status).toBe(201)
+    const pendingId = registerRes.body.id
+
+    const approveRes = await adminAgent.patch(`/auth/users/${pendingId}/approve`).send({ role: 'viewer' })
+    expect(approveRes.status).toBe(200)
+    expect(approveRes.body.status).toBe('approved')
+    expect(approveRes.body.role).toBe('viewer')
+
+    const loginRes = await request(app).post('/auth/login').send({
+      email: pendingEmail,
+      password: 'Secret123!',
+    })
+    expect(loginRes.status).toBe(200)
+    expect(loginRes.body.role).toBe('viewer')
+  })
 })

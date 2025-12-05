@@ -1,7 +1,7 @@
 import { env } from '../config/env.js'
-import { userRepository } from '../repositories/userRepository.js'
 import { sessionRepository } from '../repositories/sessionRepository.js'
-import type { AuthUser, UserStatus } from '../types/auth.js'
+import { userRepository } from '../repositories/userRepository.js'
+import type { AuthUser, Role, UserStatus } from '../types/auth.js'
 import type { Session } from '../types/session.js'
 import { hashPassword, comparePassword } from '../utils/password.js'
 
@@ -82,6 +82,17 @@ export const authService = {
     }
     if (status !== 'approved') {
       await sessionRepository.deleteSessionsForUser(userId)
+    }
+    return updated
+  },
+
+  async approveUserWithRole(userId: string, role: Role): Promise<AuthUser> {
+    if (!['viewer', 'operator', 'admin'].includes(role)) {
+      throw new Error('Invalid role')
+    }
+    const updated = await userRepository.approveWithRole(userId, role)
+    if (!updated) {
+      throw new Error('User not found')
     }
     return updated
   },

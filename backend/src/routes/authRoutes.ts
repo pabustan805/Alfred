@@ -97,6 +97,19 @@ router.patch('/users/:id/status', requireRole('admin'), async (req, res) => {
   }
 })
 
+router.patch('/users/:id/approve', requireRole('admin'), async (req, res) => {
+  try {
+    const { role } = req.body ?? {}
+    if (!role || !['viewer', 'operator', 'admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' })
+    }
+    const updated = await authService.approveUserWithRole(req.params.id, role)
+    res.json(updated)
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message })
+  }
+})
+
 router.delete('/users/:id', requireRole('admin'), async (req, res) => {
   await authService.deleteUser(req.params.id)
   res.status(204).send()
