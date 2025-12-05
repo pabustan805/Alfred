@@ -48,14 +48,18 @@ Alfred now ships a minimal RBAC layer to satisfy security requirements:
 
 This foundation keeps roles easy to reason about now while allowing richer policies later.
 
-### Backend persistence roadmap
-Local storage was sufficient for prototyping, but Alfred will migrate authentication to a centralized backend so users can sign in from any device. The upcoming stack:
-1. **Express API + PostgreSQL** – a `/auth` module backed by Postgres tables (`users`, `sessions`) will own registration, login, approvals, and deletion. Passwords will be hashed (bcrypt/argon2) and user status will be stored server-side.
-2. **Shared session model** – the backend will issue JWT or httpOnly cookie sessions containing `userId`, `role`, and `status`, enabling multi-device access.
-3. **Admin workflows** – the Team page will call the backend (e.g., `GET /auth/users`, `PATCH /auth/users/:id/status`, `DELETE /auth/users/:id`) so approvals update the database instantly.
-4. **Future audits** – central storage unlocks audit logging for sign-ins, approvals, and role changes.
+### Backend authentication stack
+Local storage has been fully replaced by a centralized backend so users can sign in from any device:
+1. **Express API + PostgreSQL** – the `/auth` module persists accounts in `users`, `sessions`, and `audit_events` tables. Passwords are hashed with bcrypt and every change updates Postgres as the source of truth.
+2. **Shared session model** – successful logins receive an httpOnly cookie that stores the session id; the backend enforces `userId`, `role`, and `status` on every request and expires pending/rejected users immediately.
+3. **Admin workflows** – the Team page now calls real endpoints (`GET /auth/users`, `PATCH /auth/users/:id/status`, `DELETE /auth/users/:id`) so approvals/deletions propagate instantly to every device.
+4. **Audit readiness** – with centralized storage we can extend audit logging for sign-ins, approvals, and role toggles without revisiting the architecture.
 
-PostgreSQL is the preferred database so we can rely on strong consistency, migrations, and hosted options later.
+#### Running the backend locally
+1. Create `backend/.env` (see `backend/.env.example`) with `DATABASE_URL`, `ADMIN_*`, and session settings.
+2. Run migrations (e.g., `pnpm exec psql < backend/migrations/0002_init_auth.sql`) and seed the admin account via `pnpm seed:admin`.
+3. Start the API with `pnpm dev` inside `backend/`. The frontend expects this service at `VITE_API_URL` (default `http://localhost:4000`).
+4. Point `frontend/.env` → `VITE_API_URL=http://localhost:4000` and restart `pnpm run dev` to consume the live API.
 
 ### Frontend deployment prep
 1. Install Node.js 18+ and pnpm (or npm).

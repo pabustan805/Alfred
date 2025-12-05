@@ -37,10 +37,10 @@ This foundation keeps roles easy to reason about now while allowing richer polic
 - **Status enforcement**: `authService` utilities ensure only approved accounts can maintain sessions, and deleting/rejecting a user clears any active session tokens.
 
 ## Backend Persistence Strategy
-- **Preferred database**: PostgreSQL will be the single source of truth for users, sessions, approvals, and future audit logs. Initial migrations will provision `users`, `sessions`, and `audit_events`.
-- **API surface**: Express routes under `/auth` will own registration, login, logout, roster listing, status changes, and deletion. Each route will authenticate requests, enforce `requireRole`, and persist mutations to Postgres.
-- **Session issuance**: Successful logins return a JWT or httpOnly cookie carrying `userId`, `role`, and `status`. When an admin toggles a user’s status, the backend invalidates existing sessions to prevent stale access.
-- **Frontend integration**: The React app will replace local `authService` calls with REST requests. `AuthContext` will fetch `/auth/me` on load, and the Team page will call `/auth/users` + `/auth/users/:id` to keep the roster consistent across devices.
+- **Preferred database**: PostgreSQL is the single source of truth for users, sessions, approvals, and future audit logs. Migrations provision `users`, `sessions`, and `audit_events`, and the admin seeding script guarantees an initial operator.
+- **API surface**: Express routes under `/auth` own registration, login, logout, roster listing, status changes, profile updates, and deletion. Each route authenticates requests, enforces `requireRole`, and persists mutations to Postgres.
+- **Session issuance**: Successful logins return an httpOnly cookie referencing a session row carrying `userId`, `role`, and `status`. When an admin toggles status or deletes a user, the backend evicts their sessions to prevent stale access.
+- **Frontend integration**: The React app now uses REST requests end-to-end. `AuthContext` hydrates via `/auth/me`, AuthGate calls `/auth/register` and `/auth/login`, Settings uses `/auth/me` PATCH/DELETE, and the Team page relies on `/auth/users` plus per-user routes so data stays consistent across devices.
 - **Scalability**: PostgreSQL enables future extensions (audit logging, reporting, multi-tenant workspaces) without rethinking the persistence model. Hosted options (RDS, Supabase, Neon, etc.) can be adopted later.
 
 
