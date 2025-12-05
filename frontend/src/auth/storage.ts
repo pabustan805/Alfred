@@ -1,7 +1,8 @@
-import type { AuthUser, Role } from './types'
+import type { AuthUser, Role, UserStatus } from './types'
 
 type StoredUser = Omit<AuthUser, 'role'> & {
   role?: Role
+  status?: UserStatus
   password?: string
 }
 
@@ -46,9 +47,9 @@ const safeParse = <T>(value: string | null, fallback: T): T => {
 }
 
 const getAdminSeed = () => {
-  const email = import.meta.env.VITE_ADMIN_EMAIL || 'admin@example.com'
-  const password = import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'
-  const name = import.meta.env.VITE_ADMIN_NAME || 'Admin User'
+  const email = import.meta.env.VITE_ADMIN_EMAIL || 'erpabustan@example.com'
+  const password = import.meta.env.VITE_ADMIN_PASSWORD || 'erpabustan123'
+  const name = import.meta.env.VITE_ADMIN_NAME || 'Erpabustan User'
   return { email, password, name }
 }
 
@@ -65,12 +66,17 @@ export const authStorage = {
         provider: 'local',
         createdAt: new Date().toISOString(),
         role: 'admin',
+        status: 'approved',
         password: seed.password,
       }
       this.saveUsers([seededUser])
       return [seededUser]
     }
-    return users.map((user) => (user.role ? user : { ...user, role: 'operator' }))
+    return users.map((user) => ({
+      ...user,
+      role: user.role ?? 'operator',
+      status: user.status ?? 'approved',
+    }))
   },
   saveUsers(users: StoredUser[]) {
     const storage = getStorage()
