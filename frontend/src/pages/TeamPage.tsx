@@ -36,9 +36,31 @@ export function TeamPage() {
   const [filter, setFilter] = useState<FilterValue>('pending')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    setUsers(authService.getAllUsers())
+    let isActive = true
+    const loadUsers = async () => {
+      try {
+        const roster = await authService.getAllUsers()
+        if (isActive) {
+          setUsers(roster)
+        }
+      } catch (err) {
+        if (isActive) {
+          const details = err instanceof Error ? err.message : 'Unable to load users'
+          setError(details)
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false)
+        }
+      }
+    }
+    loadUsers()
+    return () => {
+      isActive = false
+    }
   }, [])
 
   const stats = useMemo(() => {
@@ -57,9 +79,9 @@ export function TeamPage() {
     return users.filter((user) => user.status === filter)
   }, [filter, users])
 
-  const runAction = (action: () => void, successMessage: string) => {
+  const runAction = async (action: () => Promise<void>, successMessage: string) => {
     try {
-      action()
+      await action()
       setMessage(successMessage)
       setError(null)
     } catch (err) {
@@ -70,8 +92,8 @@ export function TeamPage() {
   }
 
   const handleStatusChange = (member: AuthUser, status: Exclude<UserStatus, 'pending'>) => {
-    runAction(() => {
-      const updated = authService.updateUserStatus(member.id, status)
+    void runAction(async () => {
+      const updated = await authService.updateUserStatus(member.id, status)
       setUsers((prev) => prev.map((user) => (user.id === member.id ? updated : user)))
     }, `${member.name} is now ${status === 'approved' ? 'approved' : 'rejected'}.`)
   }
@@ -86,8 +108,8 @@ export function TeamPage() {
     const confirmed = window.confirm(`Delete ${member.name}? This action cannot be undone.`)
     if (!confirmed) return
 
-    runAction(() => {
-      authService.deleteUserById(member.id)
+    void runAction(async () => {
+      await authService.deleteUserById(member.id)
       setUsers((prev) => prev.filter((user) => user.id !== member.id))
     }, `${member.name} was removed from Alfred.`)
   }
@@ -159,7 +181,12 @@ export function TeamPage() {
           </div>
         )}
 
-        {filteredUsers.length === 0 ? (
+        {isLoading ? (
+          <div className="team-empty" role="status">
+            <p>Loading roster…</p>
+            <span>Fetching the latest workspace members.</span>
+          </div>
+        ) : filteredUsers.length === 0 ? (
           <div className="team-empty" role="note">
             <p>No users in this view.</p>
             <span>Switch filters or invite a teammate.</span>

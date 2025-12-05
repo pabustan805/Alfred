@@ -65,12 +65,10 @@ export function SettingsPage() {
     setStatus('saving')
     setMessage(null)
     try {
-      await Promise.resolve(
-        updateProfile({
-          name: form.name.trim(),
-          email: form.email.trim(),
-        }),
-      )
+      await updateProfile({
+        name: form.name.trim(),
+        email: form.email.trim(),
+      })
       setStatus('success')
       setMessage('Profile updated')
     } catch (error) {
@@ -94,7 +92,7 @@ export function SettingsPage() {
     setDeleteError(null)
     setIsDeleting(true)
     try {
-      await Promise.resolve(deleteAccount())
+      await deleteAccount()
     } finally {
       setIsDeleting(false)
     }

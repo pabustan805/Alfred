@@ -12,6 +12,10 @@ const getInitials = (name: string) =>
 export function TopBar() {
   const { user, signOut } = useAuth()
 
+  const handleSignOut = () => {
+    void signOut()
+  }
+
   return (
     <header className="topbar" aria-label="Workspace header">
       <div className="topbar__actions">
@@ -37,7 +41,7 @@ export function TopBar() {
                 <strong>{user.name}</strong>
                 <small>{user.email}</small>
               </div>
-              <button type="button" className="ghost" onClick={signOut} aria-label="Sign out">
+              <button type="button" className="ghost" onClick={handleSignOut} aria-label="Sign out">
                 <LogOut size={16} />
                 <span className="sr-only">Sign out</span>
               </button>

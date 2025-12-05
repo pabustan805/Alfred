@@ -70,10 +70,10 @@ function AuthPanel() {
     setBusy(true)
     try {
       if (mode === 'signin') {
-        await Promise.resolve(signIn({ email: form.email, password: form.password }))
+        await signIn({ email: form.email, password: form.password })
         setNotice(null)
       } else {
-        await Promise.resolve(signUp({ name: form.name, email: form.email, password: form.password }))
+        await signUp({ name: form.name, email: form.email, password: form.password })
         setNotice('Registration received. Your account is pending admin approval.')
         setMode('signin')
         setForm((current) => ({
