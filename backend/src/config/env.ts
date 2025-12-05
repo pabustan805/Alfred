@@ -21,7 +21,7 @@ export const env = {
   databaseUrl: required('DATABASE_URL', 'postgres://postgres:postgres@localhost:5432/alfred'),
   adminEmail: required('ADMIN_EMAIL', 'admin@example.com').toLowerCase(),
   adminName: required('ADMIN_NAME', 'Admin User'),
-  adminPassword: required('ADMIN_PASSWORD', 'changeMe123!'),
+  adminPassword: required('ADMIN_PASSWORD', 'admin123'),
   bcryptSaltRounds: toNumber(process.env.BCRYPT_SALT_ROUNDS, 12),
   sessionTtlHours: toNumber(process.env.SESSION_TTL_HOURS, 72),
   sessionCookieName: process.env.SESSION_COOKIE_NAME ?? 'alfred_session',
