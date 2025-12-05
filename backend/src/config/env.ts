@@ -26,4 +26,7 @@ export const env = {
   sessionTtlHours: toNumber(process.env.SESSION_TTL_HOURS, 72),
   sessionCookieName: process.env.SESSION_COOKIE_NAME ?? 'alfred_session',
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5900',
+  notifyEmailService: process.env.NOTIFY_EMAIL_SERVICE ?? 'gmail',
+  notifyEmailUser: process.env.NOTIFY_EMAIL_USER ?? null,
+  notifyEmailAppPassword: process.env.NOTIFY_EMAIL_APP_PASSWORD ?? null,
 }

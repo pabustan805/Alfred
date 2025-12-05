@@ -5,6 +5,7 @@ import { pool } from './db/pool.js'
 import { env } from './config/env.js'
 import { sessionParser } from './middleware/sessionParser.js'
 import { authRoutes } from './routes/authRoutes.js'
+import { scriptRoutes } from './routes/scriptRoutes.js'
 
 const app = express()
 app.use(
@@ -28,6 +29,7 @@ app.get('/health', async (_req: Request, res: Response) => {
 })
 
 app.use('/auth', authRoutes)
+app.use('/scripts', scriptRoutes)
 
 const start = async () => {
   try {

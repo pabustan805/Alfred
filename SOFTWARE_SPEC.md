@@ -13,6 +13,7 @@ Alfred simplifies cron management through a modern web interface with AI validat
 - AI validation of cron scripts to prevent syntax errors and suggest corrections.
 - Script list with full CRUD operations alongside execute, reschedule, and clone actions.
 - Comprehensive logging and audit trail for every script execution.
+- Failure notification system that alerts subscribed users when a scheduled script run fails (planned).
 
 ## Non-Functional Requirements
 - **Performance**: Fast script execution, validation, and UI responsiveness.
@@ -52,6 +53,7 @@ This foundation keeps roles easy to reason about now while allowing richer polic
 - **AI Module**: Python microservice or external API providing cron validation and suggestions.
 - **Scheduler**: Cron-like service running on the backend, integrated with a job queue for reliable execution.
 - **Identity provider**: First-party credential storage using secure email/password authentication.
+- **Notification delivery**: Gmail-backed email transport (initial implementation) abstracted behind provider interfaces for future channels.
 
 ### Diagram Description
 ```
@@ -70,3 +72,21 @@ This foundation keeps roles easy to reason about now while allowing richer polic
 4. **Scheduling or rescheduling scripts**: User adjusts timing via wizard/editor. Backend updates cron schedule and future executions.
 5. **Cloning and deleting scripts**: Dashboard actions duplicate configurations or remove entries, with confirmations and audit logging.
 6. **Reviewing logs for debugging and audit**: Logs page provides searchable execution history, status, runtime, and output for investigation or compliance.
+
+## Failure Notification System (planned)
+1. **Subscription model**
+   - `script_notifications` join table ties `scripts` to `users`, records channel preference (starting with `email`), timestamps, and whether the entry was auto-created.
+   - Script creators (operators) are auto-subscribed; admins can assign additional recipients; any approved user can self-subscribe.
+2. **Event ingestion**
+   - Scheduler emits `SCRIPT_RUN_FAILED` events with script id, run metadata, and error summary.
+   - Notification service loads subscribers, deduplicates contacts, and enqueues channel-specific deliveries.
+3. **Delivery adapters**
+   - First adapter: Gmail SMTP via Nodemailer using a dedicated account protected by 2FA + app password.
+   - Environment variables: `NOTIFY_EMAIL_SERVICE=gmail`, `NOTIFY_EMAIL_USER`, `NOTIFY_EMAIL_APP_PASSWORD`.
+   - Adapter wrapped in `emailNotificationProvider` so future providers (SES/Postmark/Slack) reuse the same service contract.
+4. **Audit & retries**
+   - `notification_events` table captures each send (status, timestamp, error, retry count) to align with Phase 4 logging goals.
+   - Simple retry/backoff policy (e.g., max 3 attempts) with manual requeue tools planned later.
+5. **Frontend experience**
+   - Schedules page exposes a notification modal where operators/admins see current subscribers, add teammates, or opt themselves in/out (respecting auto-subscribe rules).
+   - Wizard persists initial notification preference when creating scripts; Settings page lets users define default channel info (email only for now).

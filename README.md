@@ -60,6 +60,17 @@ Admin feedback highlighted the need to pick a role at the moment of approval ins
 - **Frontend implementation (1 day)** – add dropdown + confirm CTA, wire to API, update state handling/tests.
 - **QA & polish (0.5 day)** – regression sweep across Team workflows and docs.
 
+### Upcoming failure notifications (Gmail fast path)
+To deliver alerting for failed scheduled scripts quickly, we will implement a lightweight notification system powered by Gmail:
+
+1. **Subscription model** – introduce a `script_notifications` join table so users can opt in, admins can assign teammates, and the script creator is auto-enrolled. Each record stores the preferred channel (`email` to start), timestamps, and whether it was auto-added.
+2. **Event trigger** – when the scheduler reports a `SCRIPT_RUN_FAILED` event, the backend loads subscribers, deduplicates contacts, and dispatches alerts.
+3. **Gmail delivery** – use Nodemailer’s Gmail transport with a dedicated account + app password. New env vars: `NOTIFY_EMAIL_SERVICE=gmail`, `NOTIFY_EMAIL_USER`, `NOTIFY_EMAIL_APP_PASSWORD`. The account must have 2FA enabled before generating the app password.
+4. **Provider abstraction** – wrap Gmail usage in `emailNotificationProvider` so we can swap to SES/Postmark later without touching business logic.
+5. **Runbook** – document setup steps (create Gmail account, enable 2FA, generate app password, set env vars, restart backend) and log each send to `notification_events` for traceability.
+
+This plan gives us actionable notifications with minimal infra while keeping a clean path to future providers and multi-channel support.
+
 ### Backend authentication stack
 Local storage has been fully replaced by a centralized backend so users can sign in from any device:
 1. **Express API + PostgreSQL** – the `/auth` module persists accounts in `users`, `sessions`, and `audit_events` tables. Passwords are hashed with bcrypt and every change updates Postgres as the source of truth.

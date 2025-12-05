@@ -22,6 +22,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Expand script workspace language support to Ruby, Perl, and Groovy with editor + test coverage (✅ Dec 2, 2025).
 - [x] Add lightweight RBAC: role + status fields, session enforcement, `requireRole` middleware, and AuthContext helpers (✅ Dec 4, 2025)
 - [x] Ship admin Team page with roster filters, approve/reject/delete actions, and vitest coverage (✅ Dec 4, 2025)
+- [ ] Add failure notification system (Gmail-based MVP): subscription model, scheduler hook, Gmail SMTP provider, frontend management UI, and tests.
 
 ## Phase 2.5: Backend Auth Migration (🚧 In Progress)
 - [x] **2.5a – Infrastructure**: Stand up Express `/auth` API backed by PostgreSQL (`users`, `sessions`, `audit_events` tables) with migrations + admin seeding.
