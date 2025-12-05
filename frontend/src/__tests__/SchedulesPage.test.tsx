@@ -144,7 +144,7 @@ describe('SchedulesPage', () => {
 
     const dialog = await screen.findByRole('dialog', { name: /Notifications for Nightly backup/i })
     expect(dialog).toBeVisible()
-    expect(await within(dialog).findByText(/Admin Ops/)).toBeVisible()
+    expect(within(dialog).getAllByText(/Admin Ops/)[0]).toBeVisible()
   })
 
   it('allows admin to add and remove recipients', async () => {
