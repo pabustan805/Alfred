@@ -48,6 +48,18 @@ Alfred now ships a minimal RBAC layer to satisfy security requirements:
 
 This foundation keeps roles easy to reason about now while allowing richer policies later.
 
+#### Upcoming role-aware approvals
+Admin feedback highlighted the need to pick a role at the moment of approval instead of approving first and editing separately. We will:
+1. Add a role selector to every pending member card so admins can choose Viewer/Operator/Admin while approving.
+2. Introduce a backend endpoint that atomically updates both `status` and `role`, ensuring consistent audit trails.
+3. Update Vitest + Playwright coverage to exercise the new combined approve-and-assign flow.
+
+**Effort & phases (~3 days total)**
+- **Design & API contract (0.5 day)** – finalize UX, copy, and request schema.
+- **Backend support (1 day)** – add combined update endpoint, validation, and unit tests.
+- **Frontend implementation (1 day)** – add dropdown + confirm CTA, wire to API, update state handling/tests.
+- **QA & polish (0.5 day)** – regression sweep across Team workflows and docs.
+
 ### Backend authentication stack
 Local storage has been fully replaced by a centralized backend so users can sign in from any device:
 1. **Express API + PostgreSQL** – the `/auth` module persists accounts in `users`, `sessions`, and `audit_events` tables. Passwords are hashed with bcrypt and every change updates Postgres as the source of truth.

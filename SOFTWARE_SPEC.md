@@ -35,6 +35,7 @@ This foundation keeps roles easy to reason about now while allowing richer polic
 - **Filterable roster**: Admins can switch between All/Pending/Approved/Rejected chips to focus workflows.
 - **Actions**: Each user card exposes Approve, Reject, and Delete (with safeguards preventing self-deletion).
 - **Status enforcement**: `authService` utilities ensure only approved accounts can maintain sessions, and deleting/rejecting a user clears any active session tokens.
+- **Upcoming role-aware approvals**: Admins need to assign a role while approving. The roadmap adds (1) a role selector on pending cards, (2) a backend endpoint that atomically updates `status` + `role`, and (3) refreshed unit/e2e coverage. Estimated effort: 0.5 day design/API contract, 1 day backend work, 1 day frontend implementation, 0.5 day QA.
 
 ## Backend Persistence Strategy
 - **Preferred database**: PostgreSQL is the single source of truth for users, sessions, approvals, and future audit logs. Migrations provision `users`, `sessions`, and `audit_events`, and the admin seeding script guarantees an initial operator.

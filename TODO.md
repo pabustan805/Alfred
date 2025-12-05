@@ -30,6 +30,11 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
   - [x] Replace frontend `authService` local storage with REST calls to register/sign in/manage users; hydrate `AuthContext` from `/auth/me`.
   - [x] Wire the Team page, Settings, Sidebar, TopBar, and AuthGate to backend endpoints (`GET /auth/users`, `PATCH /auth/users/:id/status`, `DELETE /auth/users/:id`, `/auth/me` PATCH/DELETE) so approvals persist globally.
   - [ ] Refresh frontend regression tests + documentation to cover the new API-driven flows end-to-end.
+- [ ] **2.5d – Role-aware approvals** *(new critical requirement)*
+  - [ ] Add role selector + combined approve action on the Team page.
+  - [ ] Ship backend endpoint to atomically update role + status with logging and tests.
+  - [ ] Update vitest + Playwright coverage plus README/SOFTWARE_SPEC to describe the workflow.
+  - [ ] Estimated effort: 0.5 day design/API contract, 1 day backend, 1 day frontend, 0.5 day QA.
 
 ## Phase 3: AI Integration (✅ Dec 2, 2025)
 - [x] Add AI validation for cron scripts, including a scripts-page AI Review button powered by the in-app reviewer service with logging.
