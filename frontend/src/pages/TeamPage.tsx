@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BadgeCheck, Ban, Clock3, ShieldCheck, Trash2, UsersRound } from 'lucide-react'
 import { authService } from '../auth/service'
-import type { AuthUser, UserStatus } from '../auth/types'
+import type { AuthUser, Role, UserStatus } from '../auth/types'
 import { useAuth } from '../auth/AuthContext'
 
 type FilterValue = 'all' | UserStatus
@@ -25,6 +25,12 @@ const roleCopy: Record<AuthUser['role'], string> = {
   admin: 'Administrator',
 }
 
+const roleOptions: { label: string; value: Role }[] = [
+  { label: 'Viewer', value: 'viewer' },
+  { label: 'Operator', value: 'operator' },
+  { label: 'Administrator', value: 'admin' },
+]
+
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(
     new Date(value),
@@ -37,6 +43,7 @@ export function TeamPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [roleSelections, setRoleSelections] = useState<Record<string, Role>>({})
 
   useEffect(() => {
     let isActive = true
@@ -89,6 +96,18 @@ export function TeamPage() {
       setError(details)
       setMessage(null)
     }
+  }
+
+  const handleRoleSelection = (memberId: string, role: Role) => {
+    setRoleSelections((prev) => ({ ...prev, [memberId]: role }))
+  }
+
+  const handleApprovalWithRole = (member: AuthUser) => {
+    const selectedRole = roleSelections[member.id] ?? member.role ?? 'operator'
+    void runAction(async () => {
+      const updated = await authService.approveUserWithRole(member.id, selectedRole)
+      setUsers((prev) => prev.map((user) => (user.id === member.id ? updated : user)))
+    }, `${member.name} is now approved as ${roleCopy[selectedRole].toLowerCase()}.`)
   }
 
   const handleStatusChange = (member: AuthUser, status: Exclude<UserStatus, 'pending'>) => {
@@ -226,10 +245,30 @@ export function TeamPage() {
                   </dl>
 
                   <div className="team-actions">
+                    {member.status === 'pending' && (
+                      <label className="team-role-select">
+                        <span>Approve as</span>
+                        <select
+                          aria-label={`Choose role for ${member.name}`}
+                          value={roleSelections[member.id] ?? member.role ?? 'operator'}
+                          onChange={(event) => handleRoleSelection(member.id, event.target.value as Role)}
+                        >
+                          {roleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     <button
                       type="button"
                       className="team-action team-action--approve"
-                      onClick={() => handleStatusChange(member, 'approved')}
+                      onClick={() =>
+                        member.status === 'pending'
+                          ? handleApprovalWithRole(member)
+                          : handleStatusChange(member, 'approved')
+                      }
                       disabled={member.status === 'approved'}
                       aria-label={`Approve ${member.name}`}
                     >

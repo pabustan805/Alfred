@@ -8,6 +8,7 @@ import type { AuthUser } from '../auth/types'
 const mockAuth = vi.hoisted(() => ({
   getAllUsers: vi.fn(),
   updateUserStatus: vi.fn(),
+  approveUserWithRole: vi.fn(),
   deleteUserById: vi.fn(),
 }))
 
@@ -75,6 +76,11 @@ describe('TeamPage', () => {
       ...sampleUsers.find((user) => user.id === id)!,
       status,
     }))
+    mockAuth.approveUserWithRole.mockImplementation(async (id, role) => ({
+      ...sampleUsers.find((user) => user.id === id)!,
+      status: 'approved',
+      role,
+    }))
     mockAuth.deleteUserById.mockResolvedValue(undefined)
   })
 
@@ -91,16 +97,19 @@ describe('TeamPage', () => {
     expect(await screen.findByText('Approved User')).toBeVisible()
   })
 
-  it('approves a pending user and shows success toast', async () => {
+  it('approves a pending user with a selected role and shows success toast', async () => {
     const user = userEvent.setup()
     renderWithAuth()
+
+    const selector = await screen.findByLabelText('Choose role for Pending User')
+    await user.selectOptions(selector, 'admin')
 
     const approveButton = await screen.findByRole('button', { name: /Approve Pending User/i })
     await user.click(approveButton)
 
     await waitFor(() => {
-      expect(mockAuth.updateUserStatus).toHaveBeenCalledWith('user-1', 'approved')
-      expect(screen.getByRole('status')).toHaveTextContent(/now approved/i)
+      expect(mockAuth.approveUserWithRole).toHaveBeenCalledWith('user-1', 'admin')
+      expect(screen.getByRole('status')).toHaveTextContent(/approved as administrator/i)
     })
   })
 

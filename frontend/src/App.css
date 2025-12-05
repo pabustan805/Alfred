@@ -1771,6 +1771,29 @@ main {
   gap: 0.65rem;
 }
 
+.team-role-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+  min-width: 180px;
+}
+
+.team-role-select span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+}
+
+.team-role-select select {
+  border-radius: 0.75rem;
+  border: 1px solid var(--panel-border);
+  padding: 0.4rem 0.6rem;
+  font-weight: 500;
+  background: #fff;
+  min-width: 100%;
+}
+
 .team-action {
   border: none;
   border-radius: 0.85rem;

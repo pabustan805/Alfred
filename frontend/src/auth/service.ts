@@ -1,5 +1,5 @@
 import { authApi } from '../api/authApi'
-import type { AuthUser, Credentials, RegistrationPayload, UserStatus } from './types'
+import type { AuthUser, Credentials, RegistrationPayload, Role, UserStatus } from './types'
 
 export const authService = {
   register(payload: RegistrationPayload): Promise<AuthUser> {
@@ -22,6 +22,9 @@ export const authService = {
   },
   updateUserStatus(userId: string, status: UserStatus): Promise<AuthUser> {
     return authApi.updateUserStatus(userId, status)
+  },
+  approveUserWithRole(userId: string, role: Role): Promise<AuthUser> {
+    return authApi.approveUserWithRole(userId, role)
   },
   deleteUserById(userId: string): Promise<void> {
     return authApi.deleteUser(userId)

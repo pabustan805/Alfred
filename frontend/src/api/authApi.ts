@@ -1,5 +1,5 @@
 import { apiRequest } from './client'
-import type { AuthUser, Credentials, RegistrationPayload, UserStatus } from '../auth/types'
+import type { AuthUser, Credentials, RegistrationPayload, Role, UserStatus } from '../auth/types'
 
 type BackendAuthUser = Omit<AuthUser, 'provider'> & {
   updatedAt: string
@@ -52,6 +52,14 @@ export const authApi = {
     const user = await apiRequest<BackendAuthUser>(`/auth/users/${userId}/status`, {
       method: 'PATCH',
       body: { status },
+    })
+    return mapUser(user)
+  },
+
+  async approveUserWithRole(userId: string, role: Role): Promise<AuthUser> {
+    const user = await apiRequest<BackendAuthUser>(`/auth/users/${userId}/approve`, {
+      method: 'PATCH',
+      body: { role },
     })
     return mapUser(user)
   },
