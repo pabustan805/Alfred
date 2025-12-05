@@ -1,11 +1,14 @@
 export type AuthProviderType = 'local'
 
+export type Role = 'viewer' | 'operator' | 'admin'
+
 export interface AuthUser {
   id: string
   email: string
   name: string
   provider: AuthProviderType
   createdAt: string
+  role: Role
 }
 
 export interface UpdateProfilePayload {

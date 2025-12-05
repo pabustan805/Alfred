@@ -1,6 +1,7 @@
-import type { AuthUser } from './types'
+import type { AuthUser, Role } from './types'
 
-type StoredUser = AuthUser & {
+type StoredUser = Omit<AuthUser, 'role'> & {
+  role?: Role
   password?: string
 }
 
@@ -46,7 +47,8 @@ const safeParse = <T>(value: string | null, fallback: T): T => {
 export const authStorage = {
   getUsers(): StoredUser[] {
     const storage = getStorage()
-    return safeParse<StoredUser[]>(storage.getItem(USERS_KEY), [])
+    const users = safeParse<StoredUser[]>(storage.getItem(USERS_KEY), [])
+    return users.map((user) => (user.role ? user : { ...user, role: 'operator' }))
   },
   saveUsers(users: StoredUser[]) {
     const storage = getStorage()

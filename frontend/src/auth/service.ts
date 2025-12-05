@@ -5,9 +5,9 @@ const generateId = () =>
   globalThis.crypto?.randomUUID?.() ?? `user_${Date.now()}_${Math.random().toString(16).slice(2)}`
 
 const toAuthUser = (user: StoredUser): AuthUser => {
-  const { password: _password, ...rest } = user
+  const { password: _password, role = 'operator', ...rest } = user
   void _password
-  return rest
+  return { ...rest, role }
 }
 
 const persistUsers = <T>(mutate: (users: StoredUser[]) => { nextUsers: StoredUser[]; result: T }): T => {
@@ -48,6 +48,7 @@ export const authService = {
         name: payload.name.trim(),
         provider: 'local',
         createdAt: new Date().toISOString(),
+        role: 'operator',
         password: payload.password,
       }
 
