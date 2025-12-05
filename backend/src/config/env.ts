@@ -25,4 +25,5 @@ export const env = {
   bcryptSaltRounds: toNumber(process.env.BCRYPT_SALT_ROUNDS, 12),
   sessionTtlHours: toNumber(process.env.SESSION_TTL_HOURS, 72),
   sessionCookieName: process.env.SESSION_COOKIE_NAME ?? 'alfred_session',
+  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5900',
 }
