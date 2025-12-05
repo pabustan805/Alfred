@@ -14,6 +14,7 @@ interface JobTableProps {
   canRunSelected: boolean
   runningJobIds: Set<string>
   onEdit: (job: CronJob) => void
+  canEditJobs: boolean
 }
 
 export type JobSortField = 'name' | 'schedule' | 'nextRun' | 'status' | 'priority' | 'target'
@@ -37,6 +38,7 @@ export function JobTable({
   canRunSelected,
   runningJobIds,
   onEdit,
+  canEditJobs,
 }: JobTableProps) {
   const renderSortableHeader = (label: string, field: JobSortField) => {
     const isActive = sortField === field
@@ -65,7 +67,13 @@ export function JobTable({
             <CheckSquare size={16} />
             <span>{allJobsSelected ? 'Deselect all' : 'Select all'}</span>
           </button>
-          <button type="button" className="ghost" onClick={onRunSelected} disabled={!canRunSelected}>
+          <button
+            type="button"
+            className="ghost"
+            onClick={onRunSelected}
+            disabled={!canRunSelected}
+            title={canRunSelected ? undefined : 'Operator or admin role required'}
+          >
             <Play size={16} />
             <span>Run now</span>
           </button>
@@ -129,8 +137,9 @@ export function JobTable({
                   type="button"
                   className="ghost jobs__edit-btn"
                   onClick={() => onEdit(job)}
+                  disabled={!canEditJobs}
+                  title={canEditJobs ? `Edit ${job.name}` : 'Operator or admin role required'}
                   aria-label={`Edit ${job.name}`}
-                  title={`Edit ${job.name}`}
                 >
                   <PencilLine size={16} />
                 </button>

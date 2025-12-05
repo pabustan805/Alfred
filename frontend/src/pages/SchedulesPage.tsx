@@ -3,12 +3,16 @@ import { X } from 'lucide-react'
 import { CronWizard } from '../components/CronWizard'
 import { JobTable, type JobSortField } from '../components/JobTable'
 import type { CronJob } from '../types/cron'
+import { useAuth } from '../auth/AuthContext'
 
 interface SchedulesPageProps {
   jobs: CronJob[]
 }
 
 export function SchedulesPage({ jobs }: SchedulesPageProps) {
+  const { hasRole } = useAuth()
+  const canManageSchedules = hasRole('operator', 'admin')
+  const canRunSchedules = hasRole('operator', 'admin')
   const [wizardOpen, setWizardOpen] = useState(false)
   const [jobItems, setJobItems] = useState<CronJob[]>(jobs)
   const [editingJob, setEditingJob] = useState<CronJob | null>(null)
@@ -82,6 +86,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
   const closeWizard = () => setWizardOpen(false)
 
   const handleEditRequest = (job: CronJob) => {
+    if (!canManageSchedules) return
     setEditingJob(job)
     setEditDraft({ ...job })
   }
@@ -133,6 +138,11 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
   }
 
   const handleRunSelected = () => {
+    if (!canRunSchedules) {
+      setRunFeedback('Operator or admin role required to run schedules.')
+      window.setTimeout(() => setRunFeedback(null), 3500)
+      return
+    }
     if (selectedJobIds.size === 0) {
       return
     }
@@ -182,7 +192,13 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
           <span>Keep cadence management, approvals, and runtime context in one place.</span>
         </div>
         <div className="page-hero__actions">
-          <button type="button" className="primary" onClick={() => setWizardOpen(true)}>
+          <button
+            type="button"
+            className="primary"
+            onClick={() => canManageSchedules && setWizardOpen(true)}
+            disabled={!canManageSchedules}
+            title={canManageSchedules ? undefined : 'Operator or admin role required'}
+          >
             <span>Create a cron job</span>
           </button>
         </div>
@@ -201,8 +217,9 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
           sortDirection={sortDirection}
           onRequestSort={handleRequestSort}
           onRunSelected={handleRunSelected}
-          canRunSelected={selectedJobIds.size > 0}
+          canRunSelected={canRunSchedules && selectedJobIds.size > 0}
           runningJobIds={runningJobIds}
+          canEditJobs={canManageSchedules}
         />
         {runFeedback && (
           <p className="jobs__run-feedback" role="status">
@@ -361,7 +378,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
                 <button type="button" className="ghost" onClick={closeEditModal}>
                   Cancel
                 </button>
-                <button type="submit" className="primary">
+                <button type="submit" className="primary" disabled={!canManageSchedules}>
                   Save changes
                 </button>
               </div>
