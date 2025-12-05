@@ -216,8 +216,9 @@ export function ScriptsProvider({ children, initialScripts, initialFolders, init
       if (typeof window === 'undefined') {
         return
       }
-      executionTimersRef.current.forEach((timerId) => window.clearTimeout(timerId))
-      executionTimersRef.current.clear()
+      const timers = executionTimersRef.current
+      timers.forEach((timerId) => window.clearTimeout(timerId))
+      timers.clear()
     }
   }, [])
 

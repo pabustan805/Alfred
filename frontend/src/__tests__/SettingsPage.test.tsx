@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
-import type { AuthUser } from '../auth/types'
+import type { AuthUser, Role } from '../auth/types'
 import { AuthContext } from '../auth/AuthContext'
 import { SettingsPage } from '../pages/SettingsPage'
 
@@ -23,27 +23,27 @@ const renderWithAuth = (overrides: Partial<AuthContextValue> = {}) => {
   const deleteAccount = vi.fn().mockResolvedValue(undefined)
 
   const effectiveUser = overrides.user ?? baseUser
+  const defaultHasRole = (...roles: Role[]) => {
+    if (!effectiveUser) return false
+    if (roles.length === 0) return true
+    return roles.includes(effectiveUser.role)
+  }
 
-  const value = {
+  const value: AuthContextValue = {
     user: effectiveUser,
     isReady: true,
     error: null,
-    signUp: vi.fn(),
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    updateProfile,
-    deleteAccount,
-    clearError: vi.fn(),
-    hasRole: (...roles: string[]) => {
-      if (!effectiveUser) return false
-      if (roles.length === 0) return true
-      return roles.includes(effectiveUser.role)
-    },
-    ...overrides,
+    signUp: overrides.signUp ?? vi.fn(),
+    signIn: overrides.signIn ?? vi.fn(),
+    signOut: overrides.signOut ?? vi.fn(),
+    updateProfile: overrides.updateProfile ?? updateProfile,
+    deleteAccount: overrides.deleteAccount ?? deleteAccount,
+    clearError: overrides.clearError ?? vi.fn(),
+    hasRole: overrides.hasRole ?? defaultHasRole,
   }
 
   render(
-    <AuthContext.Provider value={value as any}>
+    <AuthContext.Provider value={value}>
       <SettingsPage />
     </AuthContext.Provider>,
   )

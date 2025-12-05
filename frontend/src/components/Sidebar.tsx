@@ -1,12 +1,13 @@
 import { CalendarClock, Home, ListChecks, LogOut, Settings, ShieldCheck } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import type { Role } from '../auth/types'
 
 type NavItem = {
   icon: typeof Home
   label: string
   to?: string
-  roles?: string[]
+  roles?: Role[]
 }
 
 const navItems: NavItem[] = [
@@ -43,7 +44,7 @@ export function Sidebar() {
         <span className="sidebar__section-label">Overview</span>
         <ul>
           {navItems
-            .filter((item) => !item.roles || hasRole(...(item.roles as any)))
+            .filter((item) => !item.roles || hasRole(...item.roles))
             .map((item) => (
               <li key={item.label}>
                 {item.to ? (

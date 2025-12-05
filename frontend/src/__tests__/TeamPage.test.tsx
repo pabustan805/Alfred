@@ -1,9 +1,10 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, beforeEach, vi } from 'vitest'
+import type { ComponentProps } from 'react'
 import { TeamPage } from '../pages/TeamPage'
 import { AuthContext } from '../auth/AuthContext'
-import type { AuthUser } from '../auth/types'
+import type { AuthUser, Role } from '../auth/types'
 
 const mockAuth = vi.hoisted(() => ({
   getAllUsers: vi.fn(),
@@ -26,22 +27,23 @@ const adminUser: AuthUser = {
   status: 'approved',
 }
 
+type AuthContextValue = NonNullable<ComponentProps<typeof AuthContext.Provider>['value']>
+
 const renderWithAuth = () => {
-  const value = {
+  const value: AuthContextValue = {
     user: adminUser,
     isReady: true,
     error: null,
-    signUp: vi.fn().mockResolvedValue(adminUser),
-    signIn: vi.fn().mockResolvedValue(adminUser),
-    signOut: vi.fn().mockResolvedValue(undefined),
-    updateProfile: vi.fn().mockResolvedValue(adminUser),
-    deleteAccount: vi.fn().mockResolvedValue(undefined),
-    clearError: vi.fn(),
-    hasRole: vi.fn().mockReturnValue(true),
+    signUp: vi.fn<AuthContextValue['signUp']>().mockResolvedValue(adminUser),
+    signIn: vi.fn<AuthContextValue['signIn']>().mockResolvedValue(adminUser),
+    signOut: vi.fn<AuthContextValue['signOut']>().mockResolvedValue(undefined),
+    updateProfile: vi.fn<AuthContextValue['updateProfile']>().mockResolvedValue(adminUser),
+    deleteAccount: vi.fn<AuthContextValue['deleteAccount']>().mockResolvedValue(undefined),
+    clearError: vi.fn<AuthContextValue['clearError']>(),
+    hasRole: vi.fn<(...roles: Role[]) => boolean>().mockReturnValue(true),
   }
-
   return render(
-    <AuthContext.Provider value={value as any}>
+    <AuthContext.Provider value={value}>
       <TeamPage />
     </AuthContext.Provider>,
   )
