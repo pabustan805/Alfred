@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { authService } from '../services/authService.js'
 import { requireRole } from '../middleware/requireRole.js'
 import { env } from '../config/env.js'
+import type { AuthenticatedRequest } from '../middleware/requireRole.js'
 
 const router = Router()
 
@@ -52,7 +53,7 @@ router.post('/logout', async (req, res) => {
 })
 
 router.get('/me', (req, res) => {
-  const user = req.user
+  const user = (req as AuthenticatedRequest).user
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
