@@ -432,6 +432,10 @@ main {
   box-shadow: var(--shadow-soft);
 }
 
+.primary span {
+  color: inherit;
+}
+
 .text {
   background: transparent;
   color: var(--accent);
