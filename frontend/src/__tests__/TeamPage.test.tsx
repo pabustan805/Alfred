@@ -86,7 +86,7 @@ describe('TeamPage', () => {
     expect(await screen.findByText('Pending User')).toBeVisible()
     expect(screen.queryByText('Approved User')).toBeNull()
 
-    await user.click(screen.getByRole('tab', { name: /All users/i }))
+    await user.click(await screen.findByRole('tab', { name: /All users/i }))
 
     expect(await screen.findByText('Approved User')).toBeVisible()
   })
@@ -95,7 +95,8 @@ describe('TeamPage', () => {
     const user = userEvent.setup()
     renderWithAuth()
 
-    await user.click(screen.getByRole('button', { name: /Approve Pending User/i }))
+    const approveButton = await screen.findByRole('button', { name: /Approve Pending User/i })
+    await user.click(approveButton)
 
     await waitFor(() => {
       expect(mockAuth.updateUserStatus).toHaveBeenCalledWith('user-1', 'approved')
@@ -108,7 +109,8 @@ describe('TeamPage', () => {
     const user = userEvent.setup()
     renderWithAuth()
 
-    await user.click(screen.getByRole('button', { name: /Delete Pending User/i }))
+    const deleteButton = await screen.findByRole('button', { name: /Delete Pending User/i })
+    await user.click(deleteButton)
 
     await waitFor(() => {
       expect(mockAuth.deleteUserById).toHaveBeenCalledWith('user-1')

@@ -103,8 +103,9 @@ describe('AuthGate', () => {
       </AuthGate>,
     )
 
-    await user.click(screen.getByRole('tab', { name: /register/i }))
-    await user.type(screen.getByLabelText(/full name/i), 'Ada Lovelace')
+    const registerTab = await screen.findByRole('tab', { name: /register/i })
+    await user.click(registerTab)
+    await user.type(await screen.findByLabelText(/full name/i), 'Ada Lovelace')
     await user.type(screen.getByLabelText(/work email/i), 'ada@example.com')
     await user.type(screen.getByLabelText(/password/i), 'secure123')
     await user.click(screen.getByRole('button', { name: /create account/i }))
@@ -127,7 +128,7 @@ describe('AuthGate', () => {
       </AuthGate>,
     )
 
-    await user.type(screen.getByLabelText(/email/i), 'missing@example.com')
+    await user.type(await screen.findByLabelText(/email/i), 'missing@example.com')
     await user.type(screen.getByLabelText(/password/i), 'badpass')
     await user.click(screen.getByRole('button', { name: /^Continue$/i }))
 
