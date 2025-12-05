@@ -15,6 +15,11 @@ export interface CronJob {
   command: string
   lastDuration: string
   target: string
+  backendId?: string
+  notificationSummary?: {
+    total: number
+    selfSubscribed: boolean
+  }
 }
 
 export interface WizardResult {
@@ -25,4 +30,16 @@ export interface WizardResult {
   command: string
   notifications: NotificationChannel
   priority: CronPriority
+}
+
+export interface ScriptNotification {
+  id: string
+  scriptId: string
+  userId: string
+  channel: NotificationChannel
+  isAutoSubscribed: boolean
+  createdAt: string
+  updatedAt: string
+  userEmail?: string
+  userName?: string
 }

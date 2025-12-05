@@ -1,18 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { X } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 import { CronWizard } from '../components/CronWizard'
 import { JobTable, type JobSortField } from '../components/JobTable'
-import type { CronJob } from '../types/cron'
+import type { CronJob, ScriptNotification } from '../types/cron'
 import { useAuth } from '../auth/AuthContext'
+import type { AuthUser } from '../auth/types'
+import { scriptApi } from '../api/scriptApi'
+import { authApi } from '../api/authApi'
 
 interface SchedulesPageProps {
   jobs: CronJob[]
 }
 
 export function SchedulesPage({ jobs }: SchedulesPageProps) {
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
   const canManageSchedules = hasRole('operator', 'admin')
   const canRunSchedules = hasRole('operator', 'admin')
+  const isAdmin = hasRole('admin')
   const [wizardOpen, setWizardOpen] = useState(false)
   const [jobItems, setJobItems] = useState<CronJob[]>(jobs)
   const [editingJob, setEditingJob] = useState<CronJob | null>(null)
@@ -25,6 +29,13 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
   const [runningJobIds, setRunningJobIds] = useState<Set<string>>(new Set())
   const runningTimeoutsRef = useRef<number[]>([])
   const runningOriginalStatusesRef = useRef<Map<string, CronJob['status']>>(new Map())
+  const [notificationJob, setNotificationJob] = useState<CronJob | null>(null)
+  const [notificationSubscribers, setNotificationSubscribers] = useState<ScriptNotification[]>([])
+  const [notificationUsers, setNotificationUsers] = useState<AuthUser[]>([])
+  const [notificationLoading, setNotificationLoading] = useState(false)
+  const [notificationActionLoading, setNotificationActionLoading] = useState(false)
+  const [notificationError, setNotificationError] = useState<string | null>(null)
+  const [selectedNotificationUser, setSelectedNotificationUser] = useState<string>('self')
 
   useEffect(() => {
     return () => {
@@ -83,7 +94,95 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
     })
   }, [jobs])
 
+  const loadNotificationData = async (job: CronJob) => {
+    if (!job.backendId) {
+      setNotificationError('This schedule is not connected to the backend yet.')
+      setNotificationSubscribers([])
+      setNotificationUsers([])
+      return
+    }
+    setNotificationError(null)
+    setNotificationLoading(true)
+    try {
+      const userRequest = isAdmin ? authApi.listUsers() : Promise.resolve<AuthUser[]>([])
+      const [subs, users] = await Promise.all([scriptApi.listNotifications(job.backendId), userRequest])
+      setNotificationSubscribers(subs)
+      setNotificationUsers(isAdmin ? users : [])
+      if (user) {
+        const selfSubscribed = subs.some((sub) => sub.userId === user.id)
+        setSelectedNotificationUser(selfSubscribed ? user.id : 'self')
+      }
+    } catch (error) {
+      setNotificationError(error instanceof Error ? error.message : 'Failed to load notifications')
+      setNotificationSubscribers([])
+      setNotificationUsers([])
+    } finally {
+      setNotificationLoading(false)
+    }
+  }
+
   const closeWizard = () => setWizardOpen(false)
+
+  const handleManageNotifications = (job: CronJob) => {
+    setNotificationJob(job)
+    setSelectedNotificationUser('self')
+    setNotificationSubscribers([])
+    setNotificationUsers([])
+    setNotificationError(null)
+    void loadNotificationData(job)
+  }
+
+  const closeNotificationModal = () => {
+    setNotificationJob(null)
+    setNotificationSubscribers([])
+    setNotificationUsers([])
+    setNotificationError(null)
+    setSelectedNotificationUser('self')
+  }
+
+  const handleSubscribeToNotifications = async () => {
+    if (!notificationJob?.backendId) {
+      setNotificationError('This job is not connected to the backend yet.')
+      return
+    }
+    if (!user) {
+      setNotificationError('You must be signed in to manage notifications.')
+      return
+    }
+    setNotificationActionLoading(true)
+    try {
+      const payload =
+        isAdmin && selectedNotificationUser !== 'self'
+          ? { userId: selectedNotificationUser }
+          : {}
+      await scriptApi.subscribe(notificationJob.backendId, payload)
+      await loadNotificationData(notificationJob)
+    } catch (error) {
+      setNotificationError(error instanceof Error ? error.message : 'Unable to add recipient.')
+    } finally {
+      setNotificationActionLoading(false)
+    }
+  }
+
+  const handleRemoveSubscriber = async (subscription: ScriptNotification) => {
+    if (!notificationJob?.backendId) {
+      setNotificationError('This job is not connected to the backend yet.')
+      return
+    }
+    if (subscription.isAutoSubscribed && !isAdmin) {
+      setNotificationError('Only admins can remove auto-subscribed recipients.')
+      return
+    }
+    setNotificationActionLoading(true)
+    try {
+      await scriptApi.unsubscribe(notificationJob.backendId, subscription.id)
+      await loadNotificationData(notificationJob)
+    } catch (error) {
+      setNotificationError(error instanceof Error ? error.message : 'Unable to remove recipient.')
+    } finally {
+      setNotificationActionLoading(false)
+    }
+  }
 
   const handleEditRequest = (job: CronJob) => {
     if (!canManageSchedules) return
@@ -209,6 +308,7 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
         <JobTable
           jobs={sortedJobs}
           onEdit={handleEditRequest}
+          onManageNotifications={handleManageNotifications}
           selectedJobIds={selectedJobIds}
           onToggleSelect={handleToggleSelect}
           allJobsSelected={allJobsSelected}
@@ -383,6 +483,125 @@ export function SchedulesPage({ jobs }: SchedulesPageProps) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {notificationJob && (
+        <div className="modal" role="dialog" aria-modal="true" aria-label={`Notifications for ${notificationJob.name}`}>
+          <button
+            type="button"
+            className="modal__backdrop"
+            aria-label="Dismiss notification dialog backdrop"
+            onClick={closeNotificationModal}
+          />
+          <div className="modal__content notifications-modal">
+            <div className="modal__header">
+              <div>
+                <p>Failure notifications</p>
+                <h3>{notificationJob.name}</h3>
+              </div>
+              <button type="button" className="ghost" onClick={closeNotificationModal} aria-label="Close notification dialog">
+                <X size={16} />
+                <span>Close</span>
+              </button>
+            </div>
+
+            <div className="notifications-modal__body">
+              {notificationError && (
+                <p className="alert alert--error" role="alert">
+                  {notificationError}
+                </p>
+              )}
+
+              <section className="notifications-modal__section">
+                <header>
+                  <strong>Recipients</strong>
+                  <span>{notificationSubscribers.length} subscribed</span>
+                </header>
+                {notificationLoading ? (
+                  <div className="notifications-modal__loading">
+                    <Loader2 size={18} className="spin" aria-label="Loading notification recipients" />
+                    <span>Loading recipients…</span>
+                  </div>
+                ) : notificationSubscribers.length === 0 ? (
+                  <p className="notifications-modal__empty">No one is subscribed yet. Add the first recipient below.</p>
+                ) : (
+                  <ul className="notifications-modal__list">
+                    {notificationSubscribers.map((subscriber) => (
+                      <li key={subscriber.id}>
+                        <div>
+                          <strong>{subscriber.userName ?? 'Unknown user'}</strong>
+                          <span>{subscriber.userEmail ?? subscriber.userId}</span>
+                          {subscriber.isAutoSubscribed && <span className="badge">Auto</span>}
+                        </div>
+                        <button
+                          type="button"
+                          className="ghost"
+                          onClick={() => handleRemoveSubscriber(subscriber)}
+                          disabled={notificationActionLoading || (subscriber.isAutoSubscribed && !isAdmin)}
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="notifications-modal__section">
+                <header>
+                  <strong>Add recipient</strong>
+                  <span>Choose who should receive failure alerts.</span>
+                </header>
+
+                {notificationJob.backendId ? (
+                  <>
+                    {isAdmin ? (
+                      <label className="notifications-modal__field">
+                        <span>Recipient</span>
+                        <select
+                          value={selectedNotificationUser}
+                          onChange={(event) => setSelectedNotificationUser(event.target.value)}
+                        >
+                          <option value="self">{user ? `${user.name} (you)` : 'Your account'}</option>
+                          {notificationUsers
+                            .filter((candidate) => candidate.id !== user?.id)
+                            .map(( candidate) => (
+                              <option key={candidate.id} value={candidate.id}>
+                                {candidate.name} ({candidate.email})
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <p className="notifications-modal__hint">
+                        Only admins can invite teammates. You can still subscribe yourself to receive alerts.
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      className="primary"
+                      onClick={handleSubscribeToNotifications}
+                      disabled={notificationActionLoading}
+                    >
+                      {notificationActionLoading ? (
+                        <>
+                          <Loader2 size={16} className="spin" aria-hidden />
+                          <span>Saving…</span>
+                        </>
+                      ) : (
+                        <span>Add recipient</span>
+                      )}
+                    </button>
+                  </>
+                ) : (
+                  <p className="notifications-modal__hint">
+                    This schedule hasn&apos;t been synced with the backend yet. Connect it to enable notifications.
+                  </p>
+                )}
+              </section>
+            </div>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 import type { CronJob } from '../types/cron'
-import { Play, Pause, PencilLine, CheckSquare, ArrowUpDown, Loader2 } from 'lucide-react'
+import { Play, Pause, PencilLine, CheckSquare, ArrowUpDown, Loader2, Bell } from 'lucide-react'
 
 interface JobTableProps {
   jobs: CronJob[]
@@ -15,6 +15,7 @@ interface JobTableProps {
   runningJobIds: Set<string>
   onEdit: (job: CronJob) => void
   canEditJobs: boolean
+  onManageNotifications: (job: CronJob) => void
 }
 
 export type JobSortField = 'name' | 'schedule' | 'nextRun' | 'status' | 'priority' | 'target'
@@ -39,6 +40,7 @@ export function JobTable({
   runningJobIds,
   onEdit,
   canEditJobs,
+  onManageNotifications,
 }: JobTableProps) {
   const renderSortableHeader = (label: string, field: JobSortField) => {
     const isActive = sortField === field
@@ -142,6 +144,14 @@ export function JobTable({
                   aria-label={`Edit ${job.name}`}
                 >
                   <PencilLine size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="ghost jobs__edit-btn"
+                  onClick={() => onManageNotifications(job)}
+                  aria-label={`Manage notifications for ${job.name}`}
+                >
+                  <Bell size={16} />
                 </button>
               </td>
             </tr>
