@@ -84,6 +84,17 @@ After the script completes:
 2. Start the dev server with `pnpm run dev` (or `npm run dev`) inside `frontend/`.
 3. Run tests with `pnpm test` (or `npm test`).
 
+### Development workflow & pre-commit
+1. Install [pre-commit](https://pre-commit.com/) (e.g., `pip install pre-commit`).
+2. From the repo root run:
+   ```bash
+   pre-commit install
+   pre-commit install --hook-type pre-push
+   ```
+3. Hooks run automatically:
+   - **pre-commit:** whitespace fixes, Markdown lint, `pnpm --filter frontend lint`, and Gitleaks secret scanning.
+   - **pre-push:** `pnpm --filter backend test` to keep backend coverage green before pushes.
+
 ### RBAC & approval workflow
 Alfred now ships a minimal RBAC layer to satisfy security requirements:
 1. User records carry a `role` enum (`viewer`, `operator`, `admin`) plus a `status` field (`pending`, `approved`, `rejected`).

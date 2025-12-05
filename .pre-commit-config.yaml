@@ -1,0 +1,34 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        files: \.(md|mdx)$
+
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: Frontend lint
+        entry: pnpm --filter frontend lint
+        language: system
+        files: \.(ts|tsx|js|jsx|css)$
+        pass_filenames: false
+      - id: backend-test
+        name: Backend unit tests
+        entry: pnpm --filter backend test
+        language: system
+        stages: [pre-push]
+        pass_filenames: false
