@@ -12,7 +12,7 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Simplify access to email/password only (removed Gmail quick-login shortcuts on Dec 1, 2025).
 - [x] Gate the dashboard behind authentication with new unit and e2e coverage.
 
-## Phase 2: Script Management Core (✅ Updated Dec 1, 2025)
+## Phase 2: Script Management Core (✅ Updated Dec 4, 2025)
 - [x] Integrate the advanced script editor with multi-language syntax highlighting + Monaco-powered UX.
 - [x] Add CRUD operations for scripts (create, edit, delete, clone) with import/clone flows and optimistic UI state.
 - [x] Build dedicated schedules workspace with modal cron creation workflow (✅ Nov 30, 2025).
@@ -20,7 +20,8 @@ All deliverables include unit coverage (CronWizard vitest specs) and Playwright 
 - [x] Add fullscreen controls for both script folders and editor panes to improve focus (✅ Dec 1, 2025).
 - [x] Introduce sortable folder pane (title/created date/tag) with toolbar toggle (✅ Dec 2, 2025).
 - [x] Expand script workspace language support to Ruby, Perl, and Groovy with editor + test coverage (✅ Dec 2, 2025).
-- [ ] Prep lightweight RBAC: add `role` enum field, expose in auth payloads/context, and wire up backend middleware plan (in progress)
+- [x] Add lightweight RBAC: role + status fields, session enforcement, `requireRole` middleware, and AuthContext helpers (✅ Dec 4, 2025)
+- [x] Ship admin Team page with roster filters, approve/reject/delete actions, and vitest coverage (✅ Dec 4, 2025)
 
 ## Phase 3: AI Integration (✅ Dec 2, 2025)
 - [x] Add AI validation for cron scripts, including a scripts-page AI Review button powered by the in-app reviewer service with logging.

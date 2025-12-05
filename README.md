@@ -6,7 +6,8 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
 ## Features
 - Simple, elegant UI inspired by apple.com
 - Secure authentication with email/password accounts
-- Upcoming lightweight role-based access control (RBAC) with viewer/operator/admin tiers
+- Lightweight RBAC with viewer/operator/admin tiers and an approval workflow
+- Admin-only Team page to list users, approve/reject new accounts, and delete users
 - Wizard workflow for creating cron scripts (default option)
 - Integrated script editor for manual editing
 - AI validation to ensure cron scripts are correct
@@ -38,14 +39,14 @@ After the script completes:
 2. Start the dev server with `pnpm run dev` (or `npm run dev`) inside `frontend/`.
 3. Run tests with `pnpm test` (or `npm test`).
 
-### Upcoming RBAC implementation
-Before backend work begins, Alfred will introduce a minimal RBAC layer to satisfy security requirements:
-1. Extend the user schema (and temporary frontend storage) with a `role` enum of `viewer`, `operator`, and `admin`, defaulting to `operator`.
-2. Include the `role` in session/JWT payloads so the frontend can gate UI affordances without extra requests.
-3. Add an Express `requireRole(allowedRoles)` helper to protect sensitive endpoints and log access denials to the audit trail.
-4. Surface the role via the React `AuthContext`, adding small helpers to hide or disable admin-only controls for lower-privileged users.
+### RBAC & approval workflow
+Alfred now ships a minimal RBAC layer to satisfy security requirements:
+1. User records carry a `role` enum (`viewer`, `operator`, `admin`) plus a `status` field (`pending`, `approved`, `rejected`).
+2. Sessions persist both role and approval status; pending/rejected accounts are blocked from signing in until an admin approves them.
+3. An Express `requireRole(allowedRoles)` helper is available for backend endpoints and already gates the admin Team page.
+4. The React `AuthContext` exposes `role`, `status`, and helper guards, while the new Team page lets admins review, approve/reject, or delete users.
 
-This plan keeps roles easy to reason about now while allowing richer policies later.
+This foundation keeps roles easy to reason about now while allowing richer policies later.
 
 ### Frontend deployment prep
 1. Install Node.js 18+ and pnpm (or npm).

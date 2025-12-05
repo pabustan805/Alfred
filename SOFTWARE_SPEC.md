@@ -6,6 +6,8 @@ Alfred simplifies cron management through a modern web interface with AI validat
 ## Functional Requirements
 - UI inspired by apple.com with emphasis on clean, elegant design.
 - Authentication supporting email/password accounts.
+- Lightweight RBAC across `viewer`, `operator`, and `admin` roles with approval gating.
+- Admin-only Team experience to review user roster, approve/reject new accounts, and delete users.
 - Wizard workflow for guided cron creation.
 - Integrated script editor for manual editing and advanced customization.
 - AI validation of cron scripts to prevent syntax errors and suggest corrections.
@@ -18,15 +20,22 @@ Alfred simplifies cron management through a modern web interface with AI validat
 - **Scalability**: Capable of handling multiple users, large script libraries, and high-frequency schedules.
 - **Security**: Role-based access control, encrypted storage of scripts, and protected audit logs.
 
-## Upcoming RBAC Implementation
-To satisfy the security requirement, Alfred will adopt a lightweight role-based access control model that works with the future Node.js backend as well as the current mock authentication layer:
+## RBAC & Admin Approvals
+To satisfy the security requirement, Alfred now ships a lightweight role-based access control and approval model compatible with the future Node.js backend and the current mock authentication layer:
 
-1. **User schema** – extend the `Users` table (and temporary frontend storage) with a `role` enum (`viewer`, `operator`, `admin`) defaulting to `operator`, seeded via migration so existing accounts remain valid.
-2. **Session payloads** – include the `role` claim in issued JWTs/session objects so the frontend can branch on capabilities without additional network calls.
-3. **Backend middleware** – add an Express helper `requireRole(allowedRoles)` that checks `req.user.role` after authentication and returns `403` on mismatches, logging denials to the audit trail.
-4. **Frontend gating** – expose the role through `AuthContext` and add small helpers/components to hide or disable admin-only controls, preventing confusing UX for restricted operators.
+1. **User schema** – each account carries a `role` enum (`viewer`, `operator`, `admin`) and a `status` enum (`pending`, `approved`, `rejected`). New registrations default to `operator` + `pending` until reviewed.
+2. **Session payloads** – session storage persists the active user’s role and status. Pending/rejected accounts cannot sign in; attempting to do so returns descriptive errors.
+3. **Backend middleware** – the Express helper `requireRole(allowedRoles)` guards sensitive endpoints (e.g., the `/team` route) and can be extended to log denials for the audit trail.
+4. **Frontend gating** – `AuthContext` exposes role/status helpers. A dedicated Team page (admin-only) lists all users, highlights pending approvals, and supports approve/reject/delete actions with optimistic UI updates.
 
-This plan keeps the implementation simple (no external policy engine) while making it easy to add richer policies later.
+This foundation keeps roles easy to reason about now while allowing richer policies later.
+
+## User Management & Approvals
+- **Roster insights**: Hero metrics surface totals for members, pending approvals, and active admins.
+- **Filterable roster**: Admins can switch between All/Pending/Approved/Rejected chips to focus workflows.
+- **Actions**: Each user card exposes Approve, Reject, and Delete (with safeguards preventing self-deletion).
+- **Status enforcement**: `authService` utilities ensure only approved accounts can maintain sessions, and deleting/rejecting a user clears any active session tokens.
+
 
 ## Architecture Overview
 - **Frontend**: React-based UI featuring the wizard, editor, dashboard, and logs views.
