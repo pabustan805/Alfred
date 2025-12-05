@@ -1,11 +1,3 @@
-type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | Json[]
-  | { [key: string]: Json | undefined }
-
 const API_BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? 'http://localhost:4000'
 
 export class ApiError<T = unknown> extends Error {
@@ -20,7 +12,7 @@ export class ApiError<T = unknown> extends Error {
 }
 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
-  body?: Json | FormData
+  body?: unknown
   parseJson?: boolean
 }
 
