@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
 import { CronWizard } from '../components/CronWizard'
+import '../components/NotificationsModal.css'
 import { JobTable, type JobSortField } from '../components/JobTable'
 import type { CronJob, ScriptNotification } from '../types/cron'
 import { useAuth } from '../auth/AuthContext'

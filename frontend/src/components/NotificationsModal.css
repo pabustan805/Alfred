@@ -1,0 +1,125 @@
+.notifications-modal {
+  max-width: 36rem;
+}
+
+.notifications-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.notifications-modal__section {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notifications-modal__section header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.notifications-modal__section header strong {
+  font-size: 1rem;
+}
+
+.notifications-modal__section header span {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+}
+
+.notifications-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notifications-modal__list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notifications-modal__list li strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.notifications-modal__list li span {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+}
+
+.notifications-modal__list .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(125, 211, 252, 0.15);
+  color: #7dd3fc;
+}
+
+.notifications-modal__loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.notifications-modal__loading .spin {
+  animation: notifications-modal-spin 1s linear infinite;
+}
+
+.notifications-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.notifications-modal__field select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  color: inherit;
+}
+
+.notifications-modal__hint {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.65rem;
+  background: rgba(125, 211, 252, 0.1);
+  color: rgba(125, 211, 252, 0.95);
+  font-size: 0.85rem;
+}
+
+.notifications-modal .primary {
+  align-self: flex-start;
+}
+
+@keyframes notifications-modal-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
