@@ -143,6 +143,45 @@ main {
   gap: 2rem;
 }
 
+.page-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2rem;
+  border-radius: 2rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-soft);
+  flex-wrap: wrap;
+}
+
+.page-hero p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.page-hero h1 {
+  margin: 0.35rem 0;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+}
+
+.page-hero span {
+  color: var(--text-muted);
+  max-width: 460px;
+  display: block;
+}
+
+.page-hero__actions {
+  display: inline-flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .sidebar {
   width: 280px;
   background: #000;
@@ -2011,6 +2050,185 @@ main {
 
 .scripts__list-item.is-selected .scripts__script-name {
   color: var(--accent);
+}
+
+.audit-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.audit-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.audit-card {
+  background: var(--panel-bg);
+  border-radius: 1.75rem;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-soft);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.audit-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.audit-card header p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.audit-card header h2 {
+  margin: 0.35rem 0 0;
+}
+
+.audit-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.audit-card__header-actions span {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.audit-card__header-actions input {
+  border-radius: 0.75rem;
+  border: 1px solid var(--panel-border);
+  padding: 0.45rem 0.85rem;
+  min-width: 220px;
+  background: #f8fafc;
+}
+
+.audit-empty {
+  margin: 0;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  border: 1px dashed var(--panel-border);
+  background: rgba(15, 23, 42, 0.02);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.audit-card ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.audit-card ol li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.audit-card ol li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.audit-card ol li div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.audit-card strong {
+  font-size: 1rem;
+}
+
+.audit-card span {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.audit-card small {
+  color: var(--text-muted);
+}
+
+.audit-card p {
+  margin: 0;
+}
+
+.audit-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.audit-timeline article {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 1.25rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(248, 250, 252, 0.7);
+}
+
+.audit-timeline article header {
+  justify-content: flex-start;
+}
+
+.audit-timeline ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.audit-timeline li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.audit-pill {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+.audit-pill--info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+
+.audit-pill--warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: #b45309;
+}
+
+.audit-pill--error {
+  background: rgba(248, 113, 113, 0.22);
+  color: #b91c1c;
 }
 
 .scripts__list-item strong {
