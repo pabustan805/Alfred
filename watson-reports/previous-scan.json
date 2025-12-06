@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2025-12-06T17:24:11.273Z",
+  "metrics": {
+    "totalElements": 0,
+    "withId": 0,
+    "withoutId": 0,
+    "withName": 0,
+    "withoutName": 0,
+    "withRole": 0,
+    "withoutRole": 0,
+    "withAriaLabel": 0,
+    "withoutAriaLabel": 0,
+    "duplicateIds": [],
+    "duplicateNames": []
+  }
+}

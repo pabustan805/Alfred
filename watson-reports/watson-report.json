@@ -1,0 +1,121 @@
+{
+  "generatedAt": "2025-12-06T17:24:11.324Z",
+  "workspace": "Alfred",
+  "config": {
+    "include": [
+      "src/**/*.tsx",
+      "src/**/*.ts",
+      "public/**/*.html"
+    ],
+    "exclude": [
+      "**/node_modules/**",
+      "**/*.test.tsx"
+    ],
+    "outputs": {
+      "formats": [
+        "json",
+        "markdown"
+      ],
+      "directory": "watson-reports"
+    },
+    "thresholds": {
+      "duplicateIds": 0,
+      "duplicateNames": 0,
+      "minIdCoverage": 0.4,
+      "minNameCoverage": 0.1
+    }
+  },
+  "metrics": {
+    "totalElements": 0,
+    "withId": 0,
+    "withoutId": 0,
+    "withName": 0,
+    "withoutName": 0,
+    "withRole": 0,
+    "withoutRole": 0,
+    "withAriaLabel": 0,
+    "withoutAriaLabel": 0,
+    "duplicateIds": [],
+    "duplicateNames": []
+  },
+  "thresholds": {
+    "passed": false,
+    "statuses": [
+      {
+        "label": "ID coverage",
+        "metric": "idCoverage",
+        "comparator": "gte",
+        "level": "error",
+        "passed": false,
+        "actual": 0,
+        "required": 0.4,
+        "message": "ID coverage 0.0% (min 40.0%)"
+      },
+      {
+        "label": "Name coverage",
+        "metric": "nameCoverage",
+        "comparator": "gte",
+        "level": "error",
+        "passed": false,
+        "actual": 0,
+        "required": 0.1,
+        "message": "Name coverage 0.0% (min 10.0%)"
+      },
+      {
+        "label": "Duplicate IDs",
+        "metric": "duplicateIds",
+        "comparator": "lte",
+        "level": "error",
+        "passed": true,
+        "actual": 0,
+        "required": 0,
+        "message": "Duplicate IDs 0 (max 0)"
+      },
+      {
+        "label": "Duplicate names",
+        "metric": "duplicateNames",
+        "comparator": "lte",
+        "level": "error",
+        "passed": true,
+        "actual": 0,
+        "required": 0,
+        "message": "Duplicate names 0 (max 0)"
+      }
+    ]
+  },
+  "elements": [],
+  "locatorGuidance": [],
+  "locatorStability": {
+    "scores": [],
+    "summary": {
+      "averageScore": 0,
+      "medianScore": 0,
+      "lowestScore": 0,
+      "totalElements": 0,
+      "atRiskElements": [],
+      "histogram": [
+        {
+          "bucket": "0-25",
+          "count": 0
+        },
+        {
+          "bucket": "25-50",
+          "count": 0
+        },
+        {
+          "bucket": "50-75",
+          "count": 0
+        },
+        {
+          "bucket": "75-100",
+          "count": 0
+        }
+      ]
+    },
+    "fingerprints": {}
+  },
+  "testLinkage": {
+    "totalSelectors": 0,
+    "missingSelectors": []
+  }
+}
