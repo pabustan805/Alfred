@@ -59,6 +59,9 @@ Alfred is a sleek control center for cron automation. It blends a folder-aware s
   </p>
 </details>
 
+## Support the project
+If Alfred is helping your workflow, consider buying me a coffee to keep the work moving forward: [buymeacoffee.com/pabustan](https://buymeacoffee.com/pabustan)
+
 ## Usage
 1. Launch Alfred in your browser.
 2. Sign in with your email/password to access your workspace.

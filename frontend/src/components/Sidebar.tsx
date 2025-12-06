@@ -1,4 +1,4 @@
-import { CalendarClock, Home, ListChecks, LogOut, Settings, ShieldCheck } from 'lucide-react'
+import { CalendarClock, Coffee, Home, ListChecks, LogOut, Settings, ShieldCheck } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import type { Role } from '../auth/types'
@@ -96,6 +96,15 @@ export function Sidebar() {
           <strong>99.99%</strong>
           <span>Last incident 42 days ago</span>
         </div>
+        <a
+          className="sidebar__coffee"
+          href="https://buymeacoffee.com/pabustan"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          <Coffee size={16} aria-hidden />
+          <span>Buy me a coffee</span>
+        </a>
         {user && (
           <button type="button" className="sidebar__signout" onClick={handleSignOut} aria-label="Sign out of Alfred">
             <LogOut size={16} />
